@@ -1,17 +1,23 @@
 import { useState, useEffect } from "react";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { AuthPage } from "@/pages/AuthPage";
+import { SettingsPage } from "@/pages/SettingsPage";
 import { FitnessCard } from "@/components/FitnessCard";
 import { WorkoutForm } from "@/components/WorkoutForm";
 import { WorkoutPreview } from "@/components/WorkoutPreview";
+import { Button } from "@/components/ui/button";
 import {
   fetchFitness,
   generateWorkout,
   createWorkout,
   type FitnessData,
   type GeneratedWorkout,
-  type WorkoutGenerateRequest
+  type WorkoutGenerateRequest,
 } from "@/lib/api";
 
-function App() {
+function Dashboard() {
+  const { user, signOut } = useAuth();
+  const [showSettings, setShowSettings] = useState(false);
   const [fitness, setFitness] = useState<FitnessData | null>(null);
   const [workout, setWorkout] = useState<GeneratedWorkout | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -19,7 +25,6 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Fetch fitness data on mount
   useEffect(() => {
     fetchFitness()
       .then(setFitness)
@@ -76,13 +81,28 @@ function App() {
     }
   };
 
+  if (showSettings) {
+    return <SettingsPage onBack={() => setShowSettings(false)} />;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b">
-        <div className="container mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold">🚴 AI Cycling Coach</h1>
-          <p className="text-muted-foreground text-sm">AI 기반 워크아웃 추천</p>
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold">🚴 AI Cycling Coach</h1>
+            <p className="text-muted-foreground text-sm">AI 기반 워크아웃 추천</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-muted-foreground">{user?.email}</span>
+            <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
+              ⚙️ 설정
+            </Button>
+            <Button variant="ghost" size="sm" onClick={signOut}>
+              로그아웃
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -91,30 +111,26 @@ function App() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Left Column */}
           <div className="space-y-6">
-            {/* Fitness Card */}
-            {fitness && <FitnessCard training={fitness.training} wellness={fitness.wellness} />}
-
-            {/* Workout Form */}
+            {fitness && (
+              <FitnessCard training={fitness.training} wellness={fitness.wellness} />
+            )}
             <WorkoutForm onGenerate={handleGenerate} isLoading={isLoading} />
           </div>
 
           {/* Right Column */}
           <div className="space-y-4">
-            {/* Error Message */}
             {error && (
               <div className="bg-destructive/10 text-destructive p-4 rounded-lg">
                 ❌ {error}
               </div>
             )}
 
-            {/* Success Message */}
             {success && (
               <div className="bg-green-500/10 text-green-600 p-4 rounded-lg">
                 {success}
               </div>
             )}
 
-            {/* Workout Preview */}
             {workout && (
               <WorkoutPreview
                 workout={workout}
@@ -123,17 +139,44 @@ function App() {
               />
             )}
 
-            {/* Empty State */}
             {!workout && !error && !success && (
               <div className="border-2 border-dashed rounded-lg p-8 text-center text-muted-foreground">
                 <p className="text-lg">🎯 워크아웃을 생성해보세요!</p>
-                <p className="text-sm mt-2">왼쪽 폼에서 옵션을 선택 후 생성 버튼을 클릭하세요</p>
+                <p className="text-sm mt-2">
+                  왼쪽 폼에서 옵션을 선택 후 생성 버튼을 클릭하세요
+                </p>
               </div>
             )}
           </div>
         </div>
       </main>
     </div>
+  );
+}
+
+function AppContent() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-muted-foreground">로딩 중...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AuthPage />;
+  }
+
+  return <Dashboard />;
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 
