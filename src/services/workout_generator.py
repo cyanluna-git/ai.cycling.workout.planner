@@ -29,57 +29,61 @@ class GeneratedWorkout:
     workout_type: str  # Endurance, Threshold, VO2max, Recovery
 
 
-# Intervals.icu workout text syntax reference
+# Intervals.icu workout text syntax reference - UPDATED for proper parsing
 WORKOUT_SYNTAX_GUIDE = """
-Intervals.icu Workout Text Syntax:
-- Duration can be in seconds (s), minutes (m), or hours (h)
-- Power is expressed as percentage of FTP: 50%, 100%, 115%
-- Zones: Z1, Z2, Z3, Z4, Z5, Z6, Z7
+워크아웃 스텝 형식:
+- 시간: 숫자 + 단위 (5m = 5분, 30s = 30초, 1h = 1시간)
+- 파워: FTP 퍼센트 (50%, 88%, 100%, 115%)
 
-Examples:
-- 10m 50%         → 10 minutes at 50% FTP (warmup/cooldown)
-- 5m Z2           → 5 minutes in Zone 2
-- 3m 115%         → 3 minutes at 115% FTP (VO2max)
-- 5x 4m 105% 4m 50%  → 5 intervals of 4min at 105%, 4min recovery at 50%
-- ramp 10m 50% to 75% → 10 minute ramp from 50% to 75%
-- 30s 150%        → 30 second sprint at 150%
+스텝 예시:
+- "10m 50%" = 10분간 FTP 50%
+- "5m 100%" = 5분간 FTP 100%
+- "30s 120%" = 30초간 FTP 120%
+
+파워 존 가이드:
+- 50-65%: Z1-Z2 (회복/지구력)
+- 75-85%: Z3 (템포)
+- 88-94%: Z4 (Sweet Spot/Threshold)
+- 100-110%: Z5 (VO2max)
+- 115%+: Z6 (무산소)
 """
 
 
-SYSTEM_PROMPT = """당신은 세계적인 수준의 사이클링 코치입니다. 데이터 기반의 과학적 훈련을 전문으로 합니다.
-
-핵심 원칙:
-1. 선수의 현재 상태(TSB)에 맞는 워크아웃 강도를 처방합니다
-2. Intervals.icu 워크아웃 텍스트 포맷을 엄격하게 준수합니다
-3. 안전하고 효과적인 훈련만 제안합니다
+SYSTEM_PROMPT = """당신은 세계적인 수준의 사이클링 코치입니다. 선수의 상태를 분석하고 적절한 워크아웃을 처방합니다.
 
 워크아웃 강도 가이드라인:
-- TSB < -20 (매우 피로): Recovery Ride만 권장 (Z1-Z2, 30-45분)
-- TSB -20 ~ -10 (피로): Endurance (Z2-Z3, 60분 이내)
-- TSB -10 ~ 0 (중립): Tempo 또는 Sweet Spot 가능
-- TSB > 0 (회복됨): Threshold 또는 VO2max 인터벌 가능
-
-Zone별 파워 제한 시간:
-- Zone 5 (105-120%): 최대 5분 단일 인터벌
-- Zone 6 (>120%): 최대 2분 단일 인터벌
-- Zone 7 (>150%): 최대 30초 스프린트
+- TSB < -20 (매우 피로): 회복만 (50-65%, 30-45분)
+- TSB -20 ~ -10 (피로): 지구력 (65-75%, 60분 이내)
+- TSB -10 ~ 0 (중립): 템포/Sweet Spot 가능
+- TSB > 0 (회복됨): Threshold/VO2max 가능
 
 {syntax_guide}
 
-출력 형식:
-반드시 아래 형식으로만 응답하세요. 추가 설명 없이 워크아웃 텍스트만 출력합니다.
+**출력 규칙 (엄격히 준수):**
+반드시 아래 JSON 형식으로만 응답하세요. 추가 설명이나 마크다운 없이 순수 JSON만 출력합니다.
 
-[WORKOUT_NAME]
-(워크아웃 이름)
+```json
+{{
+  "name": "워크아웃 이름 (한국어)",
+  "type": "Endurance|Threshold|VO2max|Recovery 중 하나",
+  "tss": 예상TSS숫자,
+  "warmup": ["스텝1", "스텝2"],
+  "main": ["스텝1", "스텝2", "..."],
+  "cooldown": ["스텝1"]
+}}
+```
 
-[WORKOUT_TYPE]
-(Endurance/Threshold/VO2max/Recovery 중 하나)
-
-[ESTIMATED_TSS]
-(예상 TSS 숫자)
-
-[WORKOUT_TEXT]
-(Intervals.icu 포맷의 워크아웃 텍스트)
+예시:
+```json
+{{
+  "name": "스윗스팟 인터벌",
+  "type": "Threshold",
+  "tss": 55,
+  "warmup": ["10m 50%"],
+  "main": ["5m 88%", "5m 50%", "5m 88%", "5m 50%", "5m 88%", "5m 50%"],
+  "cooldown": ["10m 50%"]
+}}
+```
 """
 
 
@@ -176,21 +180,17 @@ class WorkoutGenerator:
         # Parse response
         workout = self._parse_response(response)
 
+        # Keep original description (for Intervals.icu parsing)
+        original_description = workout.description
+
         # Validate workout text
         validation = self.validator.validate(workout.workout_text)
 
         if not validation.is_valid:
             logger.warning(f"Generated workout has issues: {validation.errors}")
-            # Use cleaned text if available
-            if validation.cleaned_text:
-                workout = GeneratedWorkout(
-                    name=workout.name,
-                    description=workout.description,
-                    workout_text=validation.cleaned_text,
-                    estimated_duration_minutes=workout.estimated_duration_minutes,
-                    estimated_tss=workout.estimated_tss,
-                    workout_type=workout.workout_type,
-                )
+            # Note: We keep the original description for Intervals.icu
+            # The cleaned_text is used for internal workout_text validation only
+            # But we don't replace description as it has proper formatting
 
         if validation.warnings:
             logger.warning(f"Workout warnings: {validation.warnings}")
@@ -256,72 +256,227 @@ class WorkoutGenerator:
         )
 
     def _parse_response(self, response: str) -> GeneratedWorkout:
-        """Parse LLM response into GeneratedWorkout.
+        """Parse LLM JSON response into GeneratedWorkout.
 
         Args:
-            response: Raw LLM response.
+            response: Raw LLM response (should be JSON).
 
         Returns:
             Parsed GeneratedWorkout.
         """
+        import json
+        import re
+
         # Default values
         name = "AI Generated Workout"
         workout_type = "Endurance"
         estimated_tss = None
-        workout_text = ""
+        warmup_steps = []
+        main_steps = []
+        cooldown_steps = []
 
-        # Parse sections
-        sections = {}
-        current_section = None
-        current_content = []
+        # Try to extract JSON from response
+        try:
+            # Remove markdown code blocks if present
+            json_text = response
+            if "```json" in json_text:
+                json_match = re.search(r"```json\s*(.*?)\s*```", json_text, re.DOTALL)
+                if json_match:
+                    json_text = json_match.group(1)
+            elif "```" in json_text:
+                json_match = re.search(r"```\s*(.*?)\s*```", json_text, re.DOTALL)
+                if json_match:
+                    json_text = json_match.group(1)
 
-        for line in response.split("\n"):
-            line = line.strip()
-            if line.startswith("[") and line.endswith("]"):
-                if current_section:
-                    sections[current_section] = "\n".join(current_content).strip()
-                current_section = line[1:-1]
-                current_content = []
-            elif current_section:
-                current_content.append(line)
+            # Parse JSON
+            data = json.loads(json_text.strip())
 
-        # Save last section
-        if current_section:
-            sections[current_section] = "\n".join(current_content).strip()
+            name = data.get("name", name)
+            workout_type = data.get("type", workout_type)
+            estimated_tss = data.get("tss")
+            warmup_steps = data.get("warmup", [])
+            main_steps = data.get("main", [])
+            cooldown_steps = data.get("cooldown", [])
 
-        # Extract values
-        if "WORKOUT_NAME" in sections:
-            name = sections["WORKOUT_NAME"] or name
+            logger.info(f"Successfully parsed JSON workout: {name}")
 
-        if "WORKOUT_TYPE" in sections:
-            workout_type = sections["WORKOUT_TYPE"] or workout_type
+        except (json.JSONDecodeError, Exception) as e:
+            logger.warning(
+                f"Failed to parse JSON response: {e}. Falling back to text parsing."
+            )
+            # Fallback: try to extract workout steps from text
+            warmup_steps, main_steps, cooldown_steps = self._extract_steps_from_text(
+                response
+            )
 
-        if "ESTIMATED_TSS" in sections:
-            try:
-                estimated_tss = int(sections["ESTIMATED_TSS"])
-            except ValueError:
-                pass
+        # Validate and sanitize steps
+        warmup_steps = self._validate_steps(warmup_steps)
+        main_steps = self._validate_steps(main_steps)
+        cooldown_steps = self._validate_steps(cooldown_steps)
 
-        if "WORKOUT_TEXT" in sections:
-            workout_text = sections["WORKOUT_TEXT"]
-        else:
-            # Fallback: try to extract workout text directly
-            workout_text = response
+        # Build Intervals.icu formatted workout text
+        workout_text = self._build_intervals_text(
+            warmup_steps, main_steps, cooldown_steps
+        )
 
         # Estimate duration from workout text
         duration = self._estimate_duration(workout_text)
 
-        # Build description
-        description = f"AI가 생성한 {workout_type} 워크아웃입니다.\n\n{workout_text}"
-
         return GeneratedWorkout(
             name=f"AI Generated - {name}",
-            description=description,
+            description=workout_text,  # description is the workout text for Intervals.icu
             workout_text=workout_text,
             estimated_duration_minutes=duration,
             estimated_tss=estimated_tss,
             workout_type=workout_type,
         )
+
+    def _validate_steps(self, steps: list) -> list:
+        """Validate and sanitize workout steps.
+
+        Args:
+            steps: List of step strings.
+
+        Returns:
+            List of validated step strings.
+        """
+        import re
+
+        valid_steps = []
+        step_pattern = re.compile(r"^(\d+[smh])\s+(\d+%?)$", re.IGNORECASE)
+
+        for step in steps:
+            if not isinstance(step, str):
+                continue
+            step = step.strip()
+            # Remove leading dash if present
+            if step.startswith("-"):
+                step = step[1:].strip()
+
+            # Check if step matches expected format
+            if step_pattern.match(step):
+                valid_steps.append(step)
+            elif re.match(r"\d+[smh]\s+\d+%", step):
+                valid_steps.append(step)
+            else:
+                logger.warning(f"Invalid step format, skipping: {step}")
+
+        return valid_steps
+
+    def _build_intervals_text(self, warmup: list, main: list, cooldown: list) -> str:
+        """Build Intervals.icu formatted workout text.
+
+        Args:
+            warmup: List of warmup steps.
+            main: List of main set steps.
+            cooldown: List of cooldown steps.
+
+        Returns:
+            Formatted workout text for Intervals.icu.
+        """
+        lines = []
+
+        if warmup:
+            lines.append("Warmup")
+            for step in warmup:
+                lines.append(f"- {step}")
+            lines.append("")
+
+        if main:
+            lines.append("Main Set")
+            for step in main:
+                lines.append(f"- {step}")
+            lines.append("")
+
+        if cooldown:
+            lines.append("Cooldown")
+            for step in cooldown:
+                lines.append(f"- {step}")
+
+        return "\n".join(lines)
+
+    def _extract_steps_from_text(self, text: str) -> tuple:
+        """Extract workout steps from free text (fallback).
+
+        Args:
+            text: Raw text containing workout steps.
+
+        Returns:
+            Tuple of (warmup_steps, main_steps, cooldown_steps).
+        """
+        import re
+
+        # Extract all steps matching pattern
+        step_pattern = re.compile(r"(\d+[smh]\s+\d+%?)", re.IGNORECASE)
+        all_steps = step_pattern.findall(text)
+
+        if not all_steps:
+            return [], [], []
+
+        # Simple heuristic: first step is warmup, last is cooldown, rest is main
+        if len(all_steps) >= 3:
+            return [all_steps[0]], all_steps[1:-1], [all_steps[-1]]
+        elif len(all_steps) == 2:
+            return [], all_steps, []
+        else:
+            return [], all_steps, []
+
+    def _format_for_intervals(self, text: str) -> str:
+        """Format workout text for Intervals.icu parsing.
+
+        Ensures proper structure with Warmup/Main Set/Cooldown headers
+        and dash prefixes for each step.
+
+        Args:
+            text: Raw workout text.
+
+        Returns:
+            Formatted workout text.
+        """
+        import re
+
+        lines = text.strip().split("\n")
+        formatted = []
+
+        # Extract only valid workout lines (e.g., "10m 50%", "5m 88%")
+        workout_pattern = re.compile(r"^\s*[-•]?\s*(\d+[smh]\s+\d+%.*)", re.IGNORECASE)
+
+        valid_steps = []
+        for line in lines:
+            # Skip section headers and empty lines - they'll be rebuilt
+            if line.strip().lower() in ["warmup", "main set", "cooldown", ""]:
+                continue
+            match = workout_pattern.match(line)
+            if match:
+                step = match.group(1).strip()
+                valid_steps.append(step)
+            elif re.match(r"^\d+[smh]\s+\d+%", line.strip()):
+                valid_steps.append(line.strip())
+
+        if not valid_steps:
+            return text  # Return original if no valid steps found
+
+        # Build structured workout
+        # First step is warmup, last step is cooldown, rest is main set
+        if len(valid_steps) >= 3:
+            formatted.append("Warmup")
+            formatted.append(f"- {valid_steps[0]}")
+            formatted.append("")
+            formatted.append("Main Set")
+            for step in valid_steps[1:-1]:
+                formatted.append(f"- {step}")
+            formatted.append("")
+            formatted.append("Cooldown")
+            formatted.append(f"- {valid_steps[-1]}")
+        elif len(valid_steps) == 2:
+            formatted.append("Main Set")
+            for step in valid_steps:
+                formatted.append(f"- {step}")
+        else:
+            formatted.append("Main Set")
+            formatted.append(f"- {valid_steps[0]}")
+
+        return "\n".join(formatted)
 
     def _estimate_duration(self, workout_text: str) -> int:
         """Estimate workout duration from text.

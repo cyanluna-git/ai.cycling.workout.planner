@@ -186,8 +186,9 @@ class DataProcessor:
         # Determine readiness based on available data
         readiness = self._assess_readiness(hrv, rhr, sleep_hours, latest)
 
+        sleep_str = f"{sleep_hours:.1f}h" if sleep_hours else "N/A"
         logger.info(
-            f"Wellness: HRV={hrv}, RHR={rhr}, Sleep={sleep_hours:.1f}h, Readiness={readiness}"
+            f"Wellness: HRV={hrv}, RHR={rhr}, Sleep={sleep_str}, Readiness={readiness}"
         )
         return WellnessMetrics(
             hrv=hrv,
