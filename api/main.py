@@ -14,14 +14,18 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# CORS configuration for Vercel frontend
+# CORS configuration - 분리 배포용
+# Vercel 프론트엔드에서 Render 백엔드로 요청 허용
+origins = [
+    "http://localhost:5173",  # Vite dev server
+    "http://localhost:3000",  # Alternative dev
+    "https://*.vercel.app",  # Vercel preview deployments
+    # 배포 후 실제 Vercel 도메인 추가 예정
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",  # Vite dev server
-        "http://localhost:3000",
-        "https://*.vercel.app",  # Vercel deployments
-    ],
+    allow_origins=["*"],  # 개발 중에는 전체 허용, 배포 후 origins로 변경
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -40,5 +44,5 @@ async def root():
 
 @app.get("/api/health")
 async def health():
-    """Health check for Railway."""
+    """Health check for deployment."""
     return {"status": "healthy"}
