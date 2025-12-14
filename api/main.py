@@ -6,7 +6,7 @@ REST API endpoints for the React frontend.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import workout, fitness
+from .routers import workout, fitness, auth, settings
 
 app = FastAPI(
     title="AI Cycling Coach API",
@@ -20,7 +20,7 @@ origins = [
     "http://localhost:5173",  # Vite dev server
     "http://localhost:3000",  # Alternative dev
     "https://*.vercel.app",  # Vercel preview deployments
-    # 배포 후 실제 Vercel 도메인 추가 예정
+    "https://ai-cycling-workout-planner.vercel.app",  # Production
 ]
 
 app.add_middleware(
@@ -32,6 +32,8 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(auth.router, prefix="/api", tags=["auth"])
+app.include_router(settings.router, prefix="/api", tags=["settings"])
 app.include_router(fitness.router, prefix="/api", tags=["fitness"])
 app.include_router(workout.router, prefix="/api", tags=["workout"])
 
