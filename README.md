@@ -2,13 +2,35 @@
 
 AI 기반 사이클링 워크아웃 추천 및 Intervals.icu 자동 동기화 서비스
 
+## 🌐 배포 URL
+
+| 서비스 | URL |
+|--------|-----|
+| **Frontend** | https://ai-cycling-workout-planner.vercel.app |
+| **Backend API** | https://ai-cycling-workout-planner.onrender.com |
+
 ## 기능
 
 - **자동 워크아웃 생성**: CTL/ATL/TSB와 Wellness 데이터 기반 AI 맞춤 워크아웃
 - **Intervals.icu 연동**: API를 통한 캘린더 자동 등록
 - **Wahoo 동기화**: Intervals.icu에서 Wahoo 장치로 자동 전송
 - **훈련 스타일 선택**: 양극화, 노르웨이, 스윗스팟 등 다양한 스타일 지원
+- **React 웹 UI**: 브라우저에서 직접 워크아웃 생성 및 등록
 - **스케줄러**: 매일 지정 시간에 자동 실행
+
+## 아키텍처
+
+```
+┌─────────────────┐     HTTP     ┌─────────────────┐     API      ┌─────────────────┐
+│   React.js      │ ──────────▶  │    FastAPI      │ ──────────▶  │  Intervals.icu  │
+│   (Vercel)      │              │   (Render)      │              │      API        │
+└─────────────────┘              └────────┬────────┘              └─────────────────┘
+                                          │
+                                          ▼
+                                   ┌─────────────────┐
+                                   │   Gemini API    │
+                                   └─────────────────┘
+```
 
 ## 빠른 시작
 
@@ -58,14 +80,14 @@ python -m src.main [옵션]
 ### 훈련 스타일 (--style)
 
 | 스타일 | 설명 |
-|--------|------|
+|--|------|------|
 | `auto` | TSB 상태에 맞게 자동 결정 |
 | `polarized` | 양극화 - 80% 쉬움 + 20% 매우 힘듦 |
 | `norwegian` | 노르웨이식 - 4x8분 역치 인터벌 |
 | `pyramidal` | 피라미드 - Z1-Z2 기반, Z3-Z4 추가 |
 | `threshold` | 역치 중심 - FTP 95-105% |
 | `sweetspot` | 스윗스팟 - FTP 88-94% |
-| `endurance` | 지구력 - Z2 장거리 |
+| `endurance` | 지구력 - Z2 장거리 
 
 ### 강도 선호 (--intensity)
 
