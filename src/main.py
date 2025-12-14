@@ -45,6 +45,11 @@ def run_daily_workflow(
     target_date: Optional[date] = None,
     dry_run: bool = False,
     force: bool = False,
+    duration: int = 60,
+    style: str = "auto",
+    notes: str = "",
+    intensity: str = "auto",
+    indoor: bool = False,
 ) -> bool:
     """Run the daily workout generation workflow.
 
@@ -53,6 +58,11 @@ def run_daily_workflow(
         target_date: Date to generate workout for (default: today).
         dry_run: If True, don't actually create the workout.
         force: If True, create workout even if one exists.
+        duration: Target workout duration in minutes.
+        style: Training style (auto, polarized, norwegian, etc.).
+        notes: Additional user notes for the AI.
+        intensity: Intensity preference (auto, easy, moderate, hard).
+        indoor: If True, generate indoor trainer workout.
 
     Returns:
         True if successful, False otherwise.
@@ -63,13 +73,20 @@ def run_daily_workflow(
     logger.info(f"=== AI Cycling Coach - Daily Workflow ===")
     logger.info(f"Target date: {target_date}")
     logger.info(f"Dry run: {dry_run}, Force: {force}")
+    logger.info(f"Duration: {duration}min, Style: {style}, Intensity: {intensity}")
+    if notes:
+        logger.info(f"Notes: {notes}")
+    if indoor:
+        logger.info("Mode: Indoor trainer")
 
     try:
         # Initialize clients
         intervals = IntervalsClient(config.intervals)
         llm = LLMClient.from_config(config.llm)
         processor = DataProcessor()
-        generator = WorkoutGenerator(llm, config.user_profile)
+        generator = WorkoutGenerator(
+            llm, config.user_profile, max_duration_minutes=duration
+        )
 
         # Step 1: Check for existing workout
         logger.info("Step 1: Checking for existing workout...")
@@ -105,7 +122,15 @@ def run_daily_workflow(
 
         # Step 5: Generate workout with AI
         logger.info("Step 5: Generating workout with AI...")
-        workout = generator.generate(training_metrics, wellness_metrics, target_date)
+        workout = generator.generate(
+            training_metrics,
+            wellness_metrics,
+            target_date,
+            style=style,
+            notes=notes,
+            intensity=intensity,
+            indoor=indoor,
+        )
 
         logger.info(f"Generated: {workout.name}")
         logger.info(
@@ -185,6 +210,47 @@ Examples:
         help="Path to .env file",
     )
 
+    # Workout customization parameters
+    parser.add_argument(
+        "--duration",
+        type=int,
+        default=60,
+        help="Target workout duration in minutes (default: 60)",
+    )
+    parser.add_argument(
+        "--style",
+        type=str,
+        choices=[
+            "auto",
+            "polarized",
+            "norwegian",
+            "pyramidal",
+            "threshold",
+            "sweetspot",
+            "endurance",
+        ],
+        default="auto",
+        help="Training style: auto, polarized, norwegian, pyramidal, threshold, sweetspot, endurance",
+    )
+    parser.add_argument(
+        "--notes",
+        type=str,
+        default="",
+        help="Additional notes or requests for the AI (e.g., 'focus on climbing')",
+    )
+    parser.add_argument(
+        "--intensity",
+        type=str,
+        choices=["auto", "easy", "moderate", "hard"],
+        default="auto",
+        help="Intensity preference: auto, easy, moderate, hard",
+    )
+    parser.add_argument(
+        "--indoor",
+        action="store_true",
+        help="Generate indoor trainer workout (structured intervals)",
+    )
+
     args = parser.parse_args()
 
     # Load configuration
@@ -213,6 +279,11 @@ Examples:
         target_date=target_date,
         dry_run=args.dry_run,
         force=args.force,
+        duration=args.duration,
+        style=args.style,
+        notes=args.notes,
+        intensity=args.intensity,
+        indoor=args.indoor,
     )
 
     return 0 if success else 1
