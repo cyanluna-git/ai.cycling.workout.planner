@@ -105,9 +105,34 @@ USER_PROMPT_TEMPLATE = """선수 프로필:
 오늘 날짜: {today}
 요일: {weekday}
 
+**사용자 설정:**
+- 목표 시간: {max_duration}분
+- 훈련 스타일: {style}
+- 강도 선호: {intensity}
+- 환경: {environment}
+{user_notes}
+
 위 정보를 바탕으로 오늘에 적합한 사이클링 워크아웃을 생성해주세요.
-총 운동 시간은 {max_duration}분 이내로 제한해주세요.
 """
+
+
+# Training style descriptions for the prompt
+STYLE_DESCRIPTIONS = {
+    "auto": "TSB 상태에 맞게 자동 결정",
+    "polarized": "양극화 훈련 - 80% 쉬움(Z1-Z2) + 20% 매우 힘듦(Z5-Z6), 중간 강도 회피",
+    "norwegian": "노르웨이식 - 4x8분 또는 5x5분 Z4(역치) 인터벌",
+    "pyramidal": "피라미드 - Z1-Z2 기반에 Z3-Z4 추가, Z5 최소화",
+    "threshold": "역치 중심 - FTP 근처(95-105%) 인터벌",
+    "sweetspot": "스윗스팟 - FTP 88-94% 구간에서 긴 인터벌",
+    "endurance": "지구력 - Z2 중심 장거리 훈련",
+}
+
+INTENSITY_DESCRIPTIONS = {
+    "auto": "TSB 상태에 맞게 자동 결정",
+    "easy": "쉬운 회복 훈련 (Z1-Z2만 사용)",
+    "moderate": "적당한 강도 (템포/스윗스팟 허용)",
+    "hard": "높은 강도 (역치/VO2max 인터벌 허용)",
+}
 
 
 class WorkoutGenerator:
@@ -149,6 +174,10 @@ class WorkoutGenerator:
         training_metrics: TrainingMetrics,
         wellness_metrics: WellnessMetrics,
         target_date: Optional[date] = None,
+        style: str = "auto",
+        notes: str = "",
+        intensity: str = "auto",
+        indoor: bool = False,
     ) -> GeneratedWorkout:
         """Generate a workout based on current training state.
 
@@ -156,6 +185,10 @@ class WorkoutGenerator:
             training_metrics: Current CTL/ATL/TSB metrics.
             wellness_metrics: Current wellness status.
             target_date: Date for the workout (default: today).
+            style: Training style (auto, polarized, norwegian, etc.).
+            notes: Additional user notes/requests.
+            intensity: Intensity preference (auto, easy, moderate, hard).
+            indoor: If True, generate indoor trainer workout.
 
         Returns:
             GeneratedWorkout with name, description, and workout text.
@@ -168,6 +201,10 @@ class WorkoutGenerator:
             training_metrics,
             wellness_metrics,
             target_date,
+            style=style,
+            notes=notes,
+            intensity=intensity,
+            indoor=indoor,
         )
 
         logger.info(
@@ -205,6 +242,10 @@ class WorkoutGenerator:
         metrics: TrainingMetrics,
         wellness: WellnessMetrics,
         target_date: date,
+        style: str = "auto",
+        notes: str = "",
+        intensity: str = "auto",
+        indoor: bool = False,
     ) -> str:
         """Build the user prompt for LLM.
 
@@ -212,6 +253,10 @@ class WorkoutGenerator:
             metrics: Training metrics.
             wellness: Wellness metrics.
             target_date: Target date for workout.
+            style: Training style preference.
+            notes: Additional user notes.
+            intensity: Intensity preference.
+            indoor: Indoor trainer mode.
 
         Returns:
             Formatted user prompt.
@@ -237,6 +282,16 @@ class WorkoutGenerator:
         ]
         weekday = weekdays[target_date.weekday()]
 
+        # Get style and intensity descriptions
+        style_desc = STYLE_DESCRIPTIONS.get(style, style)
+        intensity_desc = INTENSITY_DESCRIPTIONS.get(intensity, intensity)
+        environment = (
+            "실내 트레이너 (구조화된 인터벌, 짧은 휴식)" if indoor else "야외 또는 일반"
+        )
+
+        # Format user notes
+        user_notes = f"- 추가 요청: {notes}" if notes else ""
+
         return USER_PROMPT_TEMPLATE.format(
             ftp=self.profile.ftp,
             max_hr=self.profile.max_hr,
@@ -253,6 +308,10 @@ class WorkoutGenerator:
             today=target_date.strftime("%Y-%m-%d"),
             weekday=weekday,
             max_duration=self.max_duration,
+            style=style_desc,
+            intensity=intensity_desc,
+            environment=environment,
+            user_notes=user_notes,
         )
 
     def _parse_response(self, response: str) -> GeneratedWorkout:
