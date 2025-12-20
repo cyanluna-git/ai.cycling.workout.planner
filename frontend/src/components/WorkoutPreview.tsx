@@ -1,14 +1,35 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { GeneratedWorkout } from "@/lib/api";
+import { WorkoutChart, getZoneColor } from "./WorkoutChart";
 
 interface WorkoutPreviewProps {
     workout: GeneratedWorkout;
     onRegister: () => void;
     isRegistering: boolean;
+    ftp?: number;
 }
 
-export function WorkoutPreview({ workout, onRegister, isRegistering }: WorkoutPreviewProps) {
+/**
+ * Format step with watts calculation
+ * Input: "10m 50%"
+ * Output: "10m 50% (126w)" with zone color
+ */
+function formatStepWithWatts(step: string, ftp: number): { text: string; color: string } {
+    const match = step.match(/(\d+m)\s+(\d+)%/);
+    if (match) {
+        const duration = match[1];
+        const percent = parseInt(match[2]);
+        const watts = Math.round(ftp * percent / 100);
+        return {
+            text: `${duration} ${percent}% (${watts}w)`,
+            color: getZoneColor(percent)
+        };
+    }
+    return { text: step, color: '#888' };
+}
+
+export function WorkoutPreview({ workout, onRegister, isRegistering, ftp = 250 }: WorkoutPreviewProps) {
     return (
         <Card className="w-full">
             <CardHeader className="pb-2">
@@ -21,32 +42,44 @@ export function WorkoutPreview({ workout, onRegister, isRegistering }: WorkoutPr
                 </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+                {/* Power Profile Chart */}
+                <WorkoutChart workoutText={workout.workout_text} />
+
                 {/* Workout Sections */}
                 <div className="bg-muted/50 rounded-lg p-4 font-mono text-sm space-y-3">
                     {workout.warmup.length > 0 && (
                         <div>
                             <div className="text-muted-foreground mb-1">Warmup</div>
-                            {workout.warmup.map((step, i) => (
-                                <div key={i} className="text-green-600">- {step}</div>
-                            ))}
+                            {workout.warmup.map((step, i) => {
+                                const formatted = formatStepWithWatts(step, ftp);
+                                return (
+                                    <div key={i} style={{ color: formatted.color }}>- {formatted.text}</div>
+                                );
+                            })}
                         </div>
                     )}
 
                     {workout.main.length > 0 && (
                         <div>
                             <div className="text-muted-foreground mb-1">Main Set</div>
-                            {workout.main.map((step, i) => (
-                                <div key={i} className="text-orange-600 font-medium">- {step}</div>
-                            ))}
+                            {workout.main.map((step, i) => {
+                                const formatted = formatStepWithWatts(step, ftp);
+                                return (
+                                    <div key={i} style={{ color: formatted.color }} className="font-medium">- {formatted.text}</div>
+                                );
+                            })}
                         </div>
                     )}
 
                     {workout.cooldown.length > 0 && (
                         <div>
                             <div className="text-muted-foreground mb-1">Cooldown</div>
-                            {workout.cooldown.map((step, i) => (
-                                <div key={i} className="text-blue-600">- {step}</div>
-                            ))}
+                            {workout.cooldown.map((step, i) => {
+                                const formatted = formatStepWithWatts(step, ftp);
+                                return (
+                                    <div key={i} style={{ color: formatted.color }}>- {formatted.text}</div>
+                                );
+                            })}
                         </div>
                     )}
                 </div>
@@ -63,3 +96,4 @@ export function WorkoutPreview({ workout, onRegister, isRegistering }: WorkoutPr
         </Card>
     );
 }
+
