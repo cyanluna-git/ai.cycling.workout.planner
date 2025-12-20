@@ -71,7 +71,7 @@ export async function checkApiConfigured(token: string): Promise<boolean> {
         });
         if (!res.ok) return false;
         const data = await res.json();
-        return !!(data.intervals_athlete_id && data.intervals_api_key);
+        return data.api_keys_configured === true;
     } catch {
         return false;
     }
