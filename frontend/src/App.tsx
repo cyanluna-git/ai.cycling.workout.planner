@@ -159,6 +159,14 @@ function Dashboard() {
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">{user?.email}</span>
+            <a
+              href="https://docs.google.com/forms/d/e/1FAIpQLSdgOIB6sEsQ-a-vlYpq4DnrnQ_wM7kjO7IILLFQaEe9gLcmhg/viewform"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              💬 피드백
+            </a>
             <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
               ⚙️ 설정
             </Button>
