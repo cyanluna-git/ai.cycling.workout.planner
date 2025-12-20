@@ -40,6 +40,12 @@ export function FitnessCard({ training, wellness, profile }: FitnessCardProps) {
                             <span className="font-bold">{profile.ftp}W</span>
                         </div>
                     )}
+                    {profile.w_per_kg && (
+                        <div className="flex items-center gap-1">
+                            <span className="text-xs text-muted-foreground">W/kg</span>
+                            <span className="font-bold text-blue-500">{profile.w_per_kg}</span>
+                        </div>
+                    )}
                     {profile.max_hr && (
                         <div className="flex items-center gap-1">
                             <span className="text-xs text-muted-foreground">Max HR</span>
@@ -84,6 +90,15 @@ export function FitnessCard({ training, wellness, profile }: FitnessCardProps) {
                         <div className="flex justify-between items-baseline">
                             <span className="text-sm text-muted-foreground">상태</span>
                             <span className="text-sm font-medium">{training.form_status}</span>
+                        </div>
+                        <div className="flex justify-between items-baseline">
+                            <span className="text-sm text-muted-foreground">준비도</span>
+                            <span className={`text-sm font-medium ${wellness.readiness.includes("Poor") ? "text-red-500" :
+                                    wellness.readiness.includes("Good") ? "text-green-500" :
+                                        "text-yellow-500"
+                                }`}>
+                                {wellness.readiness}
+                            </span>
                         </div>
                         {wellness.hrv && (
                             <div className="flex justify-between items-baseline">

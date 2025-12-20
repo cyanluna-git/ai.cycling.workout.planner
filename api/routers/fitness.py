@@ -43,6 +43,26 @@ async def get_fitness(user: dict = Depends(get_current_user)):
         training = processor.calculate_training_metrics(activities)
         wellness = processor.analyze_wellness(wellness_data)
 
+        # Extract profile data from nested structure
+        # sportSettings[0] is typically "Ride" settings
+        sport_settings = athlete_data.get("sportSettings", [])
+        ride_settings = next(
+            (s for s in sport_settings if "Ride" in s.get("types", [])),
+            sport_settings[0] if sport_settings else {},
+        )
+
+        ftp = ride_settings.get("ftp")
+        lthr = ride_settings.get("lthr")
+        max_hr = ride_settings.get("max_hr")
+        weight = athlete_data.get("icu_weight")  # weight is in icu_weight, not weight
+
+        # Get eFTP from mmp_model if available
+        mmp_model = ride_settings.get("mmp_model", {}) or {}
+        eftp = mmp_model.get("ftp") if mmp_model else None
+
+        # Calculate W/kg if both FTP and weight are available
+        w_per_kg = round(ftp / weight, 2) if ftp and weight else None
+
         return FitnessResponse(
             training=TrainingMetrics(
                 ctl=training.ctl,
@@ -57,10 +77,11 @@ async def get_fitness(user: dict = Depends(get_current_user)):
                 sleep_hours=wellness.sleep_hours,
             ),
             profile=AthleteProfile(
-                ftp=athlete_data.get("ftp"),
-                max_hr=athlete_data.get("maxHr"),
-                lthr=athlete_data.get("lthr"),
-                weight=athlete_data.get("weight"),
+                ftp=ftp,
+                max_hr=max_hr,
+                lthr=lthr,
+                weight=weight,
+                w_per_kg=w_per_kg,
             ),
         )
     except UserApiServiceError as e:

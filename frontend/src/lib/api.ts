@@ -25,6 +25,7 @@ export interface AthleteProfile {
     max_hr: number | null;
     lthr: number | null;
     weight: number | null;
+    w_per_kg: number | null;
 }
 
 export interface FitnessData {
