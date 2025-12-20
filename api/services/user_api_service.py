@@ -135,40 +135,49 @@ async def get_user_intervals_client(user_id: str) -> IntervalsClient:
 def get_server_llm_client() -> LLMClient:
     """Create an LLMClient configured with server's environment variables.
 
-    Uses LLM_PROVIDER and LLM_API_KEY from server environment.
-    This centralizes LLM API key management on the server side.
+    Uses multiple LLM providers with automatic fallback on quota errors.
+    Priority: Groq > Gemini > HuggingFace > OpenAI
 
     Returns:
-        Configured LLMClient instance.
+        Configured LLMClient instance (with fallback support).
 
     Raises:
-        UserApiServiceError: If server LLM API key is not configured.
+        UserApiServiceError: If no LLM API keys are configured.
     """
-    provider = os.getenv("LLM_PROVIDER", "gemini")
-    api_key = os.getenv("LLM_API_KEY")
-    model = os.getenv("LLM_MODEL")
+    from src.clients.llm import FallbackLLMClient
 
-    if not api_key:
+    # Collect all available API keys
+    groq_api_key = os.getenv("GROQ_API_KEY")
+    gemini_api_key = os.getenv("GEMINI_API_KEY") or os.getenv("LLM_API_KEY")
+    hf_api_key = os.getenv("HF_API_KEY")
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+
+    # Collect model settings (optional, will use defaults if not set)
+    groq_model = os.getenv("GROQ_MODEL")
+    gemini_model = os.getenv("GEMINI_MODEL")
+    hf_model = os.getenv("HF_MODEL")
+    openai_model = os.getenv("OPENAI_MODEL")
+
+    # Check if at least one key is available
+    if not any([groq_api_key, gemini_api_key, hf_api_key, openai_api_key]):
         raise UserApiServiceError(
             "서버 LLM API 키가 설정되지 않았습니다. 관리자에게 문의하세요."
         )
 
-    # Determine model based on provider if not specified
-    if not model:
-        model_map = {
-            "gemini": "gemini-2.0-flash",
-            "openai": "gpt-4o",
-            "anthropic": "claude-3-5-sonnet-20241022",
-        }
-        model = model_map.get(provider, "gpt-4o")
-
-    config = LLMConfig(
-        provider=provider,
-        api_key=api_key,
-        model=model,
+    # Create fallback client with all available providers
+    fallback_client = FallbackLLMClient.from_api_keys(
+        groq_api_key=groq_api_key,
+        gemini_api_key=gemini_api_key,
+        hf_api_key=hf_api_key,
+        openai_api_key=openai_api_key,
+        groq_model=groq_model,
+        gemini_model=gemini_model,
+        hf_model=hf_model,
+        openai_model=openai_model,
     )
 
-    return LLMClient.from_config(config)
+    # Wrap in LLMClient for compatibility
+    return LLMClient(fallback_client)
 
 
 async def get_user_profile(user_id: str) -> UserProfile:
