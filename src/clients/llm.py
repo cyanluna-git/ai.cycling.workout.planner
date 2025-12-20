@@ -158,6 +158,52 @@ class GeminiClient(BaseLLMClient):
         return response.text if response.text else ""
 
 
+class GroqClient(BaseLLMClient):
+    """Groq API client (OpenAI-compatible, super fast!)."""
+
+    def __init__(self, api_key: str, model: str = "llama-3.3-70b-versatile"):
+        """Initialize Groq client.
+
+        Args:
+            api_key: Groq API key.
+            model: Model to use (default: llama-3.3-70b-versatile).
+        """
+        try:
+            from openai import OpenAI
+        except ImportError:
+            raise ImportError(
+                "openai package is required. Install with: pip install openai"
+            )
+
+        # Groq uses OpenAI-compatible API
+        self.client = OpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1")
+        self.model = model
+
+    def generate(self, system_prompt: str, user_prompt: str) -> str:
+        """Generate a response using Groq API.
+
+        Args:
+            system_prompt: System message setting the context.
+            user_prompt: User message with the actual request.
+
+        Returns:
+            Generated text response.
+        """
+        logger.info(f"Generating with Groq ({self.model})...")
+
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            temperature=0.7,
+            max_tokens=1000,
+        )
+
+        return response.choices[0].message.content or ""
+
+
 class LLMClient:
     """Unified LLM client factory.
 
@@ -202,9 +248,11 @@ class LLMClient:
             client = AnthropicClient(api_key=config.api_key, model=config.model)
         elif provider == "gemini":
             client = GeminiClient(api_key=config.api_key, model=config.model)
+        elif provider == "groq":
+            client = GroqClient(api_key=config.api_key, model=config.model)
         else:
             raise ValueError(
-                f"Unsupported LLM provider: {provider}. Use 'openai', 'anthropic', or 'gemini'."
+                f"Unsupported LLM provider: {provider}. Use 'openai', 'anthropic', 'gemini', or 'groq'."
             )
 
         logger.info(f"Initialized {provider} LLM client")
