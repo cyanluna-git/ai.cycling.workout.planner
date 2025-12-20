@@ -64,6 +64,19 @@ export async function fetchFitness(token: string): Promise<FitnessData> {
     return res.json();
 }
 
+export async function checkApiConfigured(token: string): Promise<boolean> {
+    try {
+        const res = await fetch(`${API_BASE}/api/settings`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return false;
+        const data = await res.json();
+        return !!(data.intervals_athlete_id && data.intervals_api_key);
+    } catch {
+        return false;
+    }
+}
+
 export async function generateWorkout(
     request: WorkoutGenerateRequest,
     token: string

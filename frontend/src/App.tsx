@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthPage } from "@/pages/AuthPage";
 import { SettingsPage } from "@/pages/SettingsPage";
+import { OnboardingPage } from "@/pages/OnboardingPage";
 import { FitnessCard } from "@/components/FitnessCard";
 import { WorkoutForm } from "@/components/WorkoutForm";
 import { WorkoutPreview } from "@/components/WorkoutPreview";
@@ -12,6 +13,7 @@ import {
   generateWorkout,
   createWorkout,
   fetchWeeklyCalendar,
+  checkApiConfigured,
   type FitnessData,
   type GeneratedWorkout,
   type WorkoutGenerateRequest,
@@ -21,6 +23,7 @@ import {
 function Dashboard() {
   const { user, session, signOut } = useAuth();
   const [showSettings, setShowSettings] = useState(false);
+  const [isApiConfigured, setIsApiConfigured] = useState<boolean | null>(null);
   const [fitness, setFitness] = useState<FitnessData | null>(null);
   const [workout, setWorkout] = useState<GeneratedWorkout | null>(null);
   const [weeklyCalendar, setWeeklyCalendar] = useState<WeeklyCalendarData | null>(null);
@@ -30,8 +33,17 @@ function Dashboard() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  // Check if API is configured
   useEffect(() => {
     if (session?.access_token) {
+      checkApiConfigured(session.access_token)
+        .then(setIsApiConfigured);
+    }
+  }, [session]);
+
+  // Fetch data only if API is configured
+  useEffect(() => {
+    if (session?.access_token && isApiConfigured) {
       fetchFitness(session.access_token)
         .then(setFitness)
         .catch((e) => setError(`데이터 로딩 실패: ${e.message}`));
@@ -42,7 +54,11 @@ function Dashboard() {
         .catch(console.error)
         .finally(() => setIsLoadingCalendar(false));
     }
-  }, [session]);
+  }, [session, isApiConfigured]);
+
+  const handleOnboardingComplete = () => {
+    setIsApiConfigured(true);
+  };
 
   const handleGenerate = async (request: WorkoutGenerateRequest) => {
     setIsLoading(true);
@@ -104,6 +120,28 @@ function Dashboard() {
       setIsRegistering(false);
     }
   };
+
+  // Show loading while checking API config
+  if (isApiConfigured === null) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-muted-foreground">설정 확인 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show onboarding if API not configured
+  if (!isApiConfigured) {
+    return (
+      <OnboardingPage
+        onComplete={handleOnboardingComplete}
+        accessToken={session?.access_token || ""}
+      />
+    );
+  }
 
   if (showSettings) {
     return <SettingsPage onBack={() => setShowSettings(false)} />;
