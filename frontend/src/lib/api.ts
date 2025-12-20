@@ -111,3 +111,29 @@ export async function createWorkout(
     return res.json();
 }
 
+// --- Weekly Calendar ---
+
+export interface WeeklyEvent {
+    id: number;
+    date: string;
+    name: string;
+    category: string;
+    workout_type: string | null;
+    duration_minutes: number | null;
+    tss: number | null;
+    description: string | null;
+}
+
+export interface WeeklyCalendarData {
+    week_start: string;
+    week_end: string;
+    events: WeeklyEvent[];
+}
+
+export async function fetchWeeklyCalendar(token: string): Promise<WeeklyCalendarData> {
+    const res = await fetch(`${API_BASE}/api/weekly-calendar`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to fetch weekly calendar');
+    return res.json();
+}

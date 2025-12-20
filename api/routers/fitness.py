@@ -10,6 +10,8 @@ from ..schemas import (
     AthleteProfile,
     ActivitiesResponse,
     Activity,
+    WeeklyCalendarResponse,
+    WeeklyEvent,
 )
 
 import sys
@@ -124,6 +126,60 @@ async def get_activities(days: int = 30, user: dict = Depends(get_current_user))
             )
 
         return ActivitiesResponse(activities=result, total=len(result))
+    except UserApiServiceError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except IntervalsAPIError as e:
+        raise HTTPException(status_code=502, detail=f"Intervals.icu API error: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/weekly-calendar", response_model=WeeklyCalendarResponse)
+async def get_weekly_calendar(user: dict = Depends(get_current_user)):
+    """Get this week's planned workouts from Intervals.icu."""
+    try:
+        client = await get_user_intervals_client(user["id"])
+
+        # Get this week's date range (Monday to Sunday)
+        today = date.today()
+        week_start = today - timedelta(days=today.weekday())  # Monday
+        week_end = week_start + timedelta(days=6)  # Sunday
+
+        # Fetch events from Intervals.icu
+        events_data = client.get_events(oldest=week_start, newest=week_end)
+
+        events = []
+        for e in events_data:
+            # Only include WORKOUT category
+            category = e.get("category", "")
+            if category != "WORKOUT":
+                continue
+
+            # Parse date
+            start_date = e.get("start_date_local", "")[:10]
+
+            # Get duration in minutes
+            moving_time = e.get("moving_time")
+            duration_minutes = moving_time // 60 if moving_time else None
+
+            events.append(
+                WeeklyEvent(
+                    id=e.get("id"),
+                    date=start_date,
+                    name=e.get("name", "Workout"),
+                    category=category,
+                    workout_type=e.get("type"),
+                    duration_minutes=duration_minutes,
+                    tss=e.get("icu_training_load"),
+                    description=e.get("description"),
+                )
+            )
+
+        return WeeklyCalendarResponse(
+            week_start=week_start.isoformat(),
+            week_end=week_end.isoformat(),
+            events=events,
+        )
     except UserApiServiceError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except IntervalsAPIError as e:

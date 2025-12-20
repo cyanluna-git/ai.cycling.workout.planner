@@ -128,3 +128,27 @@ class ActivitiesResponse(BaseModel):
 
     activities: List[Activity]
     total: int
+
+
+# --- Weekly Calendar ---
+
+
+class WeeklyEvent(BaseModel):
+    """A planned workout event from Intervals.icu."""
+
+    id: int
+    date: str = Field(..., description="Date in YYYY-MM-DD format")
+    name: str
+    category: str = Field(..., description="Event category (WORKOUT, NOTE, etc)")
+    workout_type: Optional[str] = None
+    duration_minutes: Optional[int] = None
+    tss: Optional[int] = None
+    description: Optional[str] = None
+
+
+class WeeklyCalendarResponse(BaseModel):
+    """Response for weekly calendar."""
+
+    week_start: str
+    week_end: str
+    events: List[WeeklyEvent]

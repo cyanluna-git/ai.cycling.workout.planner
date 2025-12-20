@@ -5,14 +5,17 @@ import { SettingsPage } from "@/pages/SettingsPage";
 import { FitnessCard } from "@/components/FitnessCard";
 import { WorkoutForm } from "@/components/WorkoutForm";
 import { WorkoutPreview } from "@/components/WorkoutPreview";
+import { WeeklyCalendarCard } from "@/components/WeeklyCalendarCard";
 import { Button } from "@/components/ui/button";
 import {
   fetchFitness,
   generateWorkout,
   createWorkout,
+  fetchWeeklyCalendar,
   type FitnessData,
   type GeneratedWorkout,
   type WorkoutGenerateRequest,
+  type WeeklyCalendarData,
 } from "@/lib/api";
 
 function Dashboard() {
@@ -20,6 +23,8 @@ function Dashboard() {
   const [showSettings, setShowSettings] = useState(false);
   const [fitness, setFitness] = useState<FitnessData | null>(null);
   const [workout, setWorkout] = useState<GeneratedWorkout | null>(null);
+  const [weeklyCalendar, setWeeklyCalendar] = useState<WeeklyCalendarData | null>(null);
+  const [isLoadingCalendar, setIsLoadingCalendar] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,6 +35,12 @@ function Dashboard() {
       fetchFitness(session.access_token)
         .then(setFitness)
         .catch((e) => setError(`데이터 로딩 실패: ${e.message}`));
+
+      setIsLoadingCalendar(true);
+      fetchWeeklyCalendar(session.access_token)
+        .then(setWeeklyCalendar)
+        .catch(console.error)
+        .finally(() => setIsLoadingCalendar(false));
     }
   }, [session]);
 
@@ -132,6 +143,8 @@ function Dashboard() {
 
           {/* Right Column */}
           <div className="space-y-4">
+            <WeeklyCalendarCard calendar={weeklyCalendar} isLoading={isLoadingCalendar} />
+
             {error && (
               <div className="bg-destructive/10 text-destructive p-4 rounded-lg">
                 ❌ {error}
