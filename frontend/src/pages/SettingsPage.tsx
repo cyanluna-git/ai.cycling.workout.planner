@@ -3,13 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select'
 import { useAuth } from '@/contexts/AuthContext'
 
 const API_BASE = import.meta.env.VITE_API_URL || ''
@@ -23,8 +16,6 @@ interface Settings {
 
 interface ApiKeysCheck {
     intervals_configured: boolean
-    llm_configured: boolean
-    llm_provider: string
 }
 
 export function SettingsPage({ onBack }: { onBack: () => void }) {
@@ -38,8 +29,6 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
     const [apiKeys, setApiKeys] = useState({
         intervals_api_key: '',
         athlete_id: '',
-        llm_provider: 'gemini',
-        llm_api_key: '',
     })
     const [apiKeysCheck, setApiKeysCheck] = useState<ApiKeysCheck | null>(null)
     const [saving, setSaving] = useState(false)
@@ -116,7 +105,7 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
             if (res.ok) {
                 setMessage('✅ API 키가 저장되었습니다')
                 checkApiKeys()
-                setApiKeys({ ...apiKeys, intervals_api_key: '', llm_api_key: '' })
+                setApiKeys({ ...apiKeys, intervals_api_key: '' })
             }
         } catch (e) {
             setMessage('❌ 저장 실패')
@@ -142,44 +131,15 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                     <div className="p-3 rounded bg-muted text-center">{message}</div>
                 )}
 
-                {/* Profile Settings */}
+                {/* Training Goal Settings */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>⚙️ 프로필 설정</CardTitle>
+                        <CardTitle>🎯 훈련 목표</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="grid grid-cols-3 gap-4">
-                            <div className="space-y-2">
-                                <Label>FTP (W)</Label>
-                                <Input
-                                    type="number"
-                                    value={settings.ftp}
-                                    onChange={(e) =>
-                                        setSettings({ ...settings, ftp: parseInt(e.target.value) })
-                                    }
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>최대 심박수</Label>
-                                <Input
-                                    type="number"
-                                    value={settings.max_hr}
-                                    onChange={(e) =>
-                                        setSettings({ ...settings, max_hr: parseInt(e.target.value) })
-                                    }
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>젖산역치 심박수</Label>
-                                <Input
-                                    type="number"
-                                    value={settings.lthr}
-                                    onChange={(e) =>
-                                        setSettings({ ...settings, lthr: parseInt(e.target.value) })
-                                    }
-                                />
-                            </div>
-                        </div>
+                        <p className="text-sm text-muted-foreground">
+                            FTP, 최대 심박수, 역치 심박수는 Intervals.icu에서 자동으로 가져옵니다.
+                        </p>
                         <div className="space-y-2">
                             <Label>훈련 목표</Label>
                             <Input
@@ -187,10 +147,11 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                                 onChange={(e) =>
                                     setSettings({ ...settings, training_goal: e.target.value })
                                 }
+                                placeholder="예: 지구력 강화, 스프린트 파워 향상"
                             />
                         </div>
                         <Button onClick={saveSettings} disabled={saving}>
-                            {saving ? '저장 중...' : '프로필 저장'}
+                            {saving ? '저장 중...' : '목표 저장'}
                         </Button>
                     </CardContent>
                 </Card>
@@ -198,20 +159,40 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                 {/* API Keys */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>🔑 API 키 설정</CardTitle>
+                        <CardTitle>🔑 Intervals.icu 연동</CardTitle>
                         {apiKeysCheck && (
                             <div className="text-sm text-muted-foreground">
-                                Intervals.icu: {apiKeysCheck.intervals_configured ? '✅' : '❌'} |
-                                LLM: {apiKeysCheck.llm_configured ? '✅' : '❌'}
+                                연동 상태: {apiKeysCheck.intervals_configured ? '✅ 완료' : '❌ 미설정'}
                             </div>
                         )}
                     </CardHeader>
                     <CardContent className="space-y-4">
+                        {/* Guide Section */}
+                        <div className="p-4 rounded-lg bg-muted/50 border border-border">
+                            <h4 className="font-medium mb-2">📌 API 키 발급 방법</h4>
+                            <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                                <li>
+                                    <a
+                                        href="https://intervals.icu/settings"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-primary hover:underline"
+                                    >
+                                        Intervals.icu Settings
+                                    </a>
+                                    {' '}페이지로 이동
+                                </li>
+                                <li>"Developer" 탭 클릭</li>
+                                <li>"API Key" 섹션에서 키 복사</li>
+                                <li>페이지 상단의 Athlete ID도 함께 확인 (예: i123456)</li>
+                            </ol>
+                        </div>
+
                         <div className="space-y-2">
                             <Label>Intervals.icu API Key</Label>
                             <Input
                                 type="password"
-                                placeholder={apiKeysCheck?.intervals_configured ? '••••••••' : '입력 필요'}
+                                placeholder={apiKeysCheck?.intervals_configured ? '••••••••' : 'API 키 입력'}
                                 value={apiKeys.intervals_api_key}
                                 onChange={(e) =>
                                     setApiKeys({ ...apiKeys, intervals_api_key: e.target.value })
@@ -225,33 +206,6 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                                 value={apiKeys.athlete_id}
                                 onChange={(e) =>
                                     setApiKeys({ ...apiKeys, athlete_id: e.target.value })
-                                }
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>LLM Provider</Label>
-                            <Select
-                                value={apiKeys.llm_provider}
-                                onValueChange={(v) => setApiKeys({ ...apiKeys, llm_provider: v })}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="gemini">Gemini</SelectItem>
-                                    <SelectItem value="openai">OpenAI (GPT)</SelectItem>
-                                    <SelectItem value="anthropic">Anthropic (Claude)</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label>LLM API Key</Label>
-                            <Input
-                                type="password"
-                                placeholder={apiKeysCheck?.llm_configured ? '••••••••' : '입력 필요'}
-                                value={apiKeys.llm_api_key}
-                                onChange={(e) =>
-                                    setApiKeys({ ...apiKeys, llm_api_key: e.target.value })
                                 }
                             />
                         </div>

@@ -16,7 +16,7 @@ import {
 } from "@/lib/api";
 
 function Dashboard() {
-  const { user, signOut } = useAuth();
+  const { user, session, signOut } = useAuth();
   const [showSettings, setShowSettings] = useState(false);
   const [fitness, setFitness] = useState<FitnessData | null>(null);
   const [workout, setWorkout] = useState<GeneratedWorkout | null>(null);
@@ -26,10 +26,12 @@ function Dashboard() {
   const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchFitness()
-      .then(setFitness)
-      .catch((e) => setError(`데이터 로딩 실패: ${e.message}`));
-  }, []);
+    if (session?.access_token) {
+      fetchFitness(session.access_token)
+        .then(setFitness)
+        .catch((e) => setError(`데이터 로딩 실패: ${e.message}`));
+    }
+  }, [session]);
 
   const handleGenerate = async (request: WorkoutGenerateRequest) => {
     setIsLoading(true);
@@ -38,7 +40,11 @@ function Dashboard() {
     setWorkout(null);
 
     try {
-      const result = await generateWorkout(request);
+      if (!session?.access_token) {
+        setError("인증 토큰이 없습니다. 다시 로그인해주세요.");
+        return;
+      }
+      const result = await generateWorkout(request, session.access_token);
       if (result.success && result.workout) {
         setWorkout(result.workout);
       } else {
@@ -58,15 +64,22 @@ function Dashboard() {
     setError(null);
 
     try {
+      if (!session?.access_token) {
+        setError("인증 토큰이 없습니다.");
+        return;
+      }
       const today = new Date().toISOString().split("T")[0];
-      const result = await createWorkout({
-        target_date: today,
-        name: workout.name,
-        workout_text: workout.workout_text,
-        duration_minutes: workout.estimated_duration_minutes,
-        estimated_tss: workout.estimated_tss,
-        force: true,
-      });
+      const result = await createWorkout(
+        {
+          target_date: today,
+          name: workout.name,
+          workout_text: workout.workout_text,
+          duration_minutes: workout.estimated_duration_minutes,
+          estimated_tss: workout.estimated_tss,
+          force: true,
+        },
+        session.access_token
+      );
 
       if (result.success) {
         setSuccess(`✅ 등록 완료! (Event ID: ${result.event_id})`);
@@ -112,7 +125,7 @@ function Dashboard() {
           {/* Left Column */}
           <div className="space-y-6">
             {fitness && (
-              <FitnessCard training={fitness.training} wellness={fitness.wellness} />
+              <FitnessCard training={fitness.training} wellness={fitness.wellness} profile={fitness.profile} />
             )}
             <WorkoutForm onGenerate={handleGenerate} isLoading={isLoading} />
           </div>

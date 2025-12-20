@@ -20,9 +20,17 @@ export interface WellnessMetrics {
     sleep_hours: number | null;
 }
 
+export interface AthleteProfile {
+    ftp: number | null;
+    max_hr: number | null;
+    lthr: number | null;
+    weight: number | null;
+}
+
 export interface FitnessData {
     training: TrainingMetrics;
     wellness: WellnessMetrics;
+    profile: AthleteProfile;
 }
 
 export interface GeneratedWorkout {
@@ -47,43 +55,58 @@ export interface WorkoutGenerateRequest {
 
 // --- API Functions ---
 
-export async function fetchFitness(): Promise<FitnessData> {
-    const res = await fetch(`${API_BASE}/api/fitness`);
+export async function fetchFitness(token: string): Promise<FitnessData> {
+    const res = await fetch(`${API_BASE}/api/fitness`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
     if (!res.ok) throw new Error('Failed to fetch fitness data');
     return res.json();
 }
 
-export async function generateWorkout(request: WorkoutGenerateRequest): Promise<{
+export async function generateWorkout(
+    request: WorkoutGenerateRequest,
+    token: string
+): Promise<{
     success: boolean;
     workout?: GeneratedWorkout;
     error?: string;
 }> {
     const res = await fetch(`${API_BASE}/api/workout/generate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(request),
     });
     if (!res.ok) throw new Error('Failed to generate workout');
     return res.json();
 }
 
-export async function createWorkout(data: {
-    target_date: string;
-    name: string;
-    workout_text: string;
-    duration_minutes: number;
-    estimated_tss?: number | null;
-    force?: boolean;
-}): Promise<{
+export async function createWorkout(
+    data: {
+        target_date: string;
+        name: string;
+        workout_text: string;
+        duration_minutes: number;
+        estimated_tss?: number | null;
+        force?: boolean;
+    },
+    token: string
+): Promise<{
     success: boolean;
     event_id?: number;
     error?: string;
 }> {
     const res = await fetch(`${API_BASE}/api/workout/create`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(data),
     });
     if (!res.ok) throw new Error('Failed to create workout');
     return res.json();
 }
+

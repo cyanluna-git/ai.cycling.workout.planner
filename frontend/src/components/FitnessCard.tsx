@@ -1,12 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { TrainingMetrics, WellnessMetrics } from "@/lib/api";
+import type { TrainingMetrics, WellnessMetrics, AthleteProfile } from "@/lib/api";
 
 interface FitnessCardProps {
     training: TrainingMetrics;
     wellness: WellnessMetrics;
+    profile: AthleteProfile;
 }
 
-export function FitnessCard({ training, wellness }: FitnessCardProps) {
+export function FitnessCard({ training, wellness, profile }: FitnessCardProps) {
     // TSB color based on value
     const getTsbColor = (tsb: number) => {
         if (tsb > 10) return "text-green-500";
@@ -31,6 +32,34 @@ export function FitnessCard({ training, wellness }: FitnessCardProps) {
                 </CardTitle>
             </CardHeader>
             <CardContent>
+                {/* Profile Section */}
+                <div className="flex flex-wrap gap-3 mb-4 p-3 bg-muted/50 rounded-lg">
+                    {profile.ftp && (
+                        <div className="flex items-center gap-1">
+                            <span className="text-xs text-muted-foreground">FTP</span>
+                            <span className="font-bold">{profile.ftp}W</span>
+                        </div>
+                    )}
+                    {profile.max_hr && (
+                        <div className="flex items-center gap-1">
+                            <span className="text-xs text-muted-foreground">Max HR</span>
+                            <span className="font-bold">{profile.max_hr}</span>
+                        </div>
+                    )}
+                    {profile.lthr && (
+                        <div className="flex items-center gap-1">
+                            <span className="text-xs text-muted-foreground">LTHR</span>
+                            <span className="font-bold">{profile.lthr}</span>
+                        </div>
+                    )}
+                    {profile.weight && (
+                        <div className="flex items-center gap-1">
+                            <span className="text-xs text-muted-foreground">체중</span>
+                            <span className="font-bold">{profile.weight}kg</span>
+                        </div>
+                    )}
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                     {/* Training Metrics */}
                     <div className="space-y-3">
@@ -74,3 +103,4 @@ export function FitnessCard({ training, wellness }: FitnessCardProps) {
         </Card>
     );
 }
+
