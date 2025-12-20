@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthPage } from "@/pages/AuthPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { OnboardingPage } from "@/pages/OnboardingPage";
+import { LandingPage } from "@/pages/LandingPage";
 import { FitnessCard } from "@/components/FitnessCard";
 import { WorkoutForm } from "@/components/WorkoutForm";
 import { WorkoutPreview } from "@/components/WorkoutPreview";
@@ -221,6 +222,7 @@ function Dashboard() {
 
 function AppContent() {
   const { user, loading } = useAuth();
+  const [showLanding, setShowLanding] = useState(true);
 
   if (loading) {
     return (
@@ -231,6 +233,9 @@ function AppContent() {
   }
 
   if (!user) {
+    if (showLanding) {
+      return <LandingPage onGetStarted={() => setShowLanding(false)} />;
+    }
     return <AuthPage />;
   }
 
