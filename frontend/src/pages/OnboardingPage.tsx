@@ -28,14 +28,14 @@ export function OnboardingPage({ onComplete, accessToken }: OnboardingPageProps)
         setError(null);
 
         try {
-            const res = await fetch(`${API_BASE}/api/settings`, {
-                method: "POST",
+            const res = await fetch(`${API_BASE}/api/settings/api-keys`, {
+                method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${accessToken}`,
                 },
                 body: JSON.stringify({
-                    intervals_athlete_id: athleteId,
+                    athlete_id: athleteId,
                     intervals_api_key: apiKey,
                 }),
             });
