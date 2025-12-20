@@ -83,17 +83,19 @@ async def get_user_settings(user_id: str) -> UserSettingsData:
     Returns:
         UserSettingsData with the user's training profile.
     """
-    supabase = get_supabase_client()
+    supabase = get_supabase_admin_client()
 
     result = (
         supabase.table("user_settings")
         .select("ftp, max_hr, lthr, training_goal")
         .eq("user_id", user_id)
-        .single()
+        .maybe_single()
         .execute()
     )
 
-    data = result.data or {}
+    data = result.data if result else {}
+    if data is None:
+        data = {}
 
     return UserSettingsData(
         ftp=data.get("ftp", 200),

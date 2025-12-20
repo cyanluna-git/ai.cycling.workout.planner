@@ -120,7 +120,8 @@ async def create_workout(
             name=request.name,
             description=request.workout_text,
             target_date=target_date,
-            duration_minutes=request.duration_minutes,
+            moving_time=request.duration_minutes * 60,  # Convert minutes to seconds
+            training_load=request.estimated_tss,
         )
 
         return WorkoutCreateResponse(
