@@ -149,6 +149,7 @@ function Dashboard() {
                 workout={workout}
                 onRegister={handleRegister}
                 isRegistering={isRegistering}
+                ftp={fitness?.profile?.ftp ?? 250}
               />
             )}
 
