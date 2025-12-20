@@ -136,7 +136,7 @@ def get_server_llm_client() -> LLMClient:
     """Create an LLMClient configured with server's environment variables.
 
     Uses multiple LLM providers with automatic fallback on quota errors.
-    Priority: Groq > Gemini > HuggingFace > OpenAI
+    Models are loaded from database (llm_models table).
 
     Returns:
         Configured LLMClient instance (with fallback support).
@@ -145,6 +145,7 @@ def get_server_llm_client() -> LLMClient:
         UserApiServiceError: If no LLM API keys are configured.
     """
     from src.clients.llm import FallbackLLMClient
+    from api.services.model_service import get_active_models
 
     # Collect all available API keys
     groq_api_key = os.getenv("GROQ_API_KEY")
@@ -152,17 +153,20 @@ def get_server_llm_client() -> LLMClient:
     hf_api_key = os.getenv("HF_API_KEY")
     openai_api_key = os.getenv("OPENAI_API_KEY")
 
-    # Collect model settings (optional, will use defaults if not set)
-    groq_model = os.getenv("GROQ_MODEL")
-    gemini_model = os.getenv("GEMINI_MODEL")
-    hf_model = os.getenv("HF_MODEL")
-    openai_model = os.getenv("OPENAI_MODEL")
-
     # Check if at least one key is available
     if not any([groq_api_key, gemini_api_key, hf_api_key, openai_api_key]):
         raise UserApiServiceError(
             "서버 LLM API 키가 설정되지 않았습니다. 관리자에게 문의하세요."
         )
+
+    # Get models from database (sorted by priority)
+    db_models = get_active_models()
+
+    # Group models by provider, take highest priority model for each
+    provider_models: dict[str, str] = {}
+    for model in db_models:
+        if model.provider not in provider_models:
+            provider_models[model.provider] = model.model_id
 
     # Create fallback client with all available providers
     fallback_client = FallbackLLMClient.from_api_keys(
@@ -170,10 +174,10 @@ def get_server_llm_client() -> LLMClient:
         gemini_api_key=gemini_api_key,
         hf_api_key=hf_api_key,
         openai_api_key=openai_api_key,
-        groq_model=groq_model,
-        gemini_model=gemini_model,
-        hf_model=hf_model,
-        openai_model=openai_model,
+        groq_model=provider_models.get("groq"),
+        gemini_model=provider_models.get("gemini"),
+        hf_model=provider_models.get("huggingface"),
+        openai_model=provider_models.get("openai"),
     )
 
     # Wrap in LLMClient for compatibility

@@ -152,3 +152,168 @@ async def cleanup_old_logs(
         "message": f"Deleted {deleted_count} logs older than {days_to_keep} days",
         "deleted_count": deleted_count,
     }
+
+
+# ============================================
+# LLM Model Management Endpoints
+# ============================================
+
+
+class LLMModelRequest(BaseModel):
+    """Request model for creating/updating LLM models."""
+
+    provider: str  # groq, gemini, huggingface, openai
+    model_id: str  # e.g., llama-3.3-70b-versatile
+    display_name: Optional[str] = None
+    is_active: bool = True
+    priority: int = 0
+
+
+class LLMModelResponse(BaseModel):
+    """Response model for LLM model."""
+
+    id: str
+    provider: str
+    model_id: str
+    display_name: Optional[str]
+    is_active: bool
+    priority: int
+    created_at: str
+
+
+@router.get("/admin/llm-models")
+async def get_llm_models(
+    x_admin_secret: Optional[str] = Header(None),
+    provider: Optional[str] = Query(None),
+):
+    """Get all LLM models, optionally filtered by provider."""
+    verify_admin_secret(x_admin_secret)
+
+    supabase = get_supabase_admin_client()
+
+    query = supabase.table("llm_models").select("*").order("priority", desc=True)
+
+    if provider:
+        query = query.eq("provider", provider)
+
+    result = query.execute()
+
+    return {
+        "models": result.data or [],
+        "total": len(result.data or []),
+    }
+
+
+@router.post("/admin/llm-models")
+async def create_llm_model(
+    model: LLMModelRequest,
+    x_admin_secret: Optional[str] = Header(None),
+):
+    """Create a new LLM model configuration."""
+    verify_admin_secret(x_admin_secret)
+
+    supabase = get_supabase_admin_client()
+
+    model_data = {
+        "provider": model.provider,
+        "model_id": model.model_id,
+        "display_name": model.display_name or model.model_id,
+        "is_active": model.is_active,
+        "priority": model.priority,
+    }
+
+    result = supabase.table("llm_models").insert(model_data).execute()
+
+    return {
+        "message": "Model created successfully",
+        "model": result.data[0] if result.data else None,
+    }
+
+
+@router.put("/admin/llm-models/{model_id}")
+async def update_llm_model(
+    model_id: str,
+    model: LLMModelRequest,
+    x_admin_secret: Optional[str] = Header(None),
+):
+    """Update an existing LLM model configuration."""
+    verify_admin_secret(x_admin_secret)
+
+    supabase = get_supabase_admin_client()
+
+    model_data = {
+        "provider": model.provider,
+        "model_id": model.model_id,
+        "display_name": model.display_name or model.model_id,
+        "is_active": model.is_active,
+        "priority": model.priority,
+    }
+
+    result = (
+        supabase.table("llm_models").update(model_data).eq("id", model_id).execute()
+    )
+
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Model not found")
+
+    return {
+        "message": "Model updated successfully",
+        "model": result.data[0],
+    }
+
+
+@router.delete("/admin/llm-models/{model_id}")
+async def delete_llm_model(
+    model_id: str,
+    x_admin_secret: Optional[str] = Header(None),
+):
+    """Delete an LLM model configuration."""
+    verify_admin_secret(x_admin_secret)
+
+    supabase = get_supabase_admin_client()
+
+    result = supabase.table("llm_models").delete().eq("id", model_id).execute()
+
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Model not found")
+
+    return {
+        "message": "Model deleted successfully",
+    }
+
+
+@router.patch("/admin/llm-models/{model_id}/toggle")
+async def toggle_llm_model(
+    model_id: str,
+    x_admin_secret: Optional[str] = Header(None),
+):
+    """Toggle a model's active status."""
+    verify_admin_secret(x_admin_secret)
+
+    supabase = get_supabase_admin_client()
+
+    # Get current status
+    current = (
+        supabase.table("llm_models")
+        .select("is_active")
+        .eq("id", model_id)
+        .single()
+        .execute()
+    )
+
+    if not current.data:
+        raise HTTPException(status_code=404, detail="Model not found")
+
+    new_status = not current.data.get("is_active", True)
+
+    result = (
+        supabase.table("llm_models")
+        .update({"is_active": new_status})
+        .eq("id", model_id)
+        .execute()
+    )
+
+    return {
+        "message": f"Model {'activated' if new_status else 'deactivated'}",
+        "is_active": new_status,
+    }
