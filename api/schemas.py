@@ -26,11 +26,21 @@ class WellnessMetrics(BaseModel):
     sleep_hours: Optional[float] = Field(None, description="Hours of sleep")
 
 
+class AthleteProfile(BaseModel):
+    """Athlete profile from Intervals.icu."""
+
+    ftp: Optional[int] = Field(None, description="Functional Threshold Power (W)")
+    max_hr: Optional[int] = Field(None, description="Maximum Heart Rate (bpm)")
+    lthr: Optional[int] = Field(None, description="Lactate Threshold Heart Rate (bpm)")
+    weight: Optional[float] = Field(None, description="Weight (kg)")
+
+
 class FitnessResponse(BaseModel):
     """Response for /api/fitness endpoint."""
 
     training: TrainingMetrics
     wellness: WellnessMetrics
+    profile: AthleteProfile
 
 
 # --- Workout Generation ---

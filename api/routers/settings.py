@@ -11,7 +11,7 @@ sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-from src.clients.supabase_client import get_supabase_client
+from src.clients.supabase_client import get_supabase_client, get_supabase_admin_client
 from .auth import get_current_user
 
 router = APIRouter()
@@ -30,8 +30,6 @@ class UserSettings(BaseModel):
 class UserApiKeys(BaseModel):
     intervals_api_key: Optional[str] = None
     athlete_id: Optional[str] = None
-    llm_provider: str = "gemini"
-    llm_api_key: Optional[str] = None
 
 
 class UserSettingsResponse(BaseModel):
@@ -45,28 +43,28 @@ class UserSettingsResponse(BaseModel):
 @router.get("/settings", response_model=UserSettingsResponse)
 async def get_settings(user: dict = Depends(get_current_user)):
     """Get current user's settings."""
-    supabase = get_supabase_client()
+    supabase = get_supabase_admin_client()
 
     # Get settings
     settings_result = (
         supabase.table("user_settings")
         .select("*")
         .eq("user_id", user["id"])
-        .single()
+        .maybe_single()
         .execute()
     )
 
     # Get api keys (just check if configured)
     api_keys_result = (
         supabase.table("user_api_keys")
-        .select("intervals_api_key, llm_api_key")
+        .select("intervals_api_key, athlete_id")
         .eq("user_id", user["id"])
-        .single()
+        .maybe_single()
         .execute()
     )
 
-    settings_data = settings_result.data or {}
-    api_keys_data = api_keys_result.data or {}
+    settings_data = settings_result.data if settings_result else {}
+    api_keys_data = api_keys_result.data if api_keys_result else {}
 
     return UserSettingsResponse(
         settings=UserSettings(
@@ -76,7 +74,7 @@ async def get_settings(user: dict = Depends(get_current_user)):
             training_goal=settings_data.get("training_goal", "지구력 강화"),
         ),
         api_keys_configured=bool(
-            api_keys_data.get("intervals_api_key") and api_keys_data.get("llm_api_key")
+            api_keys_data.get("intervals_api_key") and api_keys_data.get("athlete_id")
         ),
     )
 
@@ -86,7 +84,7 @@ async def update_settings(
     settings: UserSettings, user: dict = Depends(get_current_user)
 ):
     """Update user settings."""
-    supabase = get_supabase_client()
+    supabase = get_supabase_admin_client()
 
     try:
         supabase.table("user_settings").upsert(
@@ -96,7 +94,8 @@ async def update_settings(
                 "max_hr": settings.max_hr,
                 "lthr": settings.lthr,
                 "training_goal": settings.training_goal,
-            }
+            },
+            on_conflict="user_id",
         ).execute()
 
         return {"message": "Settings updated successfully"}
@@ -109,7 +108,7 @@ async def update_api_keys(
     api_keys: UserApiKeys, user: dict = Depends(get_current_user)
 ):
     """Update user API keys."""
-    supabase = get_supabase_client()
+    supabase = get_supabase_admin_client()
 
     try:
         # In production, encrypt these keys before storing
@@ -118,35 +117,35 @@ async def update_api_keys(
                 "user_id": user["id"],
                 "intervals_api_key": api_keys.intervals_api_key,
                 "athlete_id": api_keys.athlete_id,
-                "llm_provider": api_keys.llm_provider,
-                "llm_api_key": api_keys.llm_api_key,
-            }
+            },
+            on_conflict="user_id",
         ).execute()
 
         return {"message": "API keys updated successfully"}
     except Exception as e:
+        print(f"[ERROR] update_api_keys failed: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/settings/api-keys/check")
 async def check_api_keys(user: dict = Depends(get_current_user)):
-    """Check if API keys are configured."""
-    supabase = get_supabase_client()
+    """Check if Intervals.icu API keys are configured."""
+    supabase = get_supabase_admin_client()
 
     result = (
         supabase.table("user_api_keys")
-        .select("intervals_api_key, athlete_id, llm_provider, llm_api_key")
+        .select("intervals_api_key, athlete_id")
         .eq("user_id", user["id"])
-        .single()
+        .maybe_single()
         .execute()
     )
 
-    data = result.data or {}
+    print(f"[DEBUG] check_api_keys result: {result}")
+    data = result.data if result else {}
+    print(f"[DEBUG] check_api_keys data: {data}")
 
     return {
         "intervals_configured": bool(
             data.get("intervals_api_key") and data.get("athlete_id")
         ),
-        "llm_configured": bool(data.get("llm_api_key")),
-        "llm_provider": data.get("llm_provider", "gemini"),
     }

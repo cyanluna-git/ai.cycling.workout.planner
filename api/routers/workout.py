@@ -1,6 +1,6 @@
 """Workout router - generate and create workouts."""
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from datetime import date
 
 from ..schemas import (
@@ -15,29 +15,31 @@ import sys
 
 sys.path.insert(0, str(__file__).replace("/api/routers/workout.py", ""))
 
-from src.config import load_config
-from src.clients.intervals import IntervalsClient, IntervalsAPIError
-from src.clients.llm import LLMClient
-from src.services.data_processor import DataProcessor
+from src.clients.intervals import IntervalsAPIError
 from src.services.workout_generator import WorkoutGenerator
+from .auth import get_current_user
+from ..services.user_api_service import (
+    get_user_intervals_client,
+    get_server_llm_client,
+    get_user_profile,
+    get_data_processor,
+    UserApiServiceError,
+)
 
 router = APIRouter()
 
 
-def get_components():
-    """Get configured components."""
-    config = load_config()
-    intervals = IntervalsClient(config.intervals)
-    llm = LLMClient.from_config(config.llm)
-    processor = DataProcessor()
-    return config, intervals, llm, processor
-
-
 @router.post("/workout/generate", response_model=WorkoutGenerateResponse)
-async def generate_workout(request: WorkoutGenerateRequest):
-    """Generate a workout using AI."""
+async def generate_workout(
+    request: WorkoutGenerateRequest, user: dict = Depends(get_current_user)
+):
+    """Generate a workout using AI with user-specific API keys."""
     try:
-        config, intervals, llm, processor = get_components()
+        # Get user-specific clients
+        intervals = await get_user_intervals_client(user["id"])
+        llm = get_server_llm_client()
+        user_profile = await get_user_profile(user["id"])
+        processor = get_data_processor()
 
         # Parse target date
         if request.target_date:
@@ -54,7 +56,7 @@ async def generate_workout(request: WorkoutGenerateRequest):
 
         # Generate workout
         generator = WorkoutGenerator(
-            llm, config.user_profile, max_duration_minutes=request.duration
+            llm, user_profile, max_duration_minutes=request.duration
         )
 
         workout = generator.generate(
@@ -83,15 +85,20 @@ async def generate_workout(request: WorkoutGenerateRequest):
                 cooldown=cooldown,
             ),
         )
+    except UserApiServiceError as e:
+        return WorkoutGenerateResponse(success=False, error=str(e))
     except Exception as e:
         return WorkoutGenerateResponse(success=False, error=str(e))
 
 
 @router.post("/workout/create", response_model=WorkoutCreateResponse)
-async def create_workout(request: WorkoutCreateRequest):
-    """Create workout on Intervals.icu."""
+async def create_workout(
+    request: WorkoutCreateRequest, user: dict = Depends(get_current_user)
+):
+    """Create workout on Intervals.icu with user-specific API keys."""
     try:
-        config, intervals, _, _ = get_components()
+        # Get user-specific Intervals client
+        intervals = await get_user_intervals_client(user["id"])
 
         target_date = date.fromisoformat(request.target_date)
 
@@ -120,6 +127,8 @@ async def create_workout(request: WorkoutCreateRequest):
             success=True,
             event_id=event.get("id"),
         )
+    except UserApiServiceError as e:
+        return WorkoutCreateResponse(success=False, error=str(e))
     except IntervalsAPIError as e:
         return WorkoutCreateResponse(success=False, error=f"Intervals.icu error: {e}")
     except Exception as e:
