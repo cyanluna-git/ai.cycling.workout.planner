@@ -7,6 +7,7 @@ configured clients for LLM and Intervals.icu integration.
 import os
 from typing import Optional
 from dataclasses import dataclass
+from datetime import date
 
 from src.clients.supabase_client import get_supabase_admin_client
 from src.clients.intervals import IntervalsClient
@@ -37,6 +38,59 @@ class UserApiServiceError(Exception):
     """Exception for user API service errors."""
 
     pass
+
+
+class RateLimitExceededError(UserApiServiceError):
+    """Exception raised when user exceeds daily rate limit."""
+    pass
+
+
+async def check_rate_limit(user_id: str, limit: int = 5) -> bool:
+    """Check if user has exceeded daily workout generation limit.
+
+    Args:
+        user_id: The user's unique ID.
+        limit: Max workouts per day (default 5).
+
+    Raises:
+        RateLimitExceededError: If limit exceeded.
+    """
+    supabase = get_supabase_admin_client()
+    today = date.today().isoformat()
+
+    result = (
+        supabase.table("workout_usage")
+        .select("generation_count")
+        .eq("user_id", user_id)
+        .eq("usage_date", today)
+        .maybe_single()
+        .execute()
+    )
+
+    data = result.data
+
+    if data and data.get("generation_count", 0) >= limit:
+        raise RateLimitExceededError(
+            f"일일 워크아웃 생성 한도({limit}회)를 초과했습니다. 내일 다시 시도해주세요."
+        )
+
+    return True
+
+
+async def increment_usage(user_id: str) -> None:
+    """Increment user's daily workout generation count.
+
+    Args:
+        user_id: The user's unique ID.
+    """
+    supabase = get_supabase_admin_client()
+    today = date.today().isoformat()
+
+    # Use RPC for atomic upsert/increment
+    supabase.rpc(
+        "increment_workout_usage",
+        {"p_user_id": user_id, "p_date": today}
+    ).execute()
 
 
 async def get_user_api_keys(user_id: str) -> UserApiKeysData:

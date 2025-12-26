@@ -29,9 +29,21 @@ CREATE TABLE IF NOT EXISTS user_api_keys (
   UNIQUE(user_id)
 );
 
+-- User Daily Workout Usage (Rate Limiting)
+CREATE TABLE IF NOT EXISTS workout_usage (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  usage_date DATE DEFAULT CURRENT_DATE,
+  generation_count INTEGER DEFAULT 1,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, usage_date)
+);
+
 -- Enable Row Level Security
 ALTER TABLE user_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_api_keys ENABLE ROW LEVEL SECURITY;
+ALTER TABLE workout_usage ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for user_settings
 CREATE POLICY "Users can view own settings" ON user_settings
@@ -53,6 +65,10 @@ CREATE POLICY "Users can insert own api keys" ON user_api_keys
 CREATE POLICY "Users can update own api keys" ON user_api_keys
   FOR UPDATE USING (auth.uid() = user_id);
 
+-- RLS Policies for workout_usage
+CREATE POLICY "Users can view own usage" ON workout_usage
+  FOR SELECT USING (auth.uid() = user_id);
+
 -- Function to automatically create user settings on signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
@@ -72,3 +88,16 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Atomic increment function for workout usage
+CREATE OR REPLACE FUNCTION increment_workout_usage(p_user_id UUID, p_date DATE)
+RETURNS VOID AS $$
+BEGIN
+  INSERT INTO workout_usage (user_id, usage_date, generation_count)
+  VALUES (p_user_id, p_date, 1)
+  ON CONFLICT (user_id, usage_date)
+  DO UPDATE SET
+    generation_count = workout_usage.generation_count + 1,
+    updated_at = NOW();
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
