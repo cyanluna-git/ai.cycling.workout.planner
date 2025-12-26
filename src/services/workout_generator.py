@@ -31,52 +31,52 @@ class GeneratedWorkout:
 
 # Intervals.icu workout text syntax reference - UPDATED for proper parsing
 WORKOUT_SYNTAX_GUIDE = """
-워크아웃 스텝 형식:
-- 시간: 숫자 + 단위 (5m = 5분, 30s = 30초, 1h = 1시간)
-- 파워: FTP 퍼센트 (50%, 88%, 100%, 115%)
+Workout Step Format:
+- Time: number + unit (5m = 5 minutes, 30s = 30 seconds, 1h = 1 hour)
+- Power: % of FTP (50%, 88%, 100%, 115%)
 
-스텝 예시:
-- "10m 50%" = 10분간 FTP 50%
-- "5m 100%" = 5분간 FTP 100%
-- "30s 120%" = 30초간 FTP 120%
+Step Examples:
+- "10m 50%" = 50% FTP for 10 minutes
+- "5m 100%" = 100% FTP for 5 minutes
+- "30s 120%" = 120% FTP for 30 seconds
 
-파워 존 가이드:
-- 50-65%: Z1-Z2 (회복/지구력)
-- 75-85%: Z3 (템포)
+Power Zone Guide:
+- 50-65%: Z1-Z2 (Recovery/Endurance)
+- 75-85%: Z3 (Tempo)
 - 88-94%: Z4 (Sweet Spot/Threshold)
 - 100-110%: Z5 (VO2max)
-- 115%+: Z6 (무산소)
+- 115%+: Z6 (Anaerobic)
 """
 
 
-SYSTEM_PROMPT = """당신은 세계적인 수준의 사이클링 코치입니다. 선수의 상태를 분석하고 적절한 워크아웃을 처방합니다.
+SYSTEM_PROMPT = """You are a world-class cycling coach. Analyze the athlete's condition and prescribe an appropriate workout.
 
-워크아웃 강도 가이드라인:
-- TSB < -20 (매우 피로): 회복만 (50-65%, 30-45분)
-- TSB -20 ~ -10 (피로): 지구력 (65-75%, 60분 이내)
-- TSB -10 ~ 0 (중립): 템포/Sweet Spot 가능
-- TSB > 0 (회복됨): Threshold/VO2max 가능
+Workout Intensity Guidelines:
+- TSB < -20 (Very Fatigued): Recovery only (50-65%, 30-45 mins)
+- TSB -20 ~ -10 (Fatigued): Endurance (65-75%, within 60 mins)
+- TSB -10 ~ 0 (Neutral): Tempo/Sweet Spot possible
+- TSB > 0 (Fresh): Threshold/VO2max possible
 
 {syntax_guide}
 
-**출력 규칙 (엄격히 준수):**
-반드시 아래 JSON 형식으로만 응답하세요. 추가 설명이나 마크다운 없이 순수 JSON만 출력합니다.
+**Output Rules (Strictly Adhere):**
+You must respond strictly in the JSON format below. Output pure JSON only, without additional explanations or markdown.
 
 ```json
 {{
-  "name": "워크아웃 이름 (한국어)",
-  "type": "Endurance|Threshold|VO2max|Recovery 중 하나",
-  "tss": 예상TSS숫자,
-  "warmup": ["스텝1", "스텝2"],
-  "main": ["스텝1", "스텝2", "..."],
-  "cooldown": ["스텝1"]
+  "name": "Workout Name (in English)",
+  "type": "One of: Endurance|Threshold|VO2max|Recovery",
+  "tss": estimated_tss_number,
+  "warmup": ["Step1", "Step2"],
+  "main": ["Step1", "Step2", "..."],
+  "cooldown": ["Step1"]
 }}
 ```
 
-예시:
+Example:
 ```json
 {{
-  "name": "스윗스팟 인터벌",
+  "name": "Sweet Spot Intervals",
   "type": "Threshold",
   "tss": 55,
   "warmup": ["10m 50%"],
@@ -87,51 +87,51 @@ SYSTEM_PROMPT = """당신은 세계적인 수준의 사이클링 코치입니다
 """
 
 
-USER_PROMPT_TEMPLATE = """선수 프로필:
+USER_PROMPT_TEMPLATE = """Athlete Profile:
 - FTP: {ftp}W
-- 최대 심박수: {max_hr} bpm
-- 젖산역치 심박수: {lthr} bpm
-- 훈련 목표: {training_goal}
+- Max HR: {max_hr} bpm
+- LTHR: {lthr} bpm
+- Training Goal: {training_goal}
 
-현재 훈련 상태:
-- CTL (체력): {ctl:.1f}
-- ATL (피로): {atl:.1f}
-- TSB (컨디션): {tsb:.1f} ({form_status})
+Current Training Status:
+- CTL (Fitness): {ctl:.1f}
+- ATL (Fatigue): {atl:.1f}
+- TSB (Form): {tsb:.1f} ({form_status})
 
-웰니스 상태:
-- 준비 상태: {readiness}
+Wellness Status:
+- Readiness: {readiness}
 {wellness_details}
 
-오늘 날짜: {today}
-요일: {weekday}
+Today's Date: {today}
+Day of Week: {weekday}
 
-**사용자 설정:**
-- 목표 시간: {max_duration}분
-- 훈련 스타일: {style}
-- 강도 선호: {intensity}
-- 환경: {environment}
+**User Settings:**
+- Target Duration: {max_duration} minutes
+- Training Style: {style}
+- Intensity Preference: {intensity}
+- Environment: {environment}
 {user_notes}
 
-위 정보를 바탕으로 오늘에 적합한 사이클링 워크아웃을 생성해주세요.
+Based on the information above, please generate a suitable cycling workout for today.
 """
 
 
 # Training style descriptions for the prompt
 STYLE_DESCRIPTIONS = {
-    "auto": "TSB 상태에 맞게 자동 결정",
-    "polarized": "양극화 훈련 - 80% 쉬움(Z1-Z2) + 20% 매우 힘듦(Z5-Z6), 중간 강도 회피",
-    "norwegian": "노르웨이식 - 4x8분 또는 5x5분 Z4(역치) 인터벌",
-    "pyramidal": "피라미드 - Z1-Z2 기반에 Z3-Z4 추가, Z5 최소화",
-    "threshold": "역치 중심 - FTP 근처(95-105%) 인터벌",
-    "sweetspot": "스윗스팟 - FTP 88-94% 구간에서 긴 인터벌",
-    "endurance": "지구력 - Z2 중심 장거리 훈련",
+    "auto": "Automatically determined based on TSB status",
+    "polarized": "Polarized Training - 80% Easy (Z1-Z2) + 20% Very Hard (Z5-Z6), avoid middle intensity",
+    "norwegian": "Norwegian Method - 4x8m or 5x5m Z4 (Threshold) intervals",
+    "pyramidal": "Pyramidal - Based on Z1-Z2 with added Z3-Z4, minimize Z5",
+    "threshold": "Threshold Focused - Intervals near FTP (95-105%)",
+    "sweetspot": "Sweet Spot - Long intervals in 88-94% FTP range",
+    "endurance": "Endurance - Z2 focused long distance training",
 }
 
 INTENSITY_DESCRIPTIONS = {
-    "auto": "TSB 상태에 맞게 자동 결정",
-    "easy": "쉬운 회복 훈련 (Z1-Z2만 사용)",
-    "moderate": "적당한 강도 (템포/스윗스팟 허용)",
-    "hard": "높은 강도 (역치/VO2max 인터벌 허용)",
+    "auto": "Automatically determined based on TSB status",
+    "easy": "Easy recovery training (Use Z1-Z2 only)",
+    "moderate": "Moderate intensity (Tempo/Sweet Spot allowed)",
+    "hard": "High intensity (Threshold/VO2max intervals allowed)",
 }
 
 
@@ -266,19 +266,19 @@ class WorkoutGenerator:
         if wellness.hrv:
             wellness_details.append(f"- HRV: {wellness.hrv}")
         if wellness.rhr:
-            wellness_details.append(f"- 안정시 심박수: {wellness.rhr} bpm")
+            wellness_details.append(f"- RHR: {wellness.rhr} bpm")
         if wellness.sleep_hours:
-            wellness_details.append(f"- 수면: {wellness.sleep_hours:.1f}시간")
+            wellness_details.append(f"- Sleep: {wellness.sleep_hours:.1f} hours")
 
-        # Weekday in Korean
+        # Weekday in English
         weekdays = [
-            "월요일",
-            "화요일",
-            "수요일",
-            "목요일",
-            "금요일",
-            "토요일",
-            "일요일",
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday",
         ]
         weekday = weekdays[target_date.weekday()]
 
@@ -286,11 +286,13 @@ class WorkoutGenerator:
         style_desc = STYLE_DESCRIPTIONS.get(style, style)
         intensity_desc = INTENSITY_DESCRIPTIONS.get(intensity, intensity)
         environment = (
-            "실내 트레이너 (구조화된 인터벌, 짧은 휴식)" if indoor else "야외 또는 일반"
+            "Indoor Trainer (Structured intervals, short rest)"
+            if indoor
+            else "Outdoor or General"
         )
 
         # Format user notes
-        user_notes = f"- 추가 요청: {notes}" if notes else ""
+        user_notes = f"- Additional Requests: {notes}" if notes else ""
 
         return USER_PROMPT_TEMPLATE.format(
             ftp=self.profile.ftp,
@@ -303,7 +305,7 @@ class WorkoutGenerator:
             form_status=metrics.form_status,
             readiness=wellness.readiness,
             wellness_details=(
-                "\n".join(wellness_details) if wellness_details else "- 데이터 없음"
+                "\n".join(wellness_details) if wellness_details else "- No Data"
             ),
             today=target_date.strftime("%Y-%m-%d"),
             weekday=weekday,
