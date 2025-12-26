@@ -25,15 +25,36 @@ from ..services.user_api_service import (
     get_user_intervals_client,
     UserApiServiceError,
 )
+from ..services.cache_service import (
+    get_cached,
+    set_cached,
+    CACHE_KEYS,
+)
 
 router = APIRouter()
 
 
 @router.get("/fitness", response_model=FitnessResponse)
-async def get_fitness(user: dict = Depends(get_current_user)):
-    """Get current training and wellness metrics with user-specific API keys."""
+async def get_fitness(
+    refresh: bool = False,
+    user: dict = Depends(get_current_user),
+):
+    """Get current training and wellness metrics with user-specific API keys.
+
+    Args:
+        refresh: If True, bypass cache and fetch fresh data.
+    """
+    user_id = user["id"]
+    cache_key = CACHE_KEYS["fitness"]
+
+    # Check cache first (unless refresh is requested)
+    if not refresh:
+        cached = get_cached(user_id, cache_key)
+        if cached:
+            return cached
+
     try:
-        client = await get_user_intervals_client(user["id"])
+        client = await get_user_intervals_client(user_id)
         processor = DataProcessor()
 
         # Fetch data
@@ -65,7 +86,7 @@ async def get_fitness(user: dict = Depends(get_current_user)):
         # Calculate W/kg if both FTP and weight are available
         w_per_kg = round(ftp / weight, 2) if ftp and weight else None
 
-        return FitnessResponse(
+        response = FitnessResponse(
             training=TrainingMetrics(
                 ctl=training.ctl,
                 atl=training.atl,
@@ -86,6 +107,11 @@ async def get_fitness(user: dict = Depends(get_current_user)):
                 w_per_kg=w_per_kg,
             ),
         )
+
+        # Cache the response
+        set_cached(user_id, cache_key, response)
+
+        return response
     except UserApiServiceError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except IntervalsAPIError as e:
@@ -95,10 +121,28 @@ async def get_fitness(user: dict = Depends(get_current_user)):
 
 
 @router.get("/activities", response_model=ActivitiesResponse)
-async def get_activities(days: int = 30, user: dict = Depends(get_current_user)):
-    """Get recent activities with user-specific API keys."""
+async def get_activities(
+    days: int = 30,
+    refresh: bool = False,
+    user: dict = Depends(get_current_user),
+):
+    """Get recent activities with user-specific API keys.
+
+    Args:
+        days: Number of days to look back.
+        refresh: If True, bypass cache and fetch fresh data.
+    """
+    user_id = user["id"]
+    cache_key = f"{CACHE_KEYS['activities']}:{days}"
+
+    # Check cache first (unless refresh is requested)
+    if not refresh:
+        cached = get_cached(user_id, cache_key)
+        if cached:
+            return cached
+
     try:
-        client = await get_user_intervals_client(user["id"])
+        client = await get_user_intervals_client(user_id)
         activities = client.get_recent_activities(days=days)
 
         result = []
@@ -125,7 +169,12 @@ async def get_activities(days: int = 30, user: dict = Depends(get_current_user))
                 )
             )
 
-        return ActivitiesResponse(activities=result, total=len(result))
+        response = ActivitiesResponse(activities=result, total=len(result))
+
+        # Cache the response
+        set_cached(user_id, cache_key, response)
+
+        return response
     except UserApiServiceError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except IntervalsAPIError as e:
@@ -135,10 +184,26 @@ async def get_activities(days: int = 30, user: dict = Depends(get_current_user))
 
 
 @router.get("/weekly-calendar", response_model=WeeklyCalendarResponse)
-async def get_weekly_calendar(user: dict = Depends(get_current_user)):
-    """Get this week's planned workouts from Intervals.icu."""
+async def get_weekly_calendar(
+    refresh: bool = False,
+    user: dict = Depends(get_current_user),
+):
+    """Get this week's planned workouts from Intervals.icu.
+
+    Args:
+        refresh: If True, bypass cache and fetch fresh data.
+    """
+    user_id = user["id"]
+    cache_key = CACHE_KEYS["calendar"]
+
+    # Check cache first (unless refresh is requested)
+    if not refresh:
+        cached = get_cached(user_id, cache_key)
+        if cached:
+            return cached
+
     try:
-        client = await get_user_intervals_client(user["id"])
+        client = await get_user_intervals_client(user_id)
 
         # Get this week's date range (Monday to Sunday)
         today = date.today()
@@ -175,11 +240,16 @@ async def get_weekly_calendar(user: dict = Depends(get_current_user)):
                 )
             )
 
-        return WeeklyCalendarResponse(
+        response = WeeklyCalendarResponse(
             week_start=week_start.isoformat(),
             week_end=week_end.isoformat(),
             events=events,
         )
+
+        # Cache the response
+        set_cached(user_id, cache_key, response)
+
+        return response
     except UserApiServiceError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except IntervalsAPIError as e:
