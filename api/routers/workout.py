@@ -23,7 +23,10 @@ from ..services.user_api_service import (
     get_server_llm_client,
     get_user_profile,
     get_data_processor,
+    check_rate_limit,
+    increment_usage,
     UserApiServiceError,
+    RateLimitExceededError,
 )
 from ..services.cache_service import clear_user_cache
 
@@ -36,6 +39,9 @@ async def generate_workout(
 ):
     """Generate a workout using AI with user-specific API keys."""
     try:
+        # Check rate limit
+        await check_rate_limit(user["id"])
+
         # Get user-specific clients
         intervals = await get_user_intervals_client(user["id"])
         llm = get_server_llm_client()
@@ -73,6 +79,9 @@ async def generate_workout(
         # Parse workout text to extract steps
         warmup, main, cooldown = _parse_workout_sections(workout.workout_text)
 
+        # Increment usage count on success
+        await increment_usage(user["id"])
+
         return WorkoutGenerateResponse(
             success=True,
             workout=GeneratedWorkout(
@@ -86,6 +95,8 @@ async def generate_workout(
                 cooldown=cooldown,
             ),
         )
+    except RateLimitExceededError as e:
+        raise HTTPException(status_code=429, detail=str(e))
     except UserApiServiceError as e:
         return WorkoutGenerateResponse(success=False, error=str(e))
     except Exception as e:
