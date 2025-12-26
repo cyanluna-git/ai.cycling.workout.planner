@@ -25,6 +25,7 @@ from ..services.user_api_service import (
     get_data_processor,
     UserApiServiceError,
 )
+from ..services.cache_service import clear_user_cache
 
 router = APIRouter()
 
@@ -123,6 +124,9 @@ async def create_workout(
             moving_time=request.duration_minutes * 60,  # Convert minutes to seconds
             training_load=request.estimated_tss,
         )
+
+        # Clear cache for this user (calendar will have new workout)
+        clear_user_cache(user["id"], keys=["calendar", "fitness"])
 
         return WorkoutCreateResponse(
             success=True,
