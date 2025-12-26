@@ -33,10 +33,12 @@ class GeneratedWorkout:
 WORKOUT_SYNTAX_GUIDE = """
 Workout Step Format:
 - Time: number + unit (5m = 5 minutes, 30s = 30 seconds, 1h = 1 hour)
-- Power: % of FTP (50%, 88%, 100%, 115%)
+- Power: % of FTP (50%, 88%, 100%, 115%) or Range (50-75%)
 
 Step Examples:
 - "10m 50%" = 50% FTP for 10 minutes
+- "10m 50-75%" = Ramp from 50% to 75% for 10 minutes (Ramp Up)
+- "10m 75-50%" = Ramp from 75% to 50% for 10 minutes (Ramp Down)
 - "5m 100%" = 100% FTP for 5 minutes
 - "30s 120%" = 120% FTP for 30 seconds
 
@@ -59,6 +61,10 @@ Workout Intensity Guidelines:
 
 {syntax_guide}
 
+**Key Instruction for Warmup/Cooldown:**
+- Use Ramp Up for Warmup (e.g., "10m 50-75%")
+- Use Ramp Down for Cooldown (e.g., "5m 75-50%")
+
 **Output Rules (Strictly Adhere):**
 You must respond strictly in the JSON format below. Output pure JSON only, without additional explanations or markdown.
 
@@ -79,9 +85,9 @@ Example:
   "name": "Sweet Spot Intervals",
   "type": "Threshold",
   "tss": 55,
-  "warmup": ["10m 50%"],
+  "warmup": ["10m 50-75%"],
   "main": ["5m 88%", "5m 50%", "5m 88%", "5m 50%", "5m 88%", "5m 50%"],
-  "cooldown": ["10m 50%"]
+  "cooldown": ["10m 75-50%"]
 }}
 ```
 """
@@ -404,7 +410,8 @@ class WorkoutGenerator:
         import re
 
         valid_steps = []
-        step_pattern = re.compile(r"^(\d+[smh])\s+(\d+%?)$", re.IGNORECASE)
+        # Support single power (50%) and ranges (50-75%)
+        step_pattern = re.compile(r"^(\d+[smh])\s+(\d+(?:-\d+)?%?)$", re.IGNORECASE)
 
         for step in steps:
             if not isinstance(step, str):
@@ -417,7 +424,8 @@ class WorkoutGenerator:
             # Check if step matches expected format
             if step_pattern.match(step):
                 valid_steps.append(step)
-            elif re.match(r"\d+[smh]\s+\d+%", step):
+            # Relaxed check for fallback
+            elif re.match(r"\d+[smh]\s+\d+(?:-\d+)?%", step):
                 valid_steps.append(step)
             else:
                 logger.warning(f"Invalid step format, skipping: {step}")
