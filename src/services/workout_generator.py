@@ -301,73 +301,40 @@ class WorkoutGenerator:
         """
         target_date = target_date or date.today()
 
-        # 1. Select Templates based on TSB & User Preference
-        selected_warmup = WARMUP_BLOCKS["ramp_standard"]
-        selected_cooldown = COOLDOWN_BLOCKS["ramp_standard"]
-
-        # Main Block Selection Logic
+        # Get TSB for intensity adjustment
         tsb = training_metrics.tsb if training_metrics.tsb is not None else 0.0
 
-        # Get all available main block keys from library
-        all_main_keys = list(MAIN_BLOCKS.keys())
+        # Determine intensity based on TSB if auto
+        if intensity == "auto" or not intensity:
+            if tsb < -20:
+                intensity = "easy"
+            elif tsb < -10:
+                intensity = "easy"
+            elif tsb < 5:
+                intensity = "moderate"
+            else:
+                intensity = "hard"
 
-        if tsb < -20:
-            # Very Fatigued: Use lightest available template
-            selected_main = (
-                MAIN_BLOCKS[all_main_keys[0]]
-                if all_main_keys
-                else {"name": "Recovery", "type": "Endurance", "structure": []}
-            )
-            intensity_adj = "REDUCE intensity significantly"
-        elif tsb < -10:
-            # Fatigued: Use moderate template
-            selected_main = (
-                MAIN_BLOCKS[all_main_keys[0]]
-                if all_main_keys
-                else {"name": "Endurance", "type": "Endurance", "structure": []}
-            )
-            intensity_adj = "Keep steady and moderate"
-        elif tsb < 5:
-            # Neutral/Slightly Fresh: Random from all available
-            import random
+        # Get target duration from generate request (default 60 min)
+        # Note: This will need to be passed from the API
+        target_duration = 60  # Default, will be overridden by form value
 
-            selected_key = random.choice(all_main_keys) if all_main_keys else None
-            selected_main = (
-                MAIN_BLOCKS[selected_key]
-                if selected_key
-                else {"name": "Mixed", "type": "Mixed", "structure": []}
-            )
-            intensity_adj = "Standard intensity"
-        else:
-            # Fresh: High Intensity - Randomly pick from all available
-            import random
+        # Use new modular assembler
+        from .workout_assembler import WorkoutAssembler
 
-            selected_key = random.choice(all_main_keys) if all_main_keys else None
-            selected_main = (
-                MAIN_BLOCKS[selected_key]
-                if selected_key
-                else {"name": "VO2max", "type": "VO2max", "structure": []}
-            )
-            intensity_adj = "Push hard if feeling good"
+        assembler = WorkoutAssembler(tsb=tsb, training_goal=self.profile.training_goal)
+        assembled_skeleton = assembler.assemble(
+            target_duration=target_duration,
+            intensity=intensity,
+        )
 
-        # 2. Assemble Base Context
-        assembled_skeleton = {
-            "workout_theme": f"{selected_main['name']} (Base)",
-            "workout_type": selected_main.get("type", "Endurance"),
-            "total_duration_minutes": selected_warmup["duration_minutes"]
-            + selected_main.get("duration", 40)
-            + selected_cooldown["duration_minutes"],  # approximate
-            "structure": (
-                selected_warmup["structure"]
-                + selected_main["structure"]
-                + selected_cooldown["structure"]
-            ),
-        }
-
-        # 3. AI BYPASS: Skip LLM refinement, use template directly
-        logger.info(f"Assembling template '{selected_main['name']}' for TSB {tsb:.1f}")
-        print(f"[TEMPLATE] Selected: {selected_main['name']}")
-        print(f"[BYPASS] Using assembled template without AI refinement")
+        # Log and convert to skeleton
+        logger.info(
+            f"Assembled: {assembled_skeleton['workout_theme']} ({assembled_skeleton['total_duration_minutes']} min)"
+        )
+        print(
+            f"[ASSEMBLER] {assembled_skeleton['workout_theme']} - {assembled_skeleton['total_duration_minutes']} min"
+        )
 
         skeleton = parse_skeleton_from_dict(assembled_skeleton)
 
