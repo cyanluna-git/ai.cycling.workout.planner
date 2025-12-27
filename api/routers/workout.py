@@ -78,6 +78,7 @@ async def generate_workout(
             notes=request.notes,
             intensity=request.intensity,
             indoor=request.indoor,
+            duration=request.duration,
         )
 
         # Parse workout text to extract steps
