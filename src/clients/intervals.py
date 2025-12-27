@@ -359,31 +359,37 @@ class IntervalsClient:
             payload["file_contents_base64"] = zwo_base64
             payload["filename"] = "workout.zwo"
 
-            # Also dump ZWO for debugging
+            # Dump ZWO for debugging (local development only)
+            import os
+
+            if os.getenv("DEBUG", "").lower() in ("true", "1", "yes"):
+                try:
+                    zwo_xml = converter.convert(steps)
+                    with open("uploaded_workout.zwo", "w") as f:
+                        f.write(zwo_xml)
+                    logger.info("Dumped ZWO to uploaded_workout.zwo")
+                except Exception as e:
+                    logger.error(f"Failed to dump ZWO: {e}")
+
+        # Debug: Dump payload to file (local development only)
+        import os
+
+        if os.getenv("DEBUG", "").lower() in ("true", "1", "yes"):
             try:
-                zwo_xml = converter.convert(steps)
-                with open("uploaded_workout.zwo", "w") as f:
-                    f.write(zwo_xml)
-                logger.info("Dumped ZWO to uploaded_workout.zwo")
+                import json
+
+                debug_payload = {
+                    k: v for k, v in payload.items() if k != "file_contents_base64"
+                }
+                if "file_contents_base64" in payload:
+                    debug_payload["file_contents_base64"] = (
+                        f"<{len(payload['file_contents_base64'])} chars>"
+                    )
+                with open("uploaded_workout.json", "w") as f:
+                    json.dump(debug_payload, f, indent=2)
+                logger.info("Dumped upload payload to uploaded_workout.json")
             except Exception as e:
-                logger.error(f"Failed to dump ZWO: {e}")
-
-        # Debug: Dump payload to file (without the base64 content for readability)
-        try:
-            import json
-
-            debug_payload = {
-                k: v for k, v in payload.items() if k != "file_contents_base64"
-            }
-            if "file_contents_base64" in payload:
-                debug_payload["file_contents_base64"] = (
-                    f"<{len(payload['file_contents_base64'])} chars>"
-                )
-            with open("uploaded_workout.json", "w") as f:
-                json.dump(debug_payload, f, indent=2)
-            logger.info("Dumped upload payload to uploaded_workout.json")
-        except Exception as e:
-            logger.error(f"Failed to dump payload: {e}")
+                logger.error(f"Failed to dump payload: {e}")
 
         logger.info(
             f"Creating workout: {name} on {date_str} (ZWO format: {bool(steps)})"
