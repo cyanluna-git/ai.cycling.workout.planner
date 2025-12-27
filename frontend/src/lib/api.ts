@@ -43,6 +43,7 @@ export interface GeneratedWorkout {
     warmup: string[];
     main: string[];
     cooldown: string[];
+    design_goal?: string;
 }
 
 export interface WorkoutGenerateRequest {

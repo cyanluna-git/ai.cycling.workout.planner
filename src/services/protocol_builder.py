@@ -314,9 +314,13 @@ class ProtocolBuilder:
                     lines.append("")
                     lines.append("Cooldown")
                     current_section = "cooldown"
-                lines.append(
-                    f"- {block.duration_minutes}m {block.start_power}% -> {block.end_power}%"
-                )
+
+                if block.start_power != block.end_power:
+                    lines.append(
+                        f"- {block.duration_minutes}m {block.start_power}% -> {block.end_power}%"
+                    )
+                else:
+                    lines.append(f"- {block.duration_minutes}m {block.start_power}%")
 
             else:
                 # Main set
@@ -350,7 +354,10 @@ class ProtocolBuilder:
                     )
 
                 elif isinstance(block, SteadyBlock):
-                    lines.append(f"- {block.duration_minutes}m {block.power}%")
+                    if block.duration_minutes:
+                        lines.append(f"- {block.duration_minutes}m {block.power}%")
+                    elif block.duration_seconds:
+                        lines.append(f"- {block.duration_seconds}s {block.power}%")
 
         return "\n".join(lines)
 

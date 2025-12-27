@@ -106,12 +106,15 @@ def get_module_inventory_text() -> str:
     inventory = []
 
     def _fmt(key, data):
-        # Format: [key] Dur: 10m | TSS: 12 | IF: 0.85 | Fatigue: Med | Desc: Name
+        # Format: [key] Dur: 10m | TSS: 12 | IF: 0.85 | Fatigue: Med | Desc: Name - Description
         dur = f"{data['duration_minutes']}m"
         tss = data.get("estimated_tss", "?")
         if_val = data.get("estimated_if", "?")
         fatigue = data.get("fatigue_impact", "?")
         name = data["name"]
+        desc = data.get("description", "")
+        if desc:
+            return f"- [{key}] Dur: {dur} | TSS: {tss} | IF: {if_val} | Fatigue: {fatigue} | Desc: {name} - {desc}"
         return f"- [{key}] Dur: {dur} | TSS: {tss} | IF: {if_val} | Fatigue: {fatigue} | Desc: {name}"
 
     inventory.append("--- WARMUP MODULES ---")

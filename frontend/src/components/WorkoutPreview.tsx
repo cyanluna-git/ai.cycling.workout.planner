@@ -42,6 +42,14 @@ export function WorkoutPreview({ workout, onRegister, isRegistering, ftp = 250 }
                 </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+                {/* Design Goal / AI Briefing */}
+                {workout.design_goal && (
+                    <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900 rounded-lg p-3 text-sm text-blue-800 dark:text-blue-300">
+                        <span className="font-semibold mr-1">💡 Coach's Note:</span>
+                        {workout.design_goal}
+                    </div>
+                )}
+
                 {/* Power Profile Chart */}
                 <WorkoutChart workoutText={workout.workout_text} />
 

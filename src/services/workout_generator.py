@@ -33,6 +33,7 @@ class GeneratedWorkout:
     estimated_duration_minutes: int
     estimated_tss: Optional[int]
     workout_type: str  # Endurance, Threshold, VO2max, Recovery
+    design_goal: Optional[str] = None
 
 
 # Intervals.icu workout text syntax reference - UPDATED for proper parsing
@@ -84,6 +85,7 @@ Generate the workout plan in JSON format.
 # Output Format
 {{
   "workout_name": "String (Creative title based on focus)",
+  "design_goal": "String (Explain what specific physiological benefit this workout reinforces)",
   "strategy_reasoning": "String (Explain WHY you chose these blocks based on TSB and Fatigue)",
   "estimated_tss": "Integer (Sum of TSS)",
   "total_duration": "Integer (Sum of minutes)",
@@ -330,7 +332,10 @@ class WorkoutGenerator:
             goal=goal,
         )
 
-        response = self.llm.generate(prompt, temperature=0.7)
+        # No temperature arg in base client generate signature
+        response = self.llm.generate(
+            system_prompt=prompt, user_prompt="Please generate the workout plan."
+        )
 
         # Simple JSON extraction
         try:
@@ -457,6 +462,15 @@ class WorkoutGenerator:
             f"Generated enhanced: {skeleton.workout_theme} ({skeleton.workout_type}, ~{duration}min)"
         )
 
+        # Extract design goal if available
+        design_goal = None
+        try:
+            # If we have selection from AI
+            if "selection" in locals() and isinstance(selection, dict):
+                design_goal = selection.get("design_goal")
+        except:
+            pass
+
         return GeneratedWorkout(
             name=f"AI Generated - {skeleton.workout_theme}",
             description=workout_text,
@@ -464,6 +478,7 @@ class WorkoutGenerator:
             estimated_duration_minutes=duration,
             estimated_tss=skeleton.estimated_tss,
             workout_type=skeleton.workout_type,
+            design_goal=design_goal,
         )
 
     def _build_enhanced_user_prompt(
