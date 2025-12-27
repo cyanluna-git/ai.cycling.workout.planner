@@ -32,7 +32,7 @@ function formatStepWithWatts(step: string, ftp: number): { text: string; color: 
 
     // 2. Replace all "X%" with "X% (Yw)"
     // Regex matches "digits%"
-    const text = step.replace(/(\d+)%/g, (match, p1) => {
+    const text = step.replace(/(\d+)%/g, (_match, p1) => {
         const percent = parseInt(p1);
         const watts = Math.round(ftp * percent / 100);
         return `${percent}% (${watts}w)`;
