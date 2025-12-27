@@ -105,6 +105,8 @@ export async function createWorkout(
         workout_text: string;
         duration_minutes: number;
         estimated_tss?: number | null;
+        design_goal?: string;
+        workout_type?: string;
         force?: boolean;
     },
     token: string
@@ -122,6 +124,23 @@ export async function createWorkout(
         body: JSON.stringify(data),
     });
     if (!res.ok) throw new Error('Failed to create workout');
+    return res.json();
+}
+
+export async function fetchTodaysWorkout(token: string, date?: string): Promise<{
+    success: boolean;
+    workout?: GeneratedWorkout;
+    error?: string;
+}> {
+    let url = `${API_BASE}/api/workout/today`;
+    if (date) {
+        url += `?date=${date}`;
+    }
+
+    const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to fetch today\'s workout');
     return res.json();
 }
 

@@ -15,6 +15,7 @@ from src.clients.intervals import IntervalsClient
 from src.clients.llm import LLMClient
 from src.config import IntervalsConfig, LLMConfig, UserProfile
 from src.services.data_processor import DataProcessor
+from api.schemas import GeneratedWorkout
 
 logger = logging.getLogger(__name__)
 
@@ -256,10 +257,10 @@ def get_server_llm_client() -> LLMClient:
         gemini_api_key=gemini_api_key,
         hf_api_key=hf_api_key,
         openai_api_key=openai_api_key,
-        groq_model=provider_models.get("groq"),
-        gemini_model=provider_models.get("gemini"),
-        hf_model=provider_models.get("huggingface"),
-        openai_model=provider_models.get("openai"),
+        groq_model=provider_models.get("groq") or os.getenv("GROQ_MODEL"),
+        gemini_model=provider_models.get("gemini") or os.getenv("GEMINI_MODEL"),
+        hf_model=provider_models.get("huggingface") or os.getenv("HF_MODEL"),
+        openai_model=provider_models.get("openai") or os.getenv("OPENAI_MODEL"),
     )
 
     # Wrap in LLMClient for compatibility
@@ -292,3 +293,144 @@ def get_data_processor() -> DataProcessor:
         DataProcessor instance for processing training data.
     """
     return DataProcessor()
+
+
+async def save_workout(user_id: str, workout_data: dict) -> dict:
+    """Save generated workout to Supabase.
+
+    Args:
+        user_id: User ID.
+        workout_data: Workout data dictionary.
+
+    Returns:
+        Saved workout data.
+    """
+    supabase = get_supabase_admin_client()
+
+    data = {
+        "user_id": user_id,
+        "name": workout_data.get("name"),
+        "workout_date": workout_data.get("target_date"),
+        "workout_text": workout_data.get("workout_text"),
+        "design_goal": workout_data.get("design_goal"),
+        "workout_type": workout_data.get("workout_type"),
+        "estimated_tss": workout_data.get("estimated_tss"),
+        "duration_minutes": workout_data.get("duration_minutes"),
+        "intervals_event_id": workout_data.get("event_id"),
+        "updated_at": date.today().isoformat(),  # Ensure we track updates
+    }
+
+    # Upsert based on user_id and workout_date to prevent duplicates for the same day
+    # Assuming valid constraint exists on (user_id, workout_date)
+    result = (
+        supabase.table("saved_workouts")
+        .upsert(data, on_conflict="user_id, workout_date")
+        .execute()
+    )
+
+    return result.data[0] if result.data else {}
+
+
+async def get_todays_workout(
+    user_id: str, target_date: str = None
+) -> Optional[GeneratedWorkout]:
+    """Get saved workout for a specific date.
+
+    Args:
+        user_id: User ID.
+        target_date: Date string (YYYY-MM-DD), defaults to today.
+
+    Returns:
+        GeneratedWorkout object or None.
+    """
+    if not target_date:
+        target_date = date.today().isoformat()
+
+    supabase = get_supabase_admin_client()
+
+    result = (
+        supabase.table("saved_workouts")
+        .select("*")
+        .eq("user_id", user_id)
+        .eq("workout_date", target_date)
+        .maybe_single()
+        .execute()
+    )
+
+    if not result or not result.data:
+        return None
+
+    data = result.data
+
+    # Parse workout text to reconstruct sections
+    from api.routers.workout import _parse_workout_sections
+
+    warmup, main, cooldown = _parse_workout_sections(data["workout_text"])
+
+    return GeneratedWorkout(
+        name=data["name"],
+        workout_type=data.get("workout_type", "Custom"),
+        design_goal=data.get("design_goal"),
+        estimated_tss=data.get("estimated_tss"),
+        estimated_duration_minutes=data.get("duration_minutes", 60),
+        workout_text=data["workout_text"],
+        warmup=warmup,
+        main=main,
+        cooldown=cooldown,
+    )
+
+
+async def sync_workout_from_intervals(user_id: str, event: dict) -> None:
+    """Sync a workout event from Intervals.icu to local DB.
+
+    Preserves existing metadata (design_goal) if the workout already exists.
+    """
+    supabase = get_supabase_admin_client()
+    target_date = event["start_date_local"][:10]
+
+    # Check if exists
+    existing = (
+        supabase.table("saved_workouts")
+        .select("design_goal, workout_type")
+        .eq("user_id", user_id)
+        .eq("workout_date", target_date)
+        .maybe_single()
+        .execute()
+    )
+
+    existing_data = existing.data if existing else None
+
+    # Prepare data
+    description = event.get("description", "") or ""
+    moving_time = event.get("moving_time", 0)
+
+    data = {
+        "user_id": user_id,
+        "name": event.get("name"),
+        "workout_date": target_date,
+        "workout_text": description,
+        "estimated_tss": event.get("icu_training_load"),
+        "duration_minutes": moving_time // 60 if moving_time else 0,
+        "intervals_event_id": event.get("id"),
+        "updated_at": date.today().isoformat(),
+    }
+
+    # Preserve or set default metadata
+    if existing_data:
+        data["design_goal"] = existing_data.get("design_goal")
+        # Only overwrite type if not set in DB, or update if we want (kept simple here)
+        data["workout_type"] = existing_data.get("workout_type") or event.get(
+            "type", "Ride"
+        )
+    else:
+        # New sync
+        data["design_goal"] = None  # No AI goal for external workouts
+        data["workout_type"] = event.get("type", "Ride")
+
+    # Upsert
+    try:
+        supabase.table("saved_workouts").upsert(
+            data, on_conflict="user_id, workout_date"
+        ).execute()
+    except Exception as e:
+        logger.error(f"Failed to sync workout {event.get('id')}: {e}")

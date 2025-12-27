@@ -4,6 +4,7 @@ import type { WeeklyCalendarData, WeeklyEvent } from "@/lib/api";
 interface WeeklyCalendarCardProps {
     calendar: WeeklyCalendarData | null;
     isLoading: boolean;
+    onSelectDate?: (date: string) => void;
 }
 
 const DAY_NAMES = ['월', '화', '수', '목', '금', '토', '일'];
@@ -37,7 +38,7 @@ function isToday(dateStr: string): boolean {
     return today.toDateString() === d.toDateString();
 }
 
-export function WeeklyCalendarCard({ calendar, isLoading }: WeeklyCalendarCardProps) {
+export function WeeklyCalendarCard({ calendar, isLoading, onSelectDate }: WeeklyCalendarCardProps) {
     if (isLoading) {
         return (
             <Card>
@@ -86,7 +87,8 @@ export function WeeklyCalendarCard({ calendar, isLoading }: WeeklyCalendarCardPr
                     {days.map((day) => (
                         <div
                             key={day.date}
-                            className={`text-center p-2 rounded-lg min-h-20 ${isToday(day.date) ? 'bg-primary/10 ring-2 ring-primary' : 'bg-muted/50'
+                            onClick={() => onSelectDate?.(day.date)}
+                            className={`text-center p-2 rounded-lg min-h-20 cursor-pointer transition-colors hover:bg-muted/80 ${isToday(day.date) ? 'bg-primary/10 ring-2 ring-primary' : 'bg-muted/50'
                                 }`}
                         >
                             <div className="text-xs text-muted-foreground mb-1">{day.dayName}</div>
@@ -96,7 +98,7 @@ export function WeeklyCalendarCard({ calendar, isLoading }: WeeklyCalendarCardPr
                             {day.events.map((event) => (
                                 <div
                                     key={event.id}
-                                    className="text-xs p-1 rounded mb-1 truncate cursor-pointer hover:opacity-80"
+                                    className="text-xs p-1 rounded mb-1 truncate"
                                     style={{
                                         backgroundColor: `${getWorkoutColor(event.workout_type)}20`,
                                         borderLeft: `3px solid ${getWorkoutColor(event.workout_type)}`

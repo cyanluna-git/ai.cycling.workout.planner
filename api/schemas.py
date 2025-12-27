@@ -98,6 +98,12 @@ class WorkoutCreateRequest(BaseModel):
     workout_text: str = Field(..., description="Workout text")
     duration_minutes: int = Field(..., description="Duration in minutes")
     estimated_tss: Optional[int] = Field(None, description="Estimated TSS")
+    design_goal: Optional[str] = Field(
+        None, description="Design goal or rationale from AI"
+    )
+    workout_type: Optional[str] = Field(
+        None, description="Workout type (e.g., SweetSpot)"
+    )
     force: bool = Field(False, description="Replace existing workout")
 
 

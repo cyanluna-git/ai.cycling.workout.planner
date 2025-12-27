@@ -240,6 +240,15 @@ async def get_weekly_calendar(
                 )
             )
 
+            # Sync to local DB
+            from ..services.user_api_service import sync_workout_from_intervals
+
+            # We don't await this to avoid slowing down the response?
+            # Ideally use background task, but for now simple await is safer to ensure data consistency
+            # or just fire and forget if we can.
+            # Let's await it to be sure. It might add a few ms per event.
+            await sync_workout_from_intervals(user_id, e)
+
         response = WeeklyCalendarResponse(
             week_start=week_start.isoformat(),
             week_end=week_end.isoformat(),
