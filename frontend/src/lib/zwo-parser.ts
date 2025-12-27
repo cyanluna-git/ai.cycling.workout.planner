@@ -140,15 +140,15 @@ export function parseZwoToChartData(zwoContent: string): ChartDataPoint[] {
                 }
                 // Ignore unknown elements silently
             } catch (elementError) {
-                console.error('ZWO Parser: Error processing element', el.tagName, elementError);
+                // Silently ignore element parsing errors
             }
         }
 
-        console.log(`ZWO Parser: Processed ${elements.length} elements, total time: ${currentTime / 60} minutes, ${chartData.length} data points`);
+
         return chartData;
 
     } catch (error) {
-        console.error('ZWO Parser: Error parsing ZWO content', error);
+        // Silently fail and return empty array
         return [];
     }
 }

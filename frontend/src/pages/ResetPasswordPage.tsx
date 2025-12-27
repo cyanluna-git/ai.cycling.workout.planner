@@ -9,7 +9,7 @@ interface ResetPasswordPageProps {
     onComplete: () => void;
 }
 
-export function ResetPasswordPage({ onComplete }: ResetPasswordPageProps) {
+export function ResetPasswordPage({ onComplete: _onComplete }: ResetPasswordPageProps) {
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
     const [error, setError] = useState<string | null>(null)
