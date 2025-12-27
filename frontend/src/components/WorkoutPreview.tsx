@@ -7,29 +7,41 @@ interface WorkoutPreviewProps {
     workout: GeneratedWorkout;
     onRegister: () => void;
     isRegistering: boolean;
+    isRegistered?: boolean; // New prop
     ftp?: number;
 }
 
 /**
  * Format step with watts calculation
- * Input: "10m 50%"
- * Output: "10m 50% (126w)" with zone color
+ * Input examples: 
+ * - "10m 50%" -> "10m 50% (125w)"
+ * - "10m 50% -> 70%" -> "10m 50% (125w) -> 70% (175w)"
+ * - "4x (4m 100% / 4m 50%)" -> "4x (4m 100% (250w) / 4m 50% (125w))"
  */
 function formatStepWithWatts(step: string, ftp: number): { text: string; color: string } {
-    const match = step.match(/(\d+m)\s+(\d+)%/);
-    if (match) {
-        const duration = match[1];
-        const percent = parseInt(match[2]);
-        const watts = Math.round(ftp * percent / 100);
-        return {
-            text: `${duration} ${percent}% (${watts}w)`,
-            color: getZoneColor(percent)
-        };
+    // 1. Determine main color (simple heuristic: highest intensity found)
+    let maxPercent = 0;
+    const percentMatches = step.match(/(\d+)%/g);
+    if (percentMatches) {
+        percentMatches.forEach(p => {
+            const val = parseInt(p);
+            if (val > maxPercent) maxPercent = val;
+        });
     }
-    return { text: step, color: '#888' };
+    const color = maxPercent > 0 ? getZoneColor(maxPercent) : '#888';
+
+    // 2. Replace all "X%" with "X% (Yw)"
+    // Regex matches "digits%"
+    const text = step.replace(/(\d+)%/g, (match, p1) => {
+        const percent = parseInt(p1);
+        const watts = Math.round(ftp * percent / 100);
+        return `${percent}% (${watts}w)`;
+    });
+
+    return { text, color };
 }
 
-export function WorkoutPreview({ workout, onRegister, isRegistering, ftp = 250 }: WorkoutPreviewProps) {
+export function WorkoutPreview({ workout, onRegister, isRegistering, isRegistered, ftp = 250 }: WorkoutPreviewProps) {
     return (
         <Card className="w-full">
             <CardHeader className="pb-2">
@@ -92,14 +104,20 @@ export function WorkoutPreview({ workout, onRegister, isRegistering, ftp = 250 }
                     )}
                 </div>
 
-                {/* Register Button */}
-                <Button
-                    onClick={onRegister}
-                    className="w-full"
-                    disabled={isRegistering}
-                >
-                    {isRegistering ? "등록 중..." : "📅 Intervals.icu에 등록"}
-                </Button>
+                {/* Register Button or Success Message */}
+                {isRegistered ? (
+                    <div className="w-full bg-green-500/10 text-green-600 font-bold py-2 rounded-md text-center border border-green-200 dark:border-green-900">
+                        ✅ 등록 완료!
+                    </div>
+                ) : (
+                    <Button
+                        onClick={onRegister}
+                        className="w-full"
+                        disabled={isRegistering}
+                    >
+                        {isRegistering ? "등록 중..." : "📅 Intervals.icu에 등록"}
+                    </Button>
+                )}
             </CardContent>
         </Card>
     );
