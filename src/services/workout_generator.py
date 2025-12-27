@@ -281,6 +281,7 @@ class WorkoutGenerator:
         notes: str = "",
         intensity: str = "auto",
         indoor: bool = False,
+        duration: int = 60,
     ) -> GeneratedWorkout:
         """Generate a workout using enhanced skeleton-based approach.
 
@@ -295,6 +296,7 @@ class WorkoutGenerator:
             notes: Additional user notes/requests.
             intensity: Intensity preference (auto, easy, moderate, hard).
             indoor: If True, generate indoor trainer workout.
+            duration: Target duration in minutes (default: 60).
 
         Returns:
             GeneratedWorkout with name, description, and workout text.
@@ -315,9 +317,8 @@ class WorkoutGenerator:
             else:
                 intensity = "hard"
 
-        # Get target duration from generate request (default 60 min)
-        # Note: This will need to be passed from the API
-        target_duration = 60  # Default, will be overridden by form value
+        # Use passed duration
+        target_duration = duration
 
         # Use new modular assembler
         from .workout_assembler import WorkoutAssembler

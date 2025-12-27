@@ -20,6 +20,15 @@ interface WorkoutChartProps {
 }
 
 /**
+ * Parse duration string to minutes
+ */
+function parseDuration(val: string, unit: string): number {
+    const value = parseInt(val);
+    if (unit === 's') return value / 60;
+    return value;
+}
+
+/**
  * Parse workout text into chart data
  */
 export function parseWorkoutSteps(text: string): WorkoutStep[] {
@@ -31,44 +40,51 @@ export function parseWorkoutSteps(text: string): WorkoutStep[] {
 
     for (const line of lines) {
         // Match ramp pattern: "10m 45% -> 75%" (warmup/cooldown ramps)
-        const rampMatch = line.match(/(\d+)m\s+(\d+)%\s*->\s*(\d+)%/);
+        const rampMatch = line.match(/(\d+)([ms])\s+(\d+)%\s*->\s*(\d+)%/);
 
-        // Match patterns like "10m 50%", "5m 65%", etc.
-        const simpleMatch = line.match(/(\d+)m\s+(\d+)%/);
+        // Match patterns like "10m 50%", "30s 120%"
+        const simpleMatch = line.match(/(\d+)([ms])\s+(\d+)%/);
 
-        // Match interval pattern: "5x 3m 115% 3m 50%" or "4x (3m 108% / 2m 50%)"
-        const intervalMatch = line.match(/(\d+)x\s*\(?(\d+)m\s+(\d+)%\s*[\/\s]+(\d+)m\s+(\d+)%\)?/);
+        // Match interval pattern: "5x 3m 115% 3m 50%" or "13x 30s 120% 15s 50%"
+        const intervalMatch = line.match(/(\d+)x\s*\(?(\d+)([ms])\s+(\d+)%\s*[\/\s]+(\d+)([ms])\s+(\d+)%\)?/);
 
         if (rampMatch) {
-            // Ramp: split into 1-minute segments for visual gradient
-            const duration = parseInt(rampMatch[1]);
-            const startPower = parseInt(rampMatch[2]);
-            const endPower = parseInt(rampMatch[3]);
-            const powerStep = (endPower - startPower) / duration;
+            // Ramp: split into 10-second segments (1/6 min) for smooth visual
+            const duration = parseDuration(rampMatch[1], rampMatch[2]);
+            const startPower = parseInt(rampMatch[3]);
+            const endPower = parseInt(rampMatch[4]);
 
-            for (let i = 0; i < duration; i++) {
+            const SEGMENT_DURATION = 1 / 6;
+            const stepsCount = Math.floor(duration / SEGMENT_DURATION);
+            const powerStep = (endPower - startPower) / stepsCount;
+
+            for (let i = 0; i < stepsCount; i++) {
                 const power = Math.round(startPower + powerStep * i);
                 steps.push({
                     time: currentTime,
-                    duration: 1,
+                    duration: SEGMENT_DURATION,
                     power,
                     label: `Ramp ${power}%`
                 });
-                currentTime += 1;
+                currentTime += SEGMENT_DURATION;
+            }
+            // Add any remaining partial segment
+            if (duration % SEGMENT_DURATION > 0.001) {
+                currentTime += (duration % SEGMENT_DURATION);
             }
         } else if (intervalMatch) {
             const reps = parseInt(intervalMatch[1]);
-            const workDuration = parseInt(intervalMatch[2]);
-            const workPower = parseInt(intervalMatch[3]);
-            const restDuration = parseInt(intervalMatch[4]);
-            const restPower = parseInt(intervalMatch[5]);
+            const workDuration = parseDuration(intervalMatch[2], intervalMatch[3]);
+            const workPower = parseInt(intervalMatch[4]);
+            const restDuration = parseDuration(intervalMatch[5], intervalMatch[6]);
+            const restPower = parseInt(intervalMatch[7]);
 
             for (let i = 0; i < reps; i++) {
                 steps.push({
                     time: currentTime,
                     duration: workDuration,
                     power: workPower,
-                    label: `${workDuration}m ${workPower}%`
+                    label: `${Math.round(workDuration * 60)}s ${workPower}%`
                 });
                 currentTime += workDuration;
 
@@ -76,19 +92,19 @@ export function parseWorkoutSteps(text: string): WorkoutStep[] {
                     time: currentTime,
                     duration: restDuration,
                     power: restPower,
-                    label: `${restDuration}m ${restPower}%`
+                    label: `${Math.round(restDuration * 60)}s ${restPower}%`
                 });
                 currentTime += restDuration;
             }
         } else if (simpleMatch) {
-            const duration = parseInt(simpleMatch[1]);
-            const power = parseInt(simpleMatch[2]);
+            const duration = parseDuration(simpleMatch[1], simpleMatch[2]);
+            const power = parseInt(simpleMatch[3]);
 
             steps.push({
                 time: currentTime,
                 duration,
                 power,
-                label: `${duration}m ${power}%`
+                label: `${Math.round(duration * 60)}s ${power}%`
             });
             currentTime += duration;
         }
@@ -132,13 +148,18 @@ export function WorkoutChart({ workoutText }: WorkoutChartProps) {
     const maxTime = segments[segments.length - 1]?.end || 60;
     const maxPower = Math.max(...segments.map(s => s.power), 100);
 
-    // Create fine-grained data for better visualization (1 minute resolution)
+    // Create fine-grained data for better visualization (10-second resolution)
     const barData: { time: number; power: number; color: string }[] = [];
-    for (let t = 0; t < maxTime; t++) {
-        const segment = segments.find(s => t >= s.start && t < s.end);
+    const RESOLUTION = 1 / 6; // 10 seconds in minutes
+
+    for (let t = 0; t < maxTime; t += RESOLUTION) {
+        // Find segment covering this time point (t + half-resolution to check center)
+        const centerTime = t + (RESOLUTION / 2);
+        const segment = segments.find(s => centerTime >= s.start && centerTime < s.end);
+
         if (segment) {
             barData.push({
-                time: t + 0.5,
+                time: t,
                 power: segment.power,
                 color: segment.color
             });
@@ -157,7 +178,7 @@ export function WorkoutChart({ workoutText }: WorkoutChartProps) {
                         dataKey="time"
                         type="number"
                         domain={[0, maxTime]}
-                        tickFormatter={(v) => `${v}m`}
+                        tickFormatter={(v) => `${Math.round(v)}m`}
                         tick={{ fontSize: 10, fill: '#888' }}
                         axisLine={{ stroke: '#444' }}
                         tickLine={{ stroke: '#444' }}

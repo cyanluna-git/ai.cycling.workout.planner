@@ -118,7 +118,14 @@ class WorkoutAssembler:
         elif intensity == "hard":
             preferred_types = ["VO2max", "Threshold"]
         else:
+            # For moderate, mix widely
             preferred_types = ["SweetSpot", "Threshold", "Mixed"]
+
+        # Special handling for Long Workouts (>90 min total -> available_time > ~60)
+        # Prioritize Endurance/Tempo to fill volume without burnout
+        if available_time > 60:
+            # Add longer endurance blocks to preferred types effectively
+            preferred_types.extend(["Endurance", "SweetSpot"])
 
         # Get segments matching preference
         matching_segments = [
