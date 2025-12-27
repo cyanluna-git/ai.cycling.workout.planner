@@ -14,6 +14,7 @@ from .workout_skeleton import (
     BarcodeBlock,
     OverUnderBlock,
     SteadyBlock,
+    ComplexRepeaterBlock,
 )
 
 logger = logging.getLogger(__name__)
@@ -62,6 +63,8 @@ class ProtocolBuilder:
             return self._build_over_under(block)
         elif isinstance(block, SteadyBlock):
             return [self._build_steady(block)]
+        elif isinstance(block, ComplexRepeaterBlock):
+            return self._build_complex_repeater(block)
         else:
             logger.warning(f"Unknown block type: {type(block)}")
             return []
@@ -188,16 +191,96 @@ class ProtocolBuilder:
                     "name": "Under",
                 }
             )
-
         return steps
 
     def _build_steady(self, block: SteadyBlock) -> Dict[str, Any]:
         """Build a steady-state interval at fixed power."""
+        # Handle both duration_minutes and duration_seconds
+        if block.duration_seconds:
+            duration = block.duration_seconds
+        elif block.duration_minutes:
+            duration = block.duration_minutes * 60
+        else:
+            duration = 60  # Default 1 minute
+
         return {
             "type": "Interval",
-            "duration": block.duration_minutes * 60,
+            "duration": duration,
             "power": {"value": block.power, "units": "%ftp"},
         }
+
+    def _build_complex_repeater(
+        self, block: ComplexRepeaterBlock
+    ) -> List[Dict[str, Any]]:
+        """Build complex repeater with nested blocks and rest intervals.
+
+        Flattens the nested structure by repeating the inner blocks
+        and adding rest intervals between sets.
+        """
+        steps = []
+
+        for rep in range(block.repetitions):
+            # Build each nested block
+            for nested_block_data in block.blocks:
+                nested_type = nested_block_data.get("type", "steady")
+
+                if nested_type == "steady":
+                    # Handle both duration_minutes and duration_seconds
+                    duration = nested_block_data.get("duration_seconds") or (
+                        nested_block_data.get("duration_minutes", 1) * 60
+                    )
+                    steps.append(
+                        {
+                            "type": "Interval",
+                            "duration": duration,
+                            "power": {
+                                "value": nested_block_data.get("power", 90),
+                                "units": "%ftp",
+                            },
+                        }
+                    )
+                elif nested_type == "over_under":
+                    # Handle nested over_under
+                    for _ in range(nested_block_data.get("repetitions", 1)):
+                        steps.append(
+                            {
+                                "type": "Interval",
+                                "duration": nested_block_data.get(
+                                    "over_duration_seconds", 60
+                                ),
+                                "power": {
+                                    "value": nested_block_data.get("over_power", 105),
+                                    "units": "%ftp",
+                                },
+                                "name": "Over",
+                            }
+                        )
+                        steps.append(
+                            {
+                                "type": "Interval",
+                                "duration": nested_block_data.get(
+                                    "under_duration_seconds", 120
+                                ),
+                                "power": {
+                                    "value": nested_block_data.get("under_power", 92),
+                                    "units": "%ftp",
+                                },
+                                "name": "Under",
+                            }
+                        )
+                # Add more nested types as needed
+
+            # Add rest between sets (except after last rep)
+            if rep < block.repetitions - 1:
+                steps.append(
+                    {
+                        "type": "Recovery",
+                        "duration": block.rest_duration_seconds,
+                        "power": {"value": block.rest_power, "units": "%ftp"},
+                    }
+                )
+
+        return steps
 
     def build_workout_text(self, skeleton: WorkoutSkeleton) -> str:
         """Build human-readable workout text for Intervals.icu.
