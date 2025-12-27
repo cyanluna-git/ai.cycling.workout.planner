@@ -198,7 +198,7 @@ async def create_workout(
                 "estimated_tss": request.estimated_tss,
                 "duration_minutes": request.duration_minutes,
                 "event_id": event.get("id"),
-                # We could save steps here too if schema supported it, but text is fine for basic persistence
+                "steps": request.steps,  # Save structured steps for chart rendering
             },
         )
 
