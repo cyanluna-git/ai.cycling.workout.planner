@@ -460,3 +460,61 @@ async def sync_workout_from_intervals(user_id: str, event: dict) -> None:
         ).execute()
     except Exception as e:
         logger.error(f"Failed to sync workout {event.get('id')}: {e}")
+
+
+async def cleanup_stale_workouts(
+    user_id: str, week_start: str, week_end: str, valid_event_ids: list
+) -> int:
+    """Remove workouts from local DB that no longer exist in Intervals.icu.
+
+    Args:
+        user_id: User ID.
+        week_start: Start of week (YYYY-MM-DD).
+        week_end: End of week (YYYY-MM-DD).
+        valid_event_ids: List of event IDs that exist in Intervals.icu.
+
+    Returns:
+        Number of deleted workouts.
+    """
+    supabase = get_supabase_admin_client()
+
+    try:
+        # Get all local workouts for this week
+        result = (
+            supabase.table("saved_workouts")
+            .select("id, intervals_event_id, workout_date")
+            .eq("user_id", user_id)
+            .gte("workout_date", week_start)
+            .lte("workout_date", week_end)
+            .execute()
+        )
+
+        if not result.data:
+            return 0
+
+        # Find workouts that are not in the valid event IDs
+        deleted_count = 0
+        for workout in result.data:
+            event_id = workout.get("intervals_event_id")
+            # Skip if no event ID (manually created, not synced)
+            if not event_id:
+                continue
+
+            # Delete if event ID not in valid list
+            if str(event_id) not in [str(eid) for eid in valid_event_ids]:
+                logger.info(
+                    f"Deleting stale workout {workout['id']} (event {event_id}) for user {user_id}"
+                )
+                supabase.table("saved_workouts").delete().eq(
+                    "id", workout["id"]
+                ).execute()
+                deleted_count += 1
+
+        if deleted_count > 0:
+            logger.info(f"Cleaned up {deleted_count} stale workouts for user {user_id}")
+
+        return deleted_count
+
+    except Exception as e:
+        logger.error(f"Failed to cleanup stale workouts for user {user_id}: {e}")
+        return 0
