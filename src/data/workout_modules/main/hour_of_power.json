@@ -1,0 +1,21 @@
+{
+    "name": "Hour of Power",
+    "duration_minutes": 30,
+    "type": "Threshold",
+    "description": "3 blocks of 13x 20s @120% with 2min @78-82% tempo. Tempo with VO2 spikes.",
+    "structure": [
+        {
+            "type": "barcode",
+            "on_power": 120,
+            "off_power": 82,
+            "on_duration_seconds": 20,
+            "off_duration_seconds": 120,
+            "repetitions": 13
+        },
+        {
+            "type": "steady",
+            "power": 50,
+            "duration_minutes": 3
+        }
+    ]
+}
