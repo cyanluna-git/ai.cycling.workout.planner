@@ -46,7 +46,7 @@ export function WorkoutPreview({ workout, onRegister, isRegistering, isRegistere
         <Card className="w-full">
             <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center justify-between">
-                    <span>✨ {workout.name.replace("[Tmakase]", "").replace("AI Generated - ", "").trim()}</span>
+                    <span>✨ {workout.name.replace("[AICoach]", "").replace("AI Generated - ", "").trim()}</span>
                     <span className="text-sm font-normal text-muted-foreground">
                         {workout.workout_type} • ~{workout.estimated_duration_minutes}분
                         {workout.estimated_tss && ` • TSS ${workout.estimated_tss}`}
