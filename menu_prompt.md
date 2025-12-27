@@ -54,6 +54,8 @@ You are an expert Cycling Coach AI engine. Your goal is to assemble a modular wo
 
 # User Context
 - **TSB (Form):** -12.5 (Fatigued)
+- **Weekly TSS (Mon-Sun):** 350
+- **Yesterday's Load:** 120
 - **Time Available:** 120 min
 - **Primary Goal:** Endurance with some intensity
 

@@ -58,9 +58,40 @@ async def generate_workout(
         else:
             target_date = date.today()
 
+        # Calculate start of week (Monday) using iso calendar, compatible with date objects
+        # date.isocalendar() returns (year, week, weekday) where Monday is 1
+        today = date.today()
+        start_of_week = today
+        # Go back to monday
+        while start_of_week.weekday() > 0:  # 0 is Monday
+            from datetime import timedelta
+
+            start_of_week -= timedelta(days=1)
+
+        yesterday = today - timedelta(days=1)
+
         # Get current metrics
         activities = intervals.get_recent_activities(days=42)
         wellness_data = intervals.get_recent_wellness(days=7)
+
+        # Calculate Weekly TSS (Mon -> Today) and Yesterday's Load
+        weekly_tss = sum(
+            activity.get("training_load", 0) or 0
+            for activity in activities
+            if activity.get("start_date_local", "").startswith(
+                str(start_of_week.year)
+            )  # Simple year check first for speed
+            and start_of_week.strftime("%Y-%m-%d")
+            <= activity.get("start_date_local", "")[:10]
+            <= today.strftime("%Y-%m-%d")
+        )
+
+        yesterday_load = sum(
+            activity.get("training_load", 0) or 0
+            for activity in activities
+            if activity.get("start_date_local", "")[:10]
+            == yesterday.strftime("%Y-%m-%d")
+        )
 
         training_metrics = processor.calculate_training_metrics(activities)
         wellness_metrics = processor.analyze_wellness(wellness_data)
@@ -79,6 +110,8 @@ async def generate_workout(
             intensity=request.intensity,
             indoor=request.indoor,
             duration=request.duration,
+            weekly_tss=weekly_tss,
+            yesterday_load=yesterday_load,
         )
 
         # Parse workout text to extract steps
