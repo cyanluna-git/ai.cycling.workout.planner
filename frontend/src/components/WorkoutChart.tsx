@@ -118,7 +118,7 @@ export function WorkoutChart({ workoutText }: WorkoutChartProps) {
         const segment = segments.find(s => t >= s.start && t < s.end);
         if (segment) {
             barData.push({
-                time: t,
+                time: t + 0.5,
                 power: segment.power,
                 color: segment.color
             });
