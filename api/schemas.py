@@ -80,6 +80,9 @@ class GeneratedWorkout(BaseModel):
     steps: Optional[List[dict]] = Field(
         default=None, description="Structured workout steps (JSON)"
     )
+    zwo_content: Optional[str] = Field(
+        default=None, description="ZWO XML content for chart rendering"
+    )
 
 
 class WorkoutGenerateResponse(BaseModel):

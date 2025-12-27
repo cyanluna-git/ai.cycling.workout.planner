@@ -45,6 +45,7 @@ export interface GeneratedWorkout {
     cooldown: string[];
     design_goal?: string;
     steps?: any[]; // JSON steps for Intervals.icu
+    zwo_content?: string; // ZWO XML content for chart rendering
 }
 
 export interface WorkoutGenerateRequest {

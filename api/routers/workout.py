@@ -187,6 +187,17 @@ async def create_workout(
         # Save to local database for persistence
         from ..services.user_api_service import save_workout
 
+        # Generate ZWO for storage
+        zwo_content = None
+        if request.steps:
+            try:
+                from src.services.zwo_converter import ZWOConverter
+
+                converter = ZWOConverter(workout_name=request.name)
+                zwo_content = converter.convert(request.steps)
+            except Exception as e:
+                logger.warning(f"Failed to generate ZWO for storage: {e}")
+
         await save_workout(
             user["id"],
             {
@@ -198,7 +209,8 @@ async def create_workout(
                 "estimated_tss": request.estimated_tss,
                 "duration_minutes": request.duration_minutes,
                 "event_id": event.get("id"),
-                "steps": request.steps,  # Save structured steps for chart rendering
+                "steps": request.steps,
+                "zwo_content": zwo_content,  # Store ZWO for accurate chart rendering
             },
         )
 

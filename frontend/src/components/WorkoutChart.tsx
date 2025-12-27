@@ -1,4 +1,5 @@
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, ReferenceLine, Cell } from 'recharts';
+import { parseZwoToChartData, getMaxTime, getMaxPower, type ChartDataPoint } from '@/lib/zwo-parser';
 
 interface WorkoutStep {
     time: number;      // Start time in minutes
@@ -16,6 +17,7 @@ interface ChartSegment {
 
 interface WorkoutChartProps {
     workoutText: string;
+    zwoContent?: string;  // ZWO XML content for accurate rendering
     ftp?: number;
 }
 
@@ -137,33 +139,49 @@ function stepsToBarData(steps: WorkoutStep[]): ChartSegment[] {
     }));
 }
 
-export function WorkoutChart({ workoutText }: WorkoutChartProps) {
-    const steps = parseWorkoutSteps(workoutText);
-    const segments = stepsToBarData(steps);
+export function WorkoutChart({ workoutText, zwoContent }: WorkoutChartProps) {
+    // Use ZWO content if available, otherwise parse from text
+    let barData: ChartDataPoint[] = [];
+    let maxTime = 60;
+    let maxPower = 100;
 
-    if (segments.length === 0) {
-        return null;
+    if (zwoContent) {
+        // Use ZWO parser for accurate rendering
+        barData = parseZwoToChartData(zwoContent);
+        maxTime = getMaxTime(barData);
+        maxPower = getMaxPower(barData);
+    } else {
+        // Fallback to text parsing
+        const steps = parseWorkoutSteps(workoutText);
+        const segments = stepsToBarData(steps);
+
+        if (segments.length === 0) {
+            return null;
+        }
+
+        maxTime = segments[segments.length - 1]?.end || 60;
+        maxPower = Math.max(...segments.map(s => s.power), 100);
+
+        // Create fine-grained data for better visualization (10-second resolution)
+        const RESOLUTION = 1 / 6; // 10 seconds in minutes
+
+        for (let t = 0; t < maxTime; t += RESOLUTION) {
+            // Find segment covering this time point (t + half-resolution to check center)
+            const centerTime = t + (RESOLUTION / 2);
+            const segment = segments.find(s => centerTime >= s.start && centerTime < s.end);
+
+            if (segment) {
+                barData.push({
+                    time: t,
+                    power: segment.power,
+                    color: segment.color
+                });
+            }
+        }
     }
 
-    const maxTime = segments[segments.length - 1]?.end || 60;
-    const maxPower = Math.max(...segments.map(s => s.power), 100);
-
-    // Create fine-grained data for better visualization (10-second resolution)
-    const barData: { time: number; power: number; color: string }[] = [];
-    const RESOLUTION = 1 / 6; // 10 seconds in minutes
-
-    for (let t = 0; t < maxTime; t += RESOLUTION) {
-        // Find segment covering this time point (t + half-resolution to check center)
-        const centerTime = t + (RESOLUTION / 2);
-        const segment = segments.find(s => centerTime >= s.start && centerTime < s.end);
-
-        if (segment) {
-            barData.push({
-                time: t,
-                power: segment.power,
-                color: segment.color
-            });
-        }
+    if (barData.length === 0) {
+        return null;
     }
 
     return (
