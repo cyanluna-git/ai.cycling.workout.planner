@@ -17,6 +17,7 @@ from .data_processor import TrainingMetrics, WellnessMetrics
 from .validator import WorkoutValidator, ValidationResult
 from .workout_skeleton import WorkoutSkeleton, parse_skeleton_from_dict
 from .protocol_builder import ProtocolBuilder, build_intervals_icu_json
+from .workout_library import WARMUP_BLOCKS, MAIN_BLOCKS, COOLDOWN_BLOCKS
 
 logger = logging.getLogger(__name__)
 
@@ -90,66 +91,34 @@ Example:
 ```
 """
 
-# Enhanced system prompt with protocol types (Skeleton format)
-ENHANCED_SYSTEM_PROMPT = """You are an expert cycling coach logic engine. Design structured workout plans based on athlete condition.
+# Template Refinement Prompt
+TEMPLATE_REFINEMENT_PROMPT = """You are an expert cycling coach logic engine.
+Your goal is to REFINE a pre-selected workout template to match the athlete's specific condition.
 
-**CRITICAL: Protocol Selection Based on TSB (Training Stress Balance)**
+**Input Context:**
+1. Athlete Profile & TSB (Training Stress Balance)
+2. Selected Base Template (Warmup + Main Set + Cooldown)
 
-| TSB Range | Condition | REQUIRED Main Protocol |
-|-----------|-----------|------------------------|
-| < -20 | Very Fatigued | ONLY steady (50-65%) |
-| -20 ~ -10 | Fatigued | steady (65-75%) |
-| -10 ~ 0 | Neutral | step_up OR over_under |
-| 0 ~ 10 | Fresh | main_set_classic (4x4, 5x5) OR barcode |
-| > 10 | Very Fresh | main_set_classic (VO2max intervals) |
-
-**IMPORTANT: DO NOT use "steady" protocol when TSB > 0. Use interval protocols!**
-
-**Available Protocol Types:**
-
-1. **warmup_ramp** - ALWAYS use for warmup
-   - start_power: 35-45%, end_power: 70-80%, duration: 8-12 min
-
-2. **cooldown_ramp** - ALWAYS use for cooldown  
-   - start_power: 65-75%, end_power: 35-45%, duration: 5-10 min
-
-3. **main_set_classic** - For Fresh/Very Fresh (TSB > 0)
-   - Norwegian 4x4: work_power 105-110%, work_duration 240s, rest_duration 180-240s, reps 4
-   - 8x8 Threshold: work_power 88-95%, work_duration 480s, rest_duration 120s, reps 3-4
-
-4. **step_up** - For Neutral TSB (-10 ~ 0)
-   - power_steps: [75, 85, 95] or [80, 90, 100], step_duration: 300s each
-
-5. **barcode** - For Fresh TSB with high anaerobic focus
-   - on_power: 120-130%, off_power: 45-50%, on_duration: 30s, off_duration: 30s, reps 10-15
-
-6. **over_under** - For Neutral to Fresh TSB
-   - over_power: 105%, under_power: 95%, over_duration: 120s, under_duration: 120s, reps 4-6
-
-7. **steady** - ONLY for Fatigued/Very Fatigued (TSB < -10)
-   - power: 60-75%, duration_minutes: 20-45
+**Refinement Rules:**
+- **TSB < -20 (Very Fatigued)**: Reduce main set intensity by 5-10%, shorten duration if possible.
+- **TSB -10 ~ 0 (Neutral)**: Keep intensity as base or adjust slightly (-2% to +2%).
+- **TSB > 10 (Fresh)**: You may increase intensity by 2-5% or add 1-2 reps if duration allows.
+- **Warmup/Cooldown**: Generally keep as is, but can shorten if total duration limit is exceeded.
+- **Total Duration**: MUST NOT exceed the user's limit ({max_duration} min). Truncate cooldown or remove 1 main set rep if needed.
 
 **Output Format:**
+Return the fully constructed JSON with your refinements applied.
+The structure MUST match the Skeleton JSON format perfectly.
+
 ```json
 {{
-  "workout_theme": "Descriptive Name",
-  "workout_type": "Endurance|Threshold|VO2max|Recovery",
+  "workout_theme": "Refined Name (e.g., 'Ciabatta Adjusted')",
+  "workout_type": "...",
   "total_duration_minutes": <int>,
   "estimated_tss": <int>,
-  "structure": [
-    {{"type": "warmup_ramp", "start_power": 40, "end_power": 75, "duration_minutes": 10}},
-    {{"type": "main_set_classic", "work_power": 105, "rest_power": 50, "work_duration_seconds": 240, "rest_duration_seconds": 180, "repetitions": 4}},
-    {{"type": "cooldown_ramp", "start_power": 70, "end_power": 40, "duration_minutes": 8}}
-  ]
+  "structure": [ ... refined blocks ... ]
 }}
 ```
-
-**Rules:**
-1. ALWAYS include warmup_ramp at start and cooldown_ramp at end
-2. Select main protocol STRICTLY based on TSB condition table above
-3. For TSB > 0: MUST use main_set_classic, barcode, step_up, or over_under (NOT steady!)
-4. Keep total duration within user's specified limit
-5. Output pure JSON only, no explanations
 """
 
 
@@ -332,47 +301,81 @@ class WorkoutGenerator:
         """
         target_date = target_date or date.today()
 
-        # Build enhanced prompts
-        system_prompt = ENHANCED_SYSTEM_PROMPT
-        user_prompt = self._build_enhanced_user_prompt(
+        # 1. Select Templates based on TSB & User Preference
+        selected_warmup = WARMUP_BLOCKS["ramp_standard"]
+        selected_cooldown = COOLDOWN_BLOCKS["ramp_standard"]
+
+        # Main Block Selection Logic
+        tsb = training_metrics.tsb if training_metrics.tsb is not None else 0.0
+
+        if tsb < -20:
+            selected_main = MAIN_BLOCKS["steady_endurance"]
+            intensity_adj = "REDUCE intensity significantly"
+        elif tsb < -10:
+            selected_main = MAIN_BLOCKS["steady_endurance"]
+            intensity_adj = "Keep steady and moderate"
+        elif tsb < 5:
+            # Neutral/Slightly Fresh: Mixed/SweetSpot
+            selected_main = MAIN_BLOCKS["ciabatta_light"]
+            intensity_adj = "Standard intensity"
+        else:
+            # Fresh: High Intensity - Randomly pick from varied templates
+            import random
+
+            high_intensity_options = [
+                "ciabatta_classic",
+                "norwegian_4x4",
+                "pyramid_intervals",
+                "over_under_crisscross",
+            ]
+            selected_key = random.choice(high_intensity_options)
+            selected_main = MAIN_BLOCKS[selected_key]
+            intensity_adj = "Push hard if feeling good"
+
+        # 2. Assemble Base Context
+        assembled_skeleton = {
+            "workout_theme": f"{selected_main['name']} (Base)",
+            "workout_type": selected_main.get("type", "Endurance"),
+            "total_duration_minutes": selected_warmup["duration_minutes"]
+            + selected_main.get("duration", 40)
+            + selected_cooldown["duration_minutes"],  # approximate
+            "structure": (
+                selected_warmup["structure"]
+                + selected_main["structure"]
+                + selected_cooldown["structure"]
+            ),
+        }
+
+        # 3. Build Refinement Prompt
+        system_prompt = TEMPLATE_REFINEMENT_PROMPT
+        user_prompt = self._build_refinement_user_prompt(
             training_metrics,
             wellness_metrics,
             target_date,
-            style=style,
+            base_template=assembled_skeleton,
             notes=notes,
-            intensity=intensity,
-            indoor=indoor,
         )
 
-        print(
-            f"[ENHANCED] Generating enhanced workout for {target_date} (TSB: {training_metrics.tsb:.1f})"
-        )
-        logger.info(
-            f"Generating enhanced workout for {target_date} (TSB: {training_metrics.tsb:.1f})"
-        )
+        logger.info(f"Refining template '{selected_main['name']}' for TSB {tsb:.1f}")
+        print(f"[TEMPLATE] Selected: {selected_main['name']}")
 
-        # Generate with LLM
+        # 4. Generate Refinement with LLM
         response = self.llm.generate(system_prompt, user_prompt)
 
-        # Debug: print first 500 chars of response
-        print(f"[ENHANCED] LLM Response (first 500 chars): {response[:500]}")
+        # Debug: print first 500 chars
+        print(f"[REFINER] LLM Response: {response[:200]}...")
 
         # Parse skeleton response
         skeleton = self._parse_skeleton_response(response)
         print(f"[ENHANCED] Skeleton parsed: {skeleton is not None}")
 
         if skeleton is None:
-            # Fallback to legacy generation
-            logger.warning("Skeleton parsing failed, falling back to legacy generation")
-            return self.generate(
-                training_metrics,
-                wellness_metrics,
-                target_date,
-                style,
-                notes,
-                intensity,
-                indoor,
-            )
+            # Use assembled template directly without AI refinement
+            logger.warning("LLM refinement failed, using base template directly")
+            print("[FALLBACK] Using assembled template without AI refinement")
+
+            # Convert assembled_skeleton dict to WorkoutSkeleton
+            skeleton = parse_skeleton_from_dict(assembled_skeleton)
 
         # Build Intervals.icu format
         builder = ProtocolBuilder()
@@ -456,6 +459,36 @@ Settings:
 {f"- Notes: {notes}" if notes else ""}
 
 Generate a structured workout using the appropriate protocol types."""
+
+    def _build_refinement_user_prompt(
+        self,
+        metrics: TrainingMetrics,
+        wellness: WellnessMetrics,
+        target_date: date,
+        base_template: dict,
+        notes: str = "",
+    ) -> str:
+        """Build user prompt for template refinement."""
+
+        # Format template as clear JSON string
+        import json
+
+        template_str = json.dumps(base_template, indent=2)
+
+        return f"""Athlete Profile:
+- FTP: {self.profile.ftp}W
+- TSB (Form): {metrics.tsb:.1f} ({metrics.form_status})
+- Training Goal: {self.profile.training_goal}
+
+Target Date: {target_date}
+
+Selected Base Template:
+{template_str}
+
+User Notes: {notes}
+
+Based on the TSB and condition, please REFINE the power/duration values of the above template.
+"""
 
     def _parse_skeleton_response(self, response: str) -> Optional[WorkoutSkeleton]:
         """Parse LLM response into WorkoutSkeleton.

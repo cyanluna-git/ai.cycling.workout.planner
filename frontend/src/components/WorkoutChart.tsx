@@ -30,13 +30,33 @@ export function parseWorkoutSteps(text: string): WorkoutStep[] {
     const lines = text.split(/[\n,]/).map(l => l.trim()).filter(l => l);
 
     for (const line of lines) {
+        // Match ramp pattern: "10m 45% -> 75%" (warmup/cooldown ramps)
+        const rampMatch = line.match(/(\d+)m\s+(\d+)%\s*->\s*(\d+)%/);
+
         // Match patterns like "10m 50%", "5m 65%", etc.
         const simpleMatch = line.match(/(\d+)m\s+(\d+)%/);
 
-        // Match interval pattern: "5x 3m 115% 3m 50%"
-        const intervalMatch = line.match(/(\d+)x\s+(\d+)m\s+(\d+)%\s+(\d+)m\s+(\d+)%/);
+        // Match interval pattern: "5x 3m 115% 3m 50%" or "4x (3m 108% / 2m 50%)"
+        const intervalMatch = line.match(/(\d+)x\s*\(?(\d+)m\s+(\d+)%\s*[\/\s]+(\d+)m\s+(\d+)%\)?/);
 
-        if (intervalMatch) {
+        if (rampMatch) {
+            // Ramp: split into 1-minute segments for visual gradient
+            const duration = parseInt(rampMatch[1]);
+            const startPower = parseInt(rampMatch[2]);
+            const endPower = parseInt(rampMatch[3]);
+            const powerStep = (endPower - startPower) / duration;
+
+            for (let i = 0; i < duration; i++) {
+                const power = Math.round(startPower + powerStep * i);
+                steps.push({
+                    time: currentTime,
+                    duration: 1,
+                    power,
+                    label: `Ramp ${power}%`
+                });
+                currentTime += 1;
+            }
+        } else if (intervalMatch) {
             const reps = parseInt(intervalMatch[1]);
             const workDuration = parseInt(intervalMatch[2]);
             const workPower = parseInt(intervalMatch[3]);
