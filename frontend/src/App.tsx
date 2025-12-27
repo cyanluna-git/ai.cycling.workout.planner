@@ -14,6 +14,7 @@ import {
   generateWorkout,
   createWorkout,
   fetchWeeklyCalendar,
+  fetchTodaysWorkout,
   checkApiConfigured,
   type FitnessData,
   type GeneratedWorkout,
@@ -51,7 +52,17 @@ function Dashboard() {
 
       setIsLoadingCalendar(true);
       fetchWeeklyCalendar(session.access_token)
-        .then(setWeeklyCalendar)
+        .then((data) => {
+          setWeeklyCalendar(data);
+          // Load today's workout AFTER calendar sync removes race condition
+          return fetchTodaysWorkout(session.access_token);
+        })
+        .then((result) => {
+          if (result && result.success && result.workout) {
+            setWorkout(result.workout);
+            setSuccess("📅 오늘의 워크아웃을 불러왔습니다.");
+          }
+        })
         .catch(console.error)
         .finally(() => setIsLoadingCalendar(false));
     }
@@ -104,6 +115,8 @@ function Dashboard() {
           workout_text: workout.workout_text,
           duration_minutes: workout.estimated_duration_minutes,
           estimated_tss: workout.estimated_tss,
+          design_goal: workout.design_goal,
+          workout_type: workout.workout_type,
           force: true,
         },
         session.access_token
@@ -119,6 +132,33 @@ function Dashboard() {
       setError(`등록 오류: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       setIsRegistering(false);
+    }
+  };
+
+  const handleSelectDate = async (date: string) => {
+    if (!session?.access_token) return;
+
+    // Optional: Only allow clicking days with events (if desired)
+    // For now, let's allow trying to load any day, maybe user wants to see if there is one
+
+    setIsLoading(true); // Reuse loading state or add specific one? Reusing is fine for now
+    setError(null);
+    setSuccess(null);
+    setWorkout(null); // Clear current view
+
+    try {
+      const result = await fetchTodaysWorkout(session.access_token, date);
+      if (result.success && result.workout) {
+        setWorkout(result.workout);
+        setSuccess(`📅 ${date} 워크아웃을 불러왔습니다.`);
+      } else {
+        // No workout found for this date
+        setError(`${date}에는 저장된 워크아웃이 없습니다.`);
+      }
+    } catch (e) {
+      setError(`불러오기 실패: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -190,7 +230,11 @@ function Dashboard() {
 
           {/* Right Column */}
           <div className="space-y-4">
-            <WeeklyCalendarCard calendar={weeklyCalendar} isLoading={isLoadingCalendar} />
+            <WeeklyCalendarCard
+              calendar={weeklyCalendar}
+              isLoading={isLoadingCalendar}
+              onSelectDate={handleSelectDate}
+            />
 
             {error && (
               <div className="bg-destructive/10 text-destructive p-4 rounded-lg">

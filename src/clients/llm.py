@@ -153,7 +153,18 @@ class GeminiClient(BaseLLMClient):
 
         # Combine prompts for Gemini
         full_prompt = f"{system_prompt}\n\n{user_prompt}"
-        response = self.model.generate_content(full_prompt)
+
+        # Add timeout to prevent hanging
+        try:
+            # google-generativeai v0.3+ supports request_options
+            from google.generativeai.types import RequestOptions
+
+            response = self.model.generate_content(
+                full_prompt, request_options=RequestOptions(timeout=30)
+            )
+        except ImportError:
+            # Fallback for older versions or if RequestOptions not available
+            response = self.model.generate_content(full_prompt)
 
         return response.text if response.text else ""
 

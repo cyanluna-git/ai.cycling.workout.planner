@@ -150,6 +150,23 @@ async def create_workout(
         # Clear cache for this user (calendar will have new workout)
         clear_user_cache(user["id"], keys=["calendar", "fitness"])
 
+        # Save to local database for persistence
+        from ..services.user_api_service import save_workout
+
+        await save_workout(
+            user["id"],
+            {
+                "name": request.name,
+                "target_date": request.target_date,
+                "workout_text": request.workout_text,
+                "design_goal": request.design_goal,
+                "workout_type": request.workout_type,
+                "estimated_tss": request.estimated_tss,
+                "duration_minutes": request.duration_minutes,
+                "event_id": event.get("id"),
+            },
+        )
+
         return WorkoutCreateResponse(
             success=True,
             event_id=event.get("id"),
@@ -160,6 +177,26 @@ async def create_workout(
         return WorkoutCreateResponse(success=False, error=f"Intervals.icu error: {e}")
     except Exception as e:
         return WorkoutCreateResponse(success=False, error=str(e))
+
+
+@router.get("/workout/today", response_model=WorkoutGenerateResponse)
+async def get_today_workout(date: str = None, user: dict = Depends(get_current_user)):
+    """Get the saved workout for today or specific date."""
+    try:
+        from ..services.user_api_service import get_todays_workout
+
+        workout = await get_todays_workout(user["id"], target_date=date)
+
+        if workout:
+            return WorkoutGenerateResponse(success=True, workout=workout)
+        else:
+            return WorkoutGenerateResponse(
+                success=True, workout=None
+            )  # Or False if we want to signal "no workout"
+
+    except Exception as e:
+        logger.exception(f"Error fetching today's workout for {user['id']}")
+        return WorkoutGenerateResponse(success=False, error=str(e))
 
 
 def _parse_workout_sections(workout_text: str) -> tuple:
