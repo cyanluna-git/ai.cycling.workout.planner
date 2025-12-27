@@ -308,28 +308,46 @@ class WorkoutGenerator:
         # Main Block Selection Logic
         tsb = training_metrics.tsb if training_metrics.tsb is not None else 0.0
 
+        # Get all available main block keys from library
+        all_main_keys = list(MAIN_BLOCKS.keys())
+
         if tsb < -20:
-            selected_main = MAIN_BLOCKS["steady_endurance"]
+            # Very Fatigued: Use lightest available template
+            selected_main = (
+                MAIN_BLOCKS[all_main_keys[0]]
+                if all_main_keys
+                else {"name": "Recovery", "type": "Endurance", "structure": []}
+            )
             intensity_adj = "REDUCE intensity significantly"
         elif tsb < -10:
-            selected_main = MAIN_BLOCKS["steady_endurance"]
+            # Fatigued: Use moderate template
+            selected_main = (
+                MAIN_BLOCKS[all_main_keys[0]]
+                if all_main_keys
+                else {"name": "Endurance", "type": "Endurance", "structure": []}
+            )
             intensity_adj = "Keep steady and moderate"
         elif tsb < 5:
-            # Neutral/Slightly Fresh: Mixed/SweetSpot
-            selected_main = MAIN_BLOCKS["ciabatta_light"]
-            intensity_adj = "Standard intensity"
-        else:
-            # Fresh: High Intensity - Randomly pick from varied templates
+            # Neutral/Slightly Fresh: Random from all available
             import random
 
-            high_intensity_options = [
-                "ciabatta_classic",
-                "norwegian_4x4",
-                "pyramid_intervals",
-                "over_under_crisscross",
-            ]
-            selected_key = random.choice(high_intensity_options)
-            selected_main = MAIN_BLOCKS[selected_key]
+            selected_key = random.choice(all_main_keys) if all_main_keys else None
+            selected_main = (
+                MAIN_BLOCKS[selected_key]
+                if selected_key
+                else {"name": "Mixed", "type": "Mixed", "structure": []}
+            )
+            intensity_adj = "Standard intensity"
+        else:
+            # Fresh: High Intensity - Randomly pick from all available
+            import random
+
+            selected_key = random.choice(all_main_keys) if all_main_keys else None
+            selected_main = (
+                MAIN_BLOCKS[selected_key]
+                if selected_key
+                else {"name": "VO2max", "type": "VO2max", "structure": []}
+            )
             intensity_adj = "Push hard if feeling good"
 
         # 2. Assemble Base Context

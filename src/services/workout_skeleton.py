@@ -143,12 +143,32 @@ class SteadyBlock:
 
     type: Literal["steady"]
     power: int
-    duration_minutes: int
+    duration_minutes: Optional[int] = None
+    duration_seconds: Optional[int] = None  # Some templates use seconds
 
     def validate(self) -> List[str]:
         errors = []
-        if not 30 <= self.power <= 150:
+        if not 30 <= self.power <= 250:
             errors.append(f"power {self.power}% out of valid range")
+        return errors
+
+
+@dataclass
+class ComplexRepeaterBlock:
+    """Complex repeater block with nested sub-blocks and rest intervals."""
+
+    type: Literal["complex_repeater"]
+    repetitions: int
+    rest_duration_seconds: int
+    rest_power: int
+    blocks: List[dict]  # Nested blocks (will be flattened during build)
+
+    def validate(self) -> List[str]:
+        errors = []
+        if not 1 <= self.repetitions <= 10:
+            errors.append(f"repetitions {self.repetitions} out of valid range")
+        if not self.blocks:
+            errors.append("complex_repeater must have at least one block")
         return errors
 
 
@@ -160,6 +180,7 @@ WorkoutBlock = Union[
     BarcodeBlock,
     OverUnderBlock,
     SteadyBlock,
+    ComplexRepeaterBlock,
 ]
 
 
@@ -237,7 +258,17 @@ class WorkoutSkeleton:
                 return SteadyBlock(
                     type=block_type,
                     power=data.get("power", 65),
-                    duration_minutes=data.get("duration_minutes", 20),
+                    duration_minutes=data.get("duration_minutes"),
+                    duration_seconds=data.get("duration_seconds"),
+                )
+
+            elif block_type == "complex_repeater":
+                return ComplexRepeaterBlock(
+                    type=block_type,
+                    repetitions=data.get("repetitions", 1),
+                    rest_duration_seconds=data.get("rest_duration_seconds", 240),
+                    rest_power=data.get("rest_power", 50),
+                    blocks=data.get("blocks", []),
                 )
 
             else:
