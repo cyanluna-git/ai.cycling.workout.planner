@@ -375,7 +375,7 @@ def build_intervals_icu_json(skeleton: WorkoutSkeleton) -> Dict[str, Any]:
     workout_text = builder.build_workout_text(skeleton)
 
     return {
-        "name": f"[Tmakase] {skeleton.workout_theme}",
+        "name": f"[AICoach] {skeleton.workout_theme}",
         "type": skeleton.workout_type,
         "description": workout_text,
         "estimatedTss": skeleton.estimated_tss,
