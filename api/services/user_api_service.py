@@ -326,6 +326,11 @@ async def save_workout(user_id: str, workout_data: dict) -> dict:
     if steps_data:
         data["steps_json"] = json.dumps(steps_data)
 
+    # Save ZWO content if present
+    zwo_content = workout_data.get("zwo_content")
+    if zwo_content:
+        data["zwo_content"] = zwo_content
+
     # Upsert based on user_id and workout_date to prevent duplicates for the same day
     try:
         result = (
@@ -335,10 +340,11 @@ async def save_workout(user_id: str, workout_data: dict) -> dict:
         )
         return result.data[0] if result.data else {}
     except Exception as e:
-        # If steps_json column doesn't exist, try without it
-        if "steps_json" in str(e):
-            logger.warning("steps_json column not found, saving without steps")
+        # If columns don't exist, try without them
+        if "steps_json" in str(e) or "zwo_content" in str(e):
+            logger.warning("New columns not found, saving without steps/zwo")
             data.pop("steps_json", None)
+            data.pop("zwo_content", None)
             result = (
                 supabase.table("saved_workouts")
                 .upsert(data, on_conflict="user_id, workout_date")
@@ -402,7 +408,8 @@ async def get_todays_workout(
         warmup=warmup,
         main=main,
         cooldown=cooldown,
-        steps=steps,  # Include structured steps for chart rendering
+        steps=steps,
+        zwo_content=data.get("zwo_content"),  # Return ZWO for chart rendering
     )
 
 
