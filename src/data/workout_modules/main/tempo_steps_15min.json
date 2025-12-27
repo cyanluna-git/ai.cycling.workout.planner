@@ -1,0 +1,23 @@
+{
+    "name": "Tempo Steps 15min",
+    "duration_minutes": 15,
+    "type": "Endurance",
+    "description": "Stepping stone tempo block. 5min @ 75%, 5min @ 80%, 5min @ 85%. Progressive fatigue.",
+    "structure": [
+        {
+            "type": "steady",
+            "power": 75,
+            "duration_minutes": 5
+        },
+        {
+            "type": "steady",
+            "power": 80,
+            "duration_minutes": 5
+        },
+        {
+            "type": "steady",
+            "power": 85,
+            "duration_minutes": 5
+        }
+    ]
+}

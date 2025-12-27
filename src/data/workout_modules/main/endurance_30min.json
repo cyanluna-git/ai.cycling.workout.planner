@@ -1,0 +1,13 @@
+{
+    "name": "Endurance 30min",
+    "duration_minutes": 30,
+    "type": "Endurance",
+    "description": "Solid 30-minute block of steady aerobic work at 65% FTP. Foundation building.",
+    "structure": [
+        {
+            "type": "steady",
+            "power": 65,
+            "duration_minutes": 30
+        }
+    ]
+}

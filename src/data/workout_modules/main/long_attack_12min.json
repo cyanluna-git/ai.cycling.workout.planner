@@ -1,0 +1,28 @@
+{
+    "name": "Long Attack 12min",
+    "duration_minutes": 12,
+    "type": "Threshold",
+    "description": "Simulating a long breakaway attempt. 30s hard launch followed by steady threshold hold.",
+    "structure": [
+        {
+            "type": "steady",
+            "power": 150,
+            "duration_seconds": 30
+        },
+        {
+            "type": "steady",
+            "power": 102,
+            "duration_minutes": 5
+        },
+        {
+            "type": "steady",
+            "power": 95,
+            "duration_minutes": 6
+        },
+        {
+            "type": "steady",
+            "power": 130,
+            "duration_seconds": 30
+        }
+    ]
+}
