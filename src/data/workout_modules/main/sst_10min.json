@@ -1,12 +1,15 @@
 {
-    "name": "Sweet Spot 10min",
-    "duration_minutes": 10,
-    "type": "SweetSpot",
-    "structure": [
-        {
-            "type": "steady",
-            "power": 88,
-            "duration_minutes": 10
-        }
-    ]
+  "name": "Sweet Spot 10min",
+  "duration_minutes": 10,
+  "type": "SweetSpot",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 88,
+      "duration_minutes": 10
+    }
+  ],
+  "estimated_tss": 13,
+  "estimated_if": 0.9,
+  "fatigue_impact": "Medium"
 }

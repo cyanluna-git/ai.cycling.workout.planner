@@ -1,17 +1,20 @@
 {
-    "name": "Flush and Fade",
-    "duration_minutes": 15,
-    "structure": [
-        {
-            "type": "steady",
-            "power": 60,
-            "duration_minutes": 8
-        },
-        {
-            "type": "cooldown_ramp",
-            "start_power": 60,
-            "end_power": 40,
-            "duration_minutes": 7
-        }
-    ]
+  "name": "Flush and Fade",
+  "duration_minutes": 15,
+  "structure": [
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_minutes": 8
+    },
+    {
+      "type": "cooldown_ramp",
+      "start_power": 60,
+      "end_power": 40,
+      "duration_minutes": 7
+    }
+  ],
+  "estimated_tss": 7,
+  "estimated_if": 0.55,
+  "fatigue_impact": "Low"
 }

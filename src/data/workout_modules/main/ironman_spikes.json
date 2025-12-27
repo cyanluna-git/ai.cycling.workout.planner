@@ -1,21 +1,24 @@
 {
-    "name": "Ironman Spikes",
-    "duration_minutes": 35,
-    "type": "Endurance",
-    "description": "Long Z2 blocks with 20s @120% micro-bursts. Ironman-style endurance training.",
-    "structure": [
-        {
-            "type": "barcode",
-            "on_power": 120,
-            "off_power": 63,
-            "on_duration_seconds": 20,
-            "off_duration_seconds": 120,
-            "repetitions": 15
-        },
-        {
-            "type": "steady",
-            "power": 30,
-            "duration_minutes": 2
-        }
-    ]
+  "name": "Ironman Spikes",
+  "duration_minutes": 35,
+  "type": "Endurance",
+  "description": "Long Z2 blocks with 20s @120% micro-bursts. Ironman-style endurance training.",
+  "structure": [
+    {
+      "type": "barcode",
+      "on_power": 120,
+      "off_power": 63,
+      "on_duration_seconds": 20,
+      "off_duration_seconds": 120,
+      "repetitions": 15
+    },
+    {
+      "type": "steady",
+      "power": 30,
+      "duration_minutes": 2
+    }
+  ],
+  "estimated_tss": 28,
+  "estimated_if": 0.7,
+  "fatigue_impact": "Low"
 }

@@ -1,12 +1,15 @@
 {
-    "name": "Tempo 15min",
-    "duration_minutes": 15,
-    "type": "Endurance",
-    "structure": [
-        {
-            "type": "steady",
-            "power": 75,
-            "duration_minutes": 15
-        }
-    ]
+  "name": "Tempo 15min",
+  "duration_minutes": 15,
+  "type": "Endurance",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 75,
+      "duration_minutes": 15
+    }
+  ],
+  "estimated_tss": 12,
+  "estimated_if": 0.7,
+  "fatigue_impact": "Low"
 }
