@@ -124,7 +124,8 @@ function Dashboard() {
 
       if (result.success) {
         setSuccess(`✅ 등록 완료! (Event ID: ${result.event_id})`);
-        setWorkout(null);
+        // Keep the workout visible!
+        // setWorkout(null); 
       } else {
         setError(result.error || "등록 실패");
       }
@@ -242,6 +243,10 @@ function Dashboard() {
               </div>
             )}
 
+            {/* Show success message only if NOT viewing the workout preview (which now has its own indicator) 
+                OR keep it for extra clarity? User said "removing button and showing Complete".
+                Let's keep the banner for now, it's consistent with other actions. 
+            */}
             {success && (
               <div className="bg-green-500/10 text-green-600 p-4 rounded-lg">
                 {success}
@@ -253,6 +258,7 @@ function Dashboard() {
                 workout={workout}
                 onRegister={handleRegister}
                 isRegistering={isRegistering}
+                isRegistered={!!success && success.includes("등록 완료")} // Pass registered state
                 ftp={fitness?.profile?.ftp ?? 250}
               />
             )}
