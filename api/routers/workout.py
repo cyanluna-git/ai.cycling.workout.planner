@@ -1,5 +1,6 @@
 """Workout router - generate and create workouts."""
 
+import logging
 from fastapi import APIRouter, HTTPException, Depends
 from datetime import date
 
@@ -30,6 +31,7 @@ from ..services.user_api_service import (
 )
 from ..services.cache_service import clear_user_cache
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -38,6 +40,8 @@ async def generate_workout(
     request: WorkoutGenerateRequest, user: dict = Depends(get_current_user)
 ):
     """Generate a workout using AI with user-specific API keys."""
+    logger.info(f"Generating workout for user {user['id']}")
+
     try:
         # Check rate limit
         await check_rate_limit(user["id"])
@@ -82,6 +86,7 @@ async def generate_workout(
         # Increment usage count on success
         await increment_usage(user["id"])
 
+        logger.info(f"Successfully generated workout for user {user['id']}")
         return WorkoutGenerateResponse(
             success=True,
             workout=GeneratedWorkout(
@@ -96,10 +101,15 @@ async def generate_workout(
             ),
         )
     except RateLimitExceededError as e:
+        logger.warning(f"Rate limit exceeded for user {user['id']}")
         raise HTTPException(status_code=429, detail=str(e))
     except UserApiServiceError as e:
-        return WorkoutGenerateResponse(success=False, error=str(e))
+        logger.error(f"User API service error for user {user['id']}: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
+        logger.exception(
+            f"Unexpected error in workout generation for user {user['id']}"
+        )
         return WorkoutGenerateResponse(success=False, error=str(e))
 
 

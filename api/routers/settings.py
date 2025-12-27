@@ -1,6 +1,7 @@
 """User settings router."""
 
 import os
+import logging
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional
@@ -14,6 +15,7 @@ sys.path.insert(
 from src.clients.supabase_client import get_supabase_client, get_supabase_admin_client
 from .auth import get_current_user
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -111,19 +113,29 @@ async def update_api_keys(
     supabase = get_supabase_admin_client()
 
     try:
+        logger.info(f"Updating API keys for user {user['id']}")
+        logger.debug(f"Received athlete_id: {api_keys.athlete_id}")
+
         # In production, encrypt these keys before storing
-        supabase.table("user_api_keys").upsert(
-            {
-                "user_id": user["id"],
-                "intervals_api_key": api_keys.intervals_api_key,
-                "athlete_id": api_keys.athlete_id,
-            },
-            on_conflict="user_id",
-        ).execute()
+        result = (
+            supabase.table("user_api_keys")
+            .upsert(
+                {
+                    "user_id": user["id"],
+                    "intervals_api_key": api_keys.intervals_api_key,
+                    "athlete_id": api_keys.athlete_id,
+                },
+                on_conflict="user_id",
+            )
+            .execute()
+        )
+
+        logger.info(f"API keys upsert result: {result}")
+        logger.debug(f"Stored data: {result.data}")
 
         return {"message": "API keys updated successfully"}
     except Exception as e:
-        print(f"[ERROR] update_api_keys failed: {e}")
+        logger.exception(f"Failed to update API keys for user {user['id']}")
         raise HTTPException(status_code=400, detail=str(e))
 
 

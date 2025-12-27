@@ -5,6 +5,7 @@ configured clients for LLM and Intervals.icu integration.
 """
 
 import os
+import logging
 from typing import Optional
 from dataclasses import dataclass
 from datetime import date
@@ -14,6 +15,8 @@ from src.clients.intervals import IntervalsClient
 from src.clients.llm import LLMClient
 from src.config import IntervalsConfig, LLMConfig, UserProfile
 from src.services.data_processor import DataProcessor
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -42,6 +45,7 @@ class UserApiServiceError(Exception):
 
 class RateLimitExceededError(UserApiServiceError):
     """Exception raised when user exceeds daily rate limit."""
+
     pass
 
 
@@ -55,24 +59,31 @@ async def check_rate_limit(user_id: str, limit: int = 5) -> bool:
     Raises:
         RateLimitExceededError: If limit exceeded.
     """
-    supabase = get_supabase_admin_client()
-    today = date.today().isoformat()
+    try:
+        supabase = get_supabase_admin_client()
+        today = date.today().isoformat()
 
-    result = (
-        supabase.table("workout_usage")
-        .select("generation_count")
-        .eq("user_id", user_id)
-        .eq("usage_date", today)
-        .maybe_single()
-        .execute()
-    )
-
-    data = result.data
-
-    if data and data.get("generation_count", 0) >= limit:
-        raise RateLimitExceededError(
-            f"일일 워크아웃 생성 한도({limit}회)를 초과했습니다. 내일 다시 시도해주세요."
+        result = (
+            supabase.table("workout_usage")
+            .select("generation_count")
+            .eq("user_id", user_id)
+            .eq("usage_date", today)
+            .maybe_single()
+            .execute()
         )
+
+        data = result.data
+
+        if data and data.get("generation_count", 0) >= limit:
+            raise RateLimitExceededError(
+                f"일일 워크아웃 생성 한도({limit}회)를 초과했습니다. 내일 다시 시도해주세요."
+            )
+    except RateLimitExceededError:
+        raise
+    except Exception as e:
+        # If workout_usage table doesn't exist or query fails, skip rate limiting
+        logger.warning(f"Rate limit check failed for user {user_id}, skipping: {e}")
+        logger.info("Continuing without rate limit check (table may not exist)")
 
     return True
 
@@ -83,14 +94,18 @@ async def increment_usage(user_id: str) -> None:
     Args:
         user_id: The user's unique ID.
     """
-    supabase = get_supabase_admin_client()
-    today = date.today().isoformat()
+    try:
+        supabase = get_supabase_admin_client()
+        today = date.today().isoformat()
 
-    # Use RPC for atomic upsert/increment
-    supabase.rpc(
-        "increment_workout_usage",
-        {"p_user_id": user_id, "p_date": today}
-    ).execute()
+        # Use RPC for atomic upsert/increment
+        supabase.rpc(
+            "increment_workout_usage", {"p_user_id": user_id, "p_date": today}
+        ).execute()
+    except Exception as e:
+        # If workout_usage table or RPC function doesn't exist, skip
+        logger.warning(f"Failed to increment usage for user {user_id}: {e}")
+        logger.info("Continuing without usage tracking")
 
 
 async def get_user_api_keys(user_id: str) -> UserApiKeysData:
@@ -105,27 +120,40 @@ async def get_user_api_keys(user_id: str) -> UserApiKeysData:
     Raises:
         UserApiServiceError: If API keys are not configured.
     """
+    logger.info(f"Fetching API keys for user_id: {user_id}")
     supabase = get_supabase_admin_client()
 
-    result = (
-        supabase.table("user_api_keys")
-        .select("intervals_api_key, athlete_id")
-        .eq("user_id", user_id)
-        .maybe_single()
-        .execute()
-    )
-
-    data = result.data if result else None
-
-    if not data:
-        raise UserApiServiceError(
-            "API 키가 설정되지 않았습니다. 설정 페이지에서 API 키를 입력해주세요."
+    try:
+        result = (
+            supabase.table("user_api_keys")
+            .select("intervals_api_key, athlete_id")
+            .eq("user_id", user_id)
+            .maybe_single()
+            .execute()
         )
 
-    return UserApiKeysData(
-        intervals_api_key=data.get("intervals_api_key"),
-        athlete_id=data.get("athlete_id"),
-    )
+        logger.debug(f"Supabase query result: {result}")
+        data = result.data if result else None
+        logger.debug(f"Extracted data: {data}")
+
+        if not data:
+            logger.warning(f"No API keys found for user {user_id}")
+            raise UserApiServiceError(
+                "⚠️ Intervals.icu API 키가 설정되지 않았습니다.\n"
+                "설정 페이지에서 Athlete ID와 API Key를 입력해주세요.\n"
+                "온보딩을 완료하지 않으셨다면 새로고침 후 다시 진행해주세요."
+            )
+
+        logger.info(f"Successfully retrieved API keys for user {user_id}")
+        return UserApiKeysData(
+            intervals_api_key=data.get("intervals_api_key"),
+            athlete_id=data.get("athlete_id"),
+        )
+    except UserApiServiceError:
+        raise
+    except Exception as e:
+        logger.exception(f"Unexpected error fetching API keys for user {user_id}")
+        raise UserApiServiceError(f"API 키 조회 중 오류가 발생했습니다: {str(e)}")
 
 
 async def get_user_settings(user_id: str) -> UserSettingsData:
