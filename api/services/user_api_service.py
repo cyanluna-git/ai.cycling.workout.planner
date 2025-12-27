@@ -5,6 +5,7 @@ configured clients for LLM and Intervals.icu integration.
 """
 
 import os
+import json
 import logging
 from typing import Optional
 from dataclasses import dataclass
@@ -317,18 +318,34 @@ async def save_workout(user_id: str, workout_data: dict) -> dict:
         "estimated_tss": workout_data.get("estimated_tss"),
         "duration_minutes": workout_data.get("duration_minutes"),
         "intervals_event_id": workout_data.get("event_id"),
-        "updated_at": date.today().isoformat(),  # Ensure we track updates
+        "updated_at": date.today().isoformat(),
     }
 
-    # Upsert based on user_id and workout_date to prevent duplicates for the same day
-    # Assuming valid constraint exists on (user_id, workout_date)
-    result = (
-        supabase.table("saved_workouts")
-        .upsert(data, on_conflict="user_id, workout_date")
-        .execute()
-    )
+    # Save structured steps as JSON if present
+    steps_data = workout_data.get("steps")
+    if steps_data:
+        data["steps_json"] = json.dumps(steps_data)
 
-    return result.data[0] if result.data else {}
+    # Upsert based on user_id and workout_date to prevent duplicates for the same day
+    try:
+        result = (
+            supabase.table("saved_workouts")
+            .upsert(data, on_conflict="user_id, workout_date")
+            .execute()
+        )
+        return result.data[0] if result.data else {}
+    except Exception as e:
+        # If steps_json column doesn't exist, try without it
+        if "steps_json" in str(e):
+            logger.warning("steps_json column not found, saving without steps")
+            data.pop("steps_json", None)
+            result = (
+                supabase.table("saved_workouts")
+                .upsert(data, on_conflict="user_id, workout_date")
+                .execute()
+            )
+            return result.data[0] if result.data else {}
+        raise
 
 
 async def get_todays_workout(
@@ -362,7 +379,15 @@ async def get_todays_workout(
 
     data = result.data
 
-    # Parse workout text to reconstruct sections
+    # Try to get structured steps from saved JSON
+    steps = None
+    if data.get("steps_json"):
+        try:
+            steps = json.loads(data["steps_json"])
+        except json.JSONDecodeError:
+            logger.warning(f"Failed to parse steps_json for workout {data.get('name')}")
+
+    # Parse workout text to reconstruct sections (fallback)
     from api.routers.workout import _parse_workout_sections
 
     warmup, main, cooldown = _parse_workout_sections(data["workout_text"])
@@ -377,6 +402,7 @@ async def get_todays_workout(
         warmup=warmup,
         main=main,
         cooldown=cooldown,
+        steps=steps,  # Include structured steps for chart rendering
     )
 
 
