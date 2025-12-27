@@ -494,7 +494,7 @@ class WorkoutGenerator:
             pass
 
         return GeneratedWorkout(
-            name=f"AI Generated - {skeleton.workout_theme}",
+            name=f"[Tmakase] {skeleton.workout_theme}",
             description=workout_text,
             workout_text=workout_text,
             estimated_duration_minutes=duration,
@@ -787,7 +787,7 @@ Based on the TSB and condition, please REFINE the power/duration values of the a
         duration = self._estimate_duration(workout_text)
 
         return GeneratedWorkout(
-            name=f"AI Generated - {name}",
+            name=f"[Tmakase] {name}",
             description=workout_text,  # description is the workout text for Intervals.icu
             workout_text=workout_text,
             estimated_duration_minutes=duration,
