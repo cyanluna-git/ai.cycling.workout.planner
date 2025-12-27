@@ -147,7 +147,7 @@ export async function fetchTodaysWorkout(token: string, date?: string): Promise<
 // --- Weekly Calendar ---
 
 export interface WeeklyEvent {
-    id: number;
+    id: string; // Changed to string
     date: string;
     name: string;
     category: string;
@@ -155,12 +155,16 @@ export interface WeeklyEvent {
     duration_minutes: number | null;
     tss: number | null;
     description: string | null;
+    is_actual?: boolean;
+    is_indoor?: boolean;
 }
 
 export interface WeeklyCalendarData {
     week_start: string;
     week_end: string;
     events: WeeklyEvent[];
+    planned_tss: number;
+    actual_tss: number;
 }
 
 export async function fetchWeeklyCalendar(token: string): Promise<WeeklyCalendarData> {

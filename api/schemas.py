@@ -141,16 +141,18 @@ class ActivitiesResponse(BaseModel):
 
 
 class WeeklyEvent(BaseModel):
-    """A planned workout event from Intervals.icu."""
+    """A planned workout event or actual activity from Intervals.icu."""
 
-    id: int
+    id: str  # Changed to str to accommodate Activity IDs (often strings)
     date: str = Field(..., description="Date in YYYY-MM-DD format")
     name: str
-    category: str = Field(..., description="Event category (WORKOUT, NOTE, etc)")
+    category: str = Field(..., description="Event category (WORKOUT, ACTIVITY, etc)")
     workout_type: Optional[str] = None
     duration_minutes: Optional[int] = None
     tss: Optional[int] = None
     description: Optional[str] = None
+    is_actual: bool = Field(False, description="True if this is a completed activity")
+    is_indoor: bool = Field(False, description="True if indoor activity")
 
 
 class WeeklyCalendarResponse(BaseModel):
@@ -159,3 +161,5 @@ class WeeklyCalendarResponse(BaseModel):
     week_start: str
     week_end: str
     events: List[WeeklyEvent]
+    planned_tss: int = 0
+    actual_tss: int = 0
