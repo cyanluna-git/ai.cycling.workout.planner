@@ -131,7 +131,7 @@ async def generate_workout(
                 workout_text=workout.workout_text,
                 warmup=warmup,
                 main=main,
-                cooldown=cooldown,
+                steps=workout.steps,
             ),
         )
     except RateLimitExceededError as e:
@@ -178,6 +178,7 @@ async def create_workout(
             target_date=target_date,
             moving_time=request.duration_minutes * 60,  # Convert minutes to seconds
             training_load=request.estimated_tss,
+            steps=request.steps,
         )
 
         # Clear cache for this user (calendar will have new workout)
@@ -197,6 +198,7 @@ async def create_workout(
                 "estimated_tss": request.estimated_tss,
                 "duration_minutes": request.duration_minutes,
                 "event_id": event.get("id"),
+                # We could save steps here too if schema supported it, but text is fine for basic persistence
             },
         )
 

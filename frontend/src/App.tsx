@@ -118,6 +118,7 @@ function Dashboard() {
           design_goal: workout.design_goal,
           workout_type: workout.workout_type,
           force: true,
+          steps: workout.steps, // Pass structured steps to API
         },
         session.access_token
       );

@@ -152,7 +152,12 @@ export function WeeklyCalendarCard({ calendar, isLoading, onSelectDate }: Weekly
                                     >
                                         <div className="flex items-center gap-1">
                                             <span>{getEventIcon(event)}</span>
-                                            <span className="truncate flex-1">{event.name}</span>
+                                            <span className="truncate flex-1">
+                                                {event.name
+                                                    .replace("[Tmakase]", "")
+                                                    .replace("AI Generated - ", "")
+                                                    .trim()}
+                                            </span>
                                         </div>
                                         {event.tss ? (
                                             <div className="mt-0.5 opacity-80 text-[9px]">

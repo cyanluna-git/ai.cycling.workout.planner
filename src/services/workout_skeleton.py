@@ -17,6 +17,7 @@ class ProtocolType(str, Enum):
 
     WARMUP_RAMP = "warmup_ramp"
     COOLDOWN_RAMP = "cooldown_ramp"
+    RAMP = "ramp"
     MAIN_SET_CLASSIC = "main_set_classic"
     STEP_UP = "step_up"
     BARCODE = "barcode"
@@ -28,7 +29,7 @@ class ProtocolType(str, Enum):
 class RampBlock:
     """Ramp warmup or cooldown block."""
 
-    type: Literal["warmup_ramp", "cooldown_ramp"]
+    type: Literal["warmup_ramp", "cooldown_ramp", "ramp"]
     start_power: int  # % of FTP
     end_power: int  # % of FTP
     duration_minutes: int
@@ -208,7 +209,7 @@ class WorkoutSkeleton:
         block_type = data.get("type", "")
 
         try:
-            if block_type in ("warmup_ramp", "cooldown_ramp"):
+            if block_type in ("warmup_ramp", "cooldown_ramp", "ramp"):
                 return RampBlock(
                     type=block_type,
                     start_power=data.get("start_power", 40),

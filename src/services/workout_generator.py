@@ -34,6 +34,7 @@ class GeneratedWorkout:
     estimated_tss: Optional[int]
     workout_type: str  # Endurance, Threshold, VO2max, Recovery
     design_goal: Optional[str] = None
+    steps: Optional[list] = None  # Structured steps for API
 
 
 # Intervals.icu workout text syntax reference - UPDATED for proper parsing
@@ -501,6 +502,7 @@ class WorkoutGenerator:
             estimated_tss=skeleton.estimated_tss,
             workout_type=skeleton.workout_type,
             design_goal=design_goal,
+            steps=steps,
         )
 
     def _build_enhanced_user_prompt(
@@ -793,6 +795,7 @@ Based on the TSB and condition, please REFINE the power/duration values of the a
             estimated_duration_minutes=duration,
             estimated_tss=estimated_tss,
             workout_type=workout_type,
+            steps=None,  # Legacy generation doesn't support structured steps yet
         )
 
     def _validate_steps(self, steps: list) -> list:

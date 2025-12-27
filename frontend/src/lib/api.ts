@@ -44,6 +44,7 @@ export interface GeneratedWorkout {
     main: string[];
     cooldown: string[];
     design_goal?: string;
+    steps?: any[]; // JSON steps for Intervals.icu
 }
 
 export interface WorkoutGenerateRequest {
@@ -108,6 +109,7 @@ export async function createWorkout(
         design_goal?: string;
         workout_type?: string;
         force?: boolean;
+        steps?: any[];
     },
     token: string
 ): Promise<{
