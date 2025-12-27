@@ -266,6 +266,19 @@ async def get_weekly_calendar(
             # Await sync to ensure data is available for detailed view
             await sync_workout_from_intervals(user_id, e)
 
+        # Cleanup stale workouts that no longer exist in Intervals.icu
+        from ..services.user_api_service import cleanup_stale_workouts
+
+        valid_event_ids = [
+            e.get("id") for e in events_data if e.get("category") == "WORKOUT"
+        ]
+        await cleanup_stale_workouts(
+            user_id,
+            week_start.isoformat(),
+            week_end.isoformat(),
+            valid_event_ids,
+        )
+
         # Process Actual Activities
         for a in week_activities:
             tss = a.get("icu_training_load") or 0
