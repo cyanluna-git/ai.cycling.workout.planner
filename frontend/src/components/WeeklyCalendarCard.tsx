@@ -154,7 +154,7 @@ export function WeeklyCalendarCard({ calendar, isLoading, onSelectDate }: Weekly
                                             <span>{getEventIcon(event)}</span>
                                             <span className="truncate flex-1">
                                                 {event.name
-                                                    .replace("[Tmakase]", "")
+                                                    .replace("[AICoach]", "")
                                                     .replace("AI Generated - ", "")
                                                     .trim()}
                                             </span>
