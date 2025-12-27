@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthPage } from "@/pages/AuthPage";
+import { ResetPasswordPage } from "@/pages/ResetPasswordPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { OnboardingPage } from "@/pages/OnboardingPage";
 import { LandingPage } from "@/pages/LandingPage";
@@ -150,6 +151,16 @@ function Dashboard() {
 function AppContent() {
   const { user, loading } = useAuth();
   const [showLanding, setShowLanding] = useState(true);
+  const [showResetPassword, setShowResetPassword] = useState(false);
+
+  // Check URL for password reset flow (Supabase redirects with #type=recovery)
+  useEffect(() => {
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const type = hashParams.get('type');
+    if (type === 'recovery') {
+      setShowResetPassword(true);
+    }
+  }, []);
 
   if (loading) {
     return (
@@ -157,6 +168,14 @@ function AppContent() {
         <div className="text-muted-foreground">로딩 중...</div>
       </div>
     );
+  }
+
+  // Show reset password page if in recovery mode
+  if (showResetPassword) {
+    return <ResetPasswordPage onComplete={() => {
+      setShowResetPassword(false);
+      window.location.hash = '';
+    }} />;
   }
 
   if (!user) {

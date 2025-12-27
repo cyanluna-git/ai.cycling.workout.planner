@@ -6,10 +6,11 @@ interface AuthContextType {
     user: User | null
     session: Session | null
     loading: boolean
-    signUp: (email: string, password: string) => Promise<{ error: Error | null }>
+    signUp: (email: string, password: string) => Promise<{ error: Error | null; needsConfirmation: boolean }>
     signIn: (email: string, password: string) => Promise<{ error: Error | null }>
     signInWithGoogle: () => Promise<{ error: Error | null }>
     signOut: () => Promise<void>
+    resetPassword: (email: string) => Promise<{ error: Error | null }>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -39,8 +40,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, [])
 
     const signUp = async (email: string, password: string) => {
-        const { error } = await supabase.auth.signUp({ email, password })
-        return { error: error as Error | null }
+        const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                emailRedirectTo: window.location.origin,
+            }
+        })
+        // If no session returned, email confirmation is required
+        const needsConfirmation = !data.session && !error
+        return { error: error as Error | null, needsConfirmation }
     }
 
     const signIn = async (email: string, password: string) => {
@@ -54,6 +63,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             options: {
                 redirectTo: window.location.origin,
             },
+        })
+        return { error: error as Error | null }
+    }
+
+    const resetPassword = async (email: string) => {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: `${window.location.origin}/reset-password`,
         })
         return { error: error as Error | null }
     }
@@ -72,6 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 signIn,
                 signInWithGoogle,
                 signOut,
+                resetPassword,
             }}
         >
             {children}
