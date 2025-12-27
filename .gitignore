@@ -60,3 +60,6 @@ dmypy.json
 Thumbs.db
 
 workout.db/
+
+uploaded_workout.zwo
+uploaded_workout.json
