@@ -63,6 +63,8 @@ You are an expert Cycling Coach AI engine. Your goal is to assemble a modular wo
 
 # User Context
 - **TSB (Form):** {tsb:.1f} ({form})
+- **Weekly TSS (Mon-Sun):** {weekly_tss}
+- **Yesterday's Load:** {yesterday_load}
 - **Time Available:** {duration} min
 - **Primary Goal:** {goal}
 
@@ -186,6 +188,10 @@ Wellness Status:
 Today's Date: {today}
 Day of Week: {weekday}
 
+**Recent Load Context:**
+- Weekly TSS (Mon-Sun): {weekly_tss}
+- Yesterday's Load: {yesterday_load}
+
 **User Settings:**
 - Target Duration: {max_duration} minutes
 - Training Style: {style}
@@ -259,6 +265,8 @@ class WorkoutGenerator:
         notes: str = "",
         intensity: str = "auto",
         indoor: bool = False,
+        weekly_tss: int = 0,
+        yesterday_load: int = 0,
     ) -> GeneratedWorkout:
         """Generate a workout based on current training state.
 
@@ -286,6 +294,8 @@ class WorkoutGenerator:
             notes=notes,
             intensity=intensity,
             indoor=indoor,
+            weekly_tss=weekly_tss,
+            yesterday_load=yesterday_load,
         )
 
         logger.info(
@@ -319,7 +329,13 @@ class WorkoutGenerator:
         return workout
 
     def _select_modules_with_llm(
-        self, tsb: float, form: str, duration: int, goal: str
+        self,
+        tsb: float,
+        form: str,
+        duration: int,
+        goal: str,
+        weekly_tss: int = 0,
+        yesterday_load: int = 0,
     ) -> dict:
         """Use LLM to select module keys from inventory."""
         inventory_text = get_module_inventory_text()
@@ -328,6 +344,8 @@ class WorkoutGenerator:
             module_inventory=inventory_text,
             tsb=tsb,
             form=form,
+            weekly_tss=weekly_tss,
+            yesterday_load=yesterday_load,
             duration=duration,
             goal=goal,
         )
@@ -361,6 +379,8 @@ class WorkoutGenerator:
         intensity: str = "auto",
         indoor: bool = False,
         duration: int = 60,
+        weekly_tss: int = 0,
+        yesterday_load: int = 0,
     ) -> GeneratedWorkout:
         """Generate a workout using enhanced skeleton-based approach.
 
@@ -417,6 +437,8 @@ class WorkoutGenerator:
                 form=training_metrics.form_status,
                 duration=target_duration,
                 goal=goal_desc,
+                weekly_tss=weekly_tss,
+                yesterday_load=yesterday_load,
             )
 
             logger.info(
@@ -623,6 +645,8 @@ Based on the TSB and condition, please REFINE the power/duration values of the a
         notes: str = "",
         intensity: str = "auto",
         indoor: bool = False,
+        weekly_tss: int = 0,
+        yesterday_load: int = 0,
     ) -> str:
         """Build the user prompt for LLM.
 
@@ -691,6 +715,8 @@ Based on the TSB and condition, please REFINE the power/duration values of the a
             intensity=intensity_desc,
             environment=environment,
             user_notes=user_notes,
+            weekly_tss=weekly_tss,
+            yesterday_load=yesterday_load,
         )
 
     def _parse_response(self, response: str) -> GeneratedWorkout:
