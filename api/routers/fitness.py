@@ -210,49 +210,96 @@ async def get_weekly_calendar(
         week_start = today - timedelta(days=today.weekday())  # Monday
         week_end = week_start + timedelta(days=6)  # Sunday
 
-        # Fetch events from Intervals.icu
+        # Fetch events (Planned) AND activities (Actual)
         events_data = client.get_events(oldest=week_start, newest=week_end)
+        activities_data = client.get_recent_activities(
+            days=60
+        )  # Fetch ample history then filter
 
-        events = []
+        # Filter activities for this week
+        week_activities = []
+        for a in activities_data:
+            a_date = a.get("start_date_local", "")[:10]
+            if week_start.isoformat() <= a_date <= week_end.isoformat():
+                week_activities.append(a)
+
+        combined_events = []
+        planned_tss = 0
+        actual_tss = 0
+
+        # Process Planned Events
         for e in events_data:
-            # Only include WORKOUT category
             category = e.get("category", "")
             if category != "WORKOUT":
                 continue
 
+            tss = e.get("icu_training_load") or 0
+            # Only add to planned TSS if not completed?
+            # Or just sum all planned. Usually "Planned TSS" includes everything on the plan.
+            planned_tss += tss
+
             # Parse date
             start_date = e.get("start_date_local", "")[:10]
 
-            # Get duration in minutes
+            # Get duration
             moving_time = e.get("moving_time")
             duration_minutes = moving_time // 60 if moving_time else None
 
-            events.append(
+            combined_events.append(
                 WeeklyEvent(
-                    id=e.get("id"),
+                    id=str(e.get("id")),
                     date=start_date,
                     name=e.get("name", "Workout"),
-                    category=category,
+                    category="WORKOUT",
                     workout_type=e.get("type"),
                     duration_minutes=duration_minutes,
-                    tss=e.get("icu_training_load"),
+                    tss=tss,
                     description=e.get("description"),
+                    is_actual=False,
+                    is_indoor=False,  # Planned doesn't usually specify indoor unless in name
                 )
             )
 
-            # Sync to local DB
+            # Sync to local DB (only planned workouts that might have definitions)
             from ..services.user_api_service import sync_workout_from_intervals
 
-            # We don't await this to avoid slowing down the response?
-            # Ideally use background task, but for now simple await is safer to ensure data consistency
-            # or just fire and forget if we can.
-            # Let's await it to be sure. It might add a few ms per event.
+            # Await sync to ensure data is available for detailed view
             await sync_workout_from_intervals(user_id, e)
+
+        # Process Actual Activities
+        for a in week_activities:
+            tss = a.get("icu_training_load") or 0
+            actual_tss += tss
+
+            start_date = a.get("start_date_local", "")[:10]
+            moving_time = a.get("moving_time")
+            duration_minutes = moving_time // 60 if moving_time else None
+
+            # Check if indoor
+            # Intervals often puts " VirtualRide" or similar in type, or `trainer` flag
+            is_indoor = a.get("trainer") is True or "Virtual" in a.get("type", "")
+
+            combined_events.append(
+                WeeklyEvent(
+                    id=f"act_{a.get('id')}",  # Prefix to distinguish
+                    date=start_date,
+                    name=a.get("name", "Activity"),
+                    category="ACTIVITY",
+                    workout_type=a.get("type"),
+                    duration_minutes=duration_minutes,
+                    tss=tss,
+                    description=None,  # Activities don't have descriptions in the same way
+                    is_actual=True,
+                    is_indoor=is_indoor,
+                )
+            )
 
         response = WeeklyCalendarResponse(
             week_start=week_start.isoformat(),
             week_end=week_end.isoformat(),
-            events=events,
+            events=combined_events,
+            planned_tss=int(planned_tss),
+            actual_tss=int(actual_tss),
         )
 
         # Cache the response
@@ -260,8 +307,6 @@ async def get_weekly_calendar(
 
         return response
     except UserApiServiceError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except IntervalsAPIError as e:
         raise HTTPException(status_code=502, detail=f"Intervals.icu API error: {e}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
