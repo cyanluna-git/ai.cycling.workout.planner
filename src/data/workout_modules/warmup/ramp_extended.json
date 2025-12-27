@@ -1,0 +1,22 @@
+{
+    "name": "Extended Warmup",
+    "duration_minutes": 15,
+    "structure": [
+        {
+            "type": "warmup_ramp",
+            "start_power": 40,
+            "end_power": 65,
+            "duration_minutes": 8
+        },
+        {
+            "type": "steady",
+            "power": 65,
+            "duration_minutes": 4
+        },
+        {
+            "type": "steady",
+            "power": 75,
+            "duration_minutes": 3
+        }
+    ]
+}

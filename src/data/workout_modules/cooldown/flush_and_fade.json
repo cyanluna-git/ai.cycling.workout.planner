@@ -1,0 +1,17 @@
+{
+    "name": "Flush and Fade",
+    "duration_minutes": 15,
+    "structure": [
+        {
+            "type": "steady",
+            "power": 60,
+            "duration_minutes": 8
+        },
+        {
+            "type": "cooldown_ramp",
+            "start_power": 60,
+            "end_power": 40,
+            "duration_minutes": 7
+        }
+    ]
+}

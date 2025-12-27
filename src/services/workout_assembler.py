@@ -100,6 +100,48 @@ class WorkoutAssembler:
             "structure": structure,
         }
 
+    def assemble_from_plan(self, selected_modules: List[str]) -> Dict[str, Any]:
+        """Assemble workout from specific list of module keys."""
+        logger.info(f"Assembling from plan: {selected_modules}")
+
+        structure = []
+        main_segments = []
+
+        for key in selected_modules:
+            module = None
+            if key in WARMUP_MODULES:
+                module = WARMUP_MODULES[key]
+            elif key in MAIN_SEGMENTS:
+                module = MAIN_SEGMENTS[key]
+                main_segments.append(module)
+            elif key in REST_SEGMENTS:
+                module = REST_SEGMENTS[key]
+            elif key in COOLDOWN_MODULES:
+                module = COOLDOWN_MODULES[key]
+
+            if module:
+                structure.extend(module["structure"])
+            else:
+                logger.warning(f"Module key '{key}' not found in inventory")
+
+        # Calculate stats
+        actual_duration = self._calculate_duration(structure)
+
+        if main_segments:
+            workout_type = self._determine_workout_type(main_segments)
+            theme = self._build_theme_name(main_segments, "custom")
+        else:
+            workout_type = "Mixed"
+            theme = "Custom Workout"
+
+        return {
+            "workout_theme": theme,
+            "workout_type": workout_type,
+            "total_duration_minutes": actual_duration,
+            "estimated_tss": self._estimate_tss(structure, actual_duration),
+            "structure": structure,
+        }
+
     def _select_main_segments(
         self, available_time: int, intensity: str
     ) -> List[Dict[str, Any]]:

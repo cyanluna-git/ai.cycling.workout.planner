@@ -1,0 +1,27 @@
+{
+    "name": "Attack Simulation",
+    "duration_minutes": 8,
+    "type": "Mixed",
+    "structure": [
+        {
+            "type": "steady",
+            "power": 150,
+            "duration_seconds": 30
+        },
+        {
+            "type": "steady",
+            "power": 95,
+            "duration_minutes": 4
+        },
+        {
+            "type": "steady",
+            "power": 115,
+            "duration_minutes": 2
+        },
+        {
+            "type": "steady",
+            "power": 50,
+            "duration_minutes": 1
+        }
+    ]
+}

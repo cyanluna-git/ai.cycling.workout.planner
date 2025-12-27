@@ -1,0 +1,12 @@
+{
+    "name": "Endurance 20min",
+    "duration_minutes": 20,
+    "type": "Endurance",
+    "structure": [
+        {
+            "type": "steady",
+            "power": 65,
+            "duration_minutes": 20
+        }
+    ]
+}
