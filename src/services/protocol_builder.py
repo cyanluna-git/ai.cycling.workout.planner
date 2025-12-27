@@ -72,23 +72,11 @@ class ProtocolBuilder:
     def _build_ramp(self, block: RampBlock) -> Dict[str, Any]:
         """Build a ramp warmup or cooldown step.
 
-        Creates a step with power != powerEnd for gradient effect.
+        Creates a step with power start != end for gradient effect.
+        Based on Intervals.icu working format from 3x9_Ciabatta.json.
         """
-        if block.type == "warmup_ramp":
-            step_type = "Warmup"
-            is_warmup = True
-            is_cooldown = False
-        elif block.type == "cooldown_ramp":
-            step_type = "Cooldown"
-            is_warmup = False
-            is_cooldown = True
-        else:
-            step_type = "Interval"
-            is_warmup = False
-            is_cooldown = False
-
+        # Base ramp structure
         step_data = {
-            "type": step_type,
             "duration": block.duration_minutes * 60,
             "ramp": True,
             "power": {
@@ -98,11 +86,12 @@ class ProtocolBuilder:
             },
         }
 
-        # Add explicit boolean flags for categorization
-        if is_warmup:
+        # Add warmup/cooldown flags based on block type (required by Intervals.icu)
+        if block.type == "warmup_ramp":
             step_data["warmup"] = True
-        if is_cooldown:
+        elif block.type == "cooldown_ramp":
             step_data["cooldown"] = True
+        # For generic "ramp" type, no additional flags needed
 
         return step_data
 
