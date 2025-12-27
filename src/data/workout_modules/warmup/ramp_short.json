@@ -1,0 +1,12 @@
+{
+    "name": "Quick Ramp",
+    "duration_minutes": 5,
+    "structure": [
+        {
+            "type": "warmup_ramp",
+            "start_power": 45,
+            "end_power": 70,
+            "duration_minutes": 5
+        }
+    ]
+}

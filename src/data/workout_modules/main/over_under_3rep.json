@@ -1,0 +1,15 @@
+{
+    "name": "Over/Under x3",
+    "duration_minutes": 12,
+    "type": "Threshold",
+    "structure": [
+        {
+            "type": "over_under",
+            "over_power": 105,
+            "under_power": 92,
+            "over_duration_seconds": 120,
+            "under_duration_seconds": 120,
+            "repetitions": 3
+        }
+    ]
+}

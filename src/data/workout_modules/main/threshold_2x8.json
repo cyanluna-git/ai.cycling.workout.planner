@@ -1,0 +1,15 @@
+{
+    "name": "2x8min Threshold",
+    "duration_minutes": 20,
+    "type": "Threshold",
+    "structure": [
+        {
+            "type": "main_set_classic",
+            "work_power": 95,
+            "rest_power": 50,
+            "work_duration_seconds": 480,
+            "rest_duration_seconds": 120,
+            "repetitions": 2
+        }
+    ]
+}

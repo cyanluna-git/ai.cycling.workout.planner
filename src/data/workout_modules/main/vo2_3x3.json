@@ -1,0 +1,15 @@
+{
+    "name": "3x3min VO2max",
+    "duration_minutes": 15,
+    "type": "VO2max",
+    "structure": [
+        {
+            "type": "main_set_classic",
+            "work_power": 115,
+            "rest_power": 50,
+            "work_duration_seconds": 180,
+            "rest_duration_seconds": 120,
+            "repetitions": 3
+        }
+    ]
+}

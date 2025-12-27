@@ -1,0 +1,11 @@
+{
+    "name": "Medium Rest",
+    "duration_minutes": 4,
+    "structure": [
+        {
+            "type": "steady",
+            "power": 50,
+            "duration_minutes": 4
+        }
+    ]
+}

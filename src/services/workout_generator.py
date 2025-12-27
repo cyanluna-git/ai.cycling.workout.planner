@@ -18,6 +18,7 @@ from .validator import WorkoutValidator, ValidationResult
 from .workout_skeleton import WorkoutSkeleton, parse_skeleton_from_dict
 from .protocol_builder import ProtocolBuilder, build_intervals_icu_json
 from .workout_library import WARMUP_BLOCKS, MAIN_BLOCKS, COOLDOWN_BLOCKS
+from .workout_modules import get_module_inventory_text
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +52,33 @@ Power Zone Guide:
 - 88-94%: Z4 (Sweet Spot/Threshold)
 - 100-110%: Z5 (VO2max)
 - 115%+: Z6 (Anaerobic)
+"""
+
+MODULE_SELECTOR_PROMPT = """You are an expert cycling coach.
+Available Modules:
+{module_inventory}
+
+User Profile:
+- TSB: {tsb:.1f} ({form})
+- Target Duration: {duration} min
+- Goal: {goal}
+
+Task: Create a workout by selecting a sequence of module keys.
+Rules:
+1. Must start with a WARMUP module.
+2. Must end with a COOLDOWN module.
+3. Total duration must be within +/- 5 mins of target.
+4. Select MAIN segments suitable for the user's form (TSB).
+5. Include REST segments between hard main segments (VO2max, Threshold).
+   - Use 'rest_short' (2m) or 'rest_medium' (4m).
+   - Endurance/Steady blocks might not need rest intervals.
+
+Output JSON:
+{{
+  "workout_name": "Creative Name",
+  "rationale": "Brief explanation",
+  "selected_modules": ["key1", "key2", "rest_key", "key3", "cooldown_key"]
+}}
 """
 
 # Legacy system prompt (kept for backward compatibility)
@@ -272,6 +300,36 @@ class WorkoutGenerator:
         )
         return workout
 
+    def _select_modules_with_llm(
+        self, tsb: float, form: str, duration: int, goal: str
+    ) -> dict:
+        """Use LLM to select module keys from inventory."""
+        inventory_text = get_module_inventory_text()
+
+        prompt = MODULE_SELECTOR_PROMPT.format(
+            module_inventory=inventory_text,
+            tsb=tsb,
+            form=form,
+            duration=duration,
+            goal=goal,
+        )
+
+        response = self.llm.generate(prompt, temperature=0.7)
+
+        # Simple JSON extraction
+        try:
+            # Find JSON block
+            match = re.search(r"\{.*\}", response, re.DOTALL)
+            if match:
+                json_str = match.group(0)
+                return json.loads(json_str)
+            else:
+                # Try to parse entire response if no code block
+                return json.loads(response)
+        except Exception as e:
+            logger.error(f"Failed to parse LLM response: {response}")
+            raise ValueError(f"LLM JSON parsing failed: {e}")
+
     def generate_enhanced(
         self,
         training_metrics: TrainingMetrics,
@@ -324,10 +382,42 @@ class WorkoutGenerator:
         from .workout_assembler import WorkoutAssembler
 
         assembler = WorkoutAssembler(tsb=tsb, training_goal=self.profile.training_goal)
-        assembled_skeleton = assembler.assemble(
-            target_duration=target_duration,
-            intensity=intensity,
-        )
+
+        # AI-Driven Selection with Fallback
+        try:
+            # We treat 'intensity' as 'goal' hint if provided, otherwise use profile goal
+            goal_desc = self.profile.training_goal or "General Fitness"
+            if intensity and intensity != "auto":
+                goal_desc += f" (Preference: {intensity})"
+
+            logger.info("Requesting workout plan from AI...")
+            selection = self._select_modules_with_llm(
+                tsb=tsb,
+                form=training_metrics.form_status,
+                duration=target_duration,
+                goal=goal_desc,
+            )
+
+            logger.info(
+                f"AI Selection: {selection.get('workout_name')} - {selection.get('selected_modules')}"
+            )
+
+            assembled_skeleton = assembler.assemble_from_plan(
+                selection["selected_modules"]
+            )
+
+            # Override name/theme from AI
+            if "workout_name" in selection:
+                assembled_skeleton["workout_theme"] = selection["workout_name"]
+
+        except Exception as e:
+            logger.error(
+                f"AI selection failed ({e}), falling back to algorithmic assembly"
+            )
+            assembled_skeleton = assembler.assemble(
+                target_duration=target_duration,
+                intensity=intensity,
+            )
 
         # Log and convert to skeleton
         logger.info(
