@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { WeeklyCalendarData, WeeklyEvent } from "@/lib/api";
+import { cleanWorkoutName } from "@/lib/workout-utils";
 
 interface WeeklyCalendarCardProps {
     calendar: WeeklyCalendarData | null;
@@ -153,10 +154,7 @@ export function WeeklyCalendarCard({ calendar, isLoading, onSelectDate }: Weekly
                                         <div className="flex items-center gap-1">
                                             <span>{getEventIcon(event)}</span>
                                             <span className="truncate flex-1">
-                                                {event.name
-                                                    .replace("[AICoach]", "")
-                                                    .replace("AI Generated - ", "")
-                                                    .trim()}
+                                                {cleanWorkoutName(event.name)}
                                             </span>
                                         </div>
                                         {event.tss ? (
