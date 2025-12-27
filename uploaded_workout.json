@@ -1,11 +1,11 @@
 {
   "start_date_local": "2025-12-27T00:00:00",
   "category": "WORKOUT",
-  "name": "[AICoach] 40/20 + 40/20 Combo",
-  "description": "Warmup\n- 10m 45% -> 75%\n\nMain Set\n- 10x (40s 125% / 20s 50%)\n- 2m 50%\n- 10x (40s 125% / 20s 50%)\n- 2m 50%\n- 3x Over/Under (2m 105% / 2m 92%)\n\nCooldown\n- 10m 70% -> 40%",
+  "name": "[AICoach] Xert + Climbing Combo",
+  "description": "Warmup\n- 10m 45% -> 75%\n\nMain Set\n- 3x Over/Under (2m 100% / 2m 85%)\n- 2m 50%\n\nCooldown\n- 10m 70% -> 40%",
   "type": "Ride",
-  "moving_time": 3360,
-  "icu_training_load": 43,
+  "moving_time": 3240,
+  "icu_training_load": 40,
   "filename": "workout.zwo",
-  "file_contents_base64": "<1008 chars>"
+  "file_contents_base64": "<784 chars>"
 }

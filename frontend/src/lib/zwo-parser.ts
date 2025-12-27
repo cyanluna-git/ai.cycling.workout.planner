@@ -2,18 +2,6 @@
  * ZWO Parser - Parses ZWO (Zwift Workout) XML to chart data
  */
 
-export interface ZwoStep {
-    type: 'steadystate' | 'warmup' | 'cooldown' | 'intervalst' | 'freeride';
-    duration: number;  // seconds
-    powerLow?: number; // decimal (0.5 = 50%)
-    powerHigh?: number;
-    repeat?: number;
-    onDuration?: number;
-    offDuration?: number;
-    onPower?: number;
-    offPower?: number;
-}
-
 export interface ChartDataPoint {
     time: number;     // minutes
     power: number;    // percentage
@@ -36,103 +24,133 @@ function getZoneColor(power: number): string {
  * Parse ZWO XML content to chart data points
  */
 export function parseZwoToChartData(zwoContent: string): ChartDataPoint[] {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(zwoContent, 'text/xml');
+    try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(zwoContent, 'text/xml');
 
-    const workout = doc.querySelector('workout');
-    if (!workout) return [];
-
-    const chartData: ChartDataPoint[] = [];
-    let currentTime = 0;
-    const RESOLUTION = 10; // 10-second resolution
-
-    // Process each workout element
-    const elements = workout.children;
-    for (let i = 0; i < elements.length; i++) {
-        const el = elements[i];
-        const tagName = el.tagName.toLowerCase();
-
-        if (tagName === 'steadystate') {
-            const duration = parseInt(el.getAttribute('Duration') || '0');
-            const power = parseFloat(el.getAttribute('Power') || '0.5') * 100;
-
-            // Add data points at resolution intervals
-            for (let t = 0; t < duration; t += RESOLUTION) {
-                chartData.push({
-                    time: (currentTime + t) / 60,
-                    power: Math.round(power),
-                    color: getZoneColor(power)
-                });
-            }
-            currentTime += duration;
-
-        } else if (tagName === 'warmup' || tagName === 'cooldown') {
-            const duration = parseInt(el.getAttribute('Duration') || '0');
-            const powerLow = parseFloat(el.getAttribute('PowerLow') || '0.4') * 100;
-            const powerHigh = parseFloat(el.getAttribute('PowerHigh') || '0.7') * 100;
-            const isWarmup = tagName === 'warmup';
-
-            // Create ramp by interpolating power
-            const steps = Math.floor(duration / RESOLUTION);
-            for (let j = 0; j < steps; j++) {
-                const progress = j / steps;
-                const power = isWarmup
-                    ? powerLow + (powerHigh - powerLow) * progress
-                    : powerHigh - (powerHigh - powerLow) * progress;
-
-                chartData.push({
-                    time: (currentTime + j * RESOLUTION) / 60,
-                    power: Math.round(power),
-                    color: getZoneColor(power)
-                });
-            }
-            currentTime += duration;
-
-        } else if (tagName === 'intervalst') {
-            const repeat = parseInt(el.getAttribute('Repeat') || '1');
-            const onDuration = parseInt(el.getAttribute('OnDuration') || '60');
-            const offDuration = parseInt(el.getAttribute('OffDuration') || '60');
-            const onPower = parseFloat(el.getAttribute('OnPower') || '1.0') * 100;
-            const offPower = parseFloat(el.getAttribute('OffPower') || '0.5') * 100;
-
-            for (let r = 0; r < repeat; r++) {
-                // On interval
-                for (let t = 0; t < onDuration; t += RESOLUTION) {
-                    chartData.push({
-                        time: (currentTime + t) / 60,
-                        power: Math.round(onPower),
-                        color: getZoneColor(onPower)
-                    });
-                }
-                currentTime += onDuration;
-
-                // Off interval
-                for (let t = 0; t < offDuration; t += RESOLUTION) {
-                    chartData.push({
-                        time: (currentTime + t) / 60,
-                        power: Math.round(offPower),
-                        color: getZoneColor(offPower)
-                    });
-                }
-                currentTime += offDuration;
-            }
-
-        } else if (tagName === 'freeride') {
-            const duration = parseInt(el.getAttribute('Duration') || '0');
-            const power = 50; // Default free ride power
-
-            for (let t = 0; t < duration; t += RESOLUTION) {
-                chartData.push({
-                    time: (currentTime + t) / 60,
-                    power,
-                    color: getZoneColor(power)
-                });
-            }
-            currentTime += duration;
+        const workout = doc.querySelector('workout');
+        if (!workout) {
+            console.warn('ZWO Parser: No workout element found');
+            return [];
         }
-    }
 
-    return chartData;
+        const chartData: ChartDataPoint[] = [];
+        let currentTime = 0;
+        const RESOLUTION = 10; // 10-second resolution
+
+        // Process each workout element - handle different child access methods
+        const elements = Array.from(workout.children);
+
+        for (const el of elements) {
+            try {
+                // Get tag name and normalize to lowercase for comparison
+                const tagName = el.tagName?.toLowerCase() || '';
+
+                if (tagName === 'steadystate') {
+                    const duration = parseInt(el.getAttribute('Duration') || '0');
+                    const power = parseFloat(el.getAttribute('Power') || '0.5') * 100;
+
+                    for (let t = 0; t < duration; t += RESOLUTION) {
+                        chartData.push({
+                            time: (currentTime + t) / 60,
+                            power: Math.round(power),
+                            color: getZoneColor(power)
+                        });
+                    }
+                    currentTime += duration;
+
+                } else if (tagName === 'warmup') {
+                    const duration = parseInt(el.getAttribute('Duration') || '0');
+                    const powerLow = parseFloat(el.getAttribute('PowerLow') || '0.4') * 100;
+                    const powerHigh = parseFloat(el.getAttribute('PowerHigh') || '0.7') * 100;
+
+                    const steps = Math.max(1, Math.floor(duration / RESOLUTION));
+                    for (let j = 0; j < steps; j++) {
+                        const progress = j / steps;
+                        const power = powerLow + (powerHigh - powerLow) * progress;
+
+                        chartData.push({
+                            time: (currentTime + j * RESOLUTION) / 60,
+                            power: Math.round(power),
+                            color: getZoneColor(power)
+                        });
+                    }
+                    currentTime += duration;
+
+                } else if (tagName === 'cooldown') {
+                    const duration = parseInt(el.getAttribute('Duration') || '0');
+                    const powerLow = parseFloat(el.getAttribute('PowerLow') || '0.4') * 100;
+                    const powerHigh = parseFloat(el.getAttribute('PowerHigh') || '0.7') * 100;
+
+                    const steps = Math.max(1, Math.floor(duration / RESOLUTION));
+                    for (let j = 0; j < steps; j++) {
+                        const progress = j / steps;
+                        // Cooldown goes from high to low
+                        const power = powerHigh - (powerHigh - powerLow) * progress;
+
+                        chartData.push({
+                            time: (currentTime + j * RESOLUTION) / 60,
+                            power: Math.round(power),
+                            color: getZoneColor(power)
+                        });
+                    }
+                    currentTime += duration;
+
+                } else if (tagName === 'intervalst') {
+                    const repeat = parseInt(el.getAttribute('Repeat') || '1');
+                    const onDuration = parseInt(el.getAttribute('OnDuration') || '60');
+                    const offDuration = parseInt(el.getAttribute('OffDuration') || '60');
+                    const onPower = parseFloat(el.getAttribute('OnPower') || '1.0') * 100;
+                    const offPower = parseFloat(el.getAttribute('OffPower') || '0.5') * 100;
+
+                    for (let r = 0; r < repeat; r++) {
+                        // On interval
+                        for (let t = 0; t < onDuration; t += RESOLUTION) {
+                            chartData.push({
+                                time: (currentTime + t) / 60,
+                                power: Math.round(onPower),
+                                color: getZoneColor(onPower)
+                            });
+                        }
+                        currentTime += onDuration;
+
+                        // Off interval
+                        for (let t = 0; t < offDuration; t += RESOLUTION) {
+                            chartData.push({
+                                time: (currentTime + t) / 60,
+                                power: Math.round(offPower),
+                                color: getZoneColor(offPower)
+                            });
+                        }
+                        currentTime += offDuration;
+                    }
+
+                } else if (tagName === 'freeride') {
+                    const duration = parseInt(el.getAttribute('Duration') || '0');
+                    const power = 50;
+
+                    for (let t = 0; t < duration; t += RESOLUTION) {
+                        chartData.push({
+                            time: (currentTime + t) / 60,
+                            power,
+                            color: getZoneColor(power)
+                        });
+                    }
+                    currentTime += duration;
+                }
+                // Ignore unknown elements silently
+            } catch (elementError) {
+                console.error('ZWO Parser: Error processing element', el.tagName, elementError);
+            }
+        }
+
+        console.log(`ZWO Parser: Processed ${elements.length} elements, total time: ${currentTime / 60} minutes, ${chartData.length} data points`);
+        return chartData;
+
+    } catch (error) {
+        console.error('ZWO Parser: Error parsing ZWO content', error);
+        return [];
+    }
 }
 
 /**
@@ -140,7 +158,7 @@ export function parseZwoToChartData(zwoContent: string): ChartDataPoint[] {
  */
 export function getMaxTime(chartData: ChartDataPoint[]): number {
     if (chartData.length === 0) return 0;
-    return chartData[chartData.length - 1].time + (10 / 60); // Add one more resolution step
+    return chartData[chartData.length - 1].time + (10 / 60);
 }
 
 /**

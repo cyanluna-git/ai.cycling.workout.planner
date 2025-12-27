@@ -145,13 +145,21 @@ export function WorkoutChart({ workoutText, zwoContent }: WorkoutChartProps) {
     let maxTime = 60;
     let maxPower = 100;
 
+    // Debug logging
+    console.log('WorkoutChart: zwoContent present:', !!zwoContent);
+    console.log('WorkoutChart: zwoContent length:', zwoContent?.length || 0);
+
     if (zwoContent) {
         // Use ZWO parser for accurate rendering
+        console.log('WorkoutChart: Using ZWO parser');
         barData = parseZwoToChartData(zwoContent);
+        console.log('WorkoutChart: ZWO parsed, barData length:', barData.length);
         maxTime = getMaxTime(barData);
         maxPower = getMaxPower(barData);
+        console.log('WorkoutChart: maxTime:', maxTime, 'maxPower:', maxPower);
     } else {
         // Fallback to text parsing
+        console.log('WorkoutChart: Falling back to text parsing');
         const steps = parseWorkoutSteps(workoutText);
         const segments = stepsToBarData(steps);
 
@@ -178,9 +186,11 @@ export function WorkoutChart({ workoutText, zwoContent }: WorkoutChartProps) {
                 });
             }
         }
+        console.log('WorkoutChart: Text parsed, barData length:', barData.length, 'maxTime:', maxTime);
     }
 
     if (barData.length === 0) {
+        console.log('WorkoutChart: No bar data, returning null');
         return null;
     }
 
