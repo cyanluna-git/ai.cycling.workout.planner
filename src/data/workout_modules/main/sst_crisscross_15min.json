@@ -1,0 +1,38 @@
+{
+    "name": "SST Criss-Cross 15min",
+    "duration_minutes": 15,
+    "type": "SweetSpot",
+    "description": "15 minutes of Sweet Spot with surges. 3x (4min @ 88%, 1min @ 110%). Simulates reacting to pace changes.",
+    "structure": [
+        {
+            "type": "steady",
+            "power": 88,
+            "duration_minutes": 4
+        },
+        {
+            "type": "steady",
+            "power": 110,
+            "duration_minutes": 1
+        },
+        {
+            "type": "steady",
+            "power": 88,
+            "duration_minutes": 4
+        },
+        {
+            "type": "steady",
+            "power": 110,
+            "duration_minutes": 1
+        },
+        {
+            "type": "steady",
+            "power": 88,
+            "duration_minutes": 4
+        },
+        {
+            "type": "steady",
+            "power": 110,
+            "duration_minutes": 1
+        }
+    ]
+}

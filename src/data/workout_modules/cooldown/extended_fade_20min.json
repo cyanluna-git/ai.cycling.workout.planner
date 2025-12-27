@@ -1,0 +1,14 @@
+{
+    "name": "Extended Fade 20min",
+    "duration_minutes": 20,
+    "type": "Cooldown",
+    "description": "A very long, relaxing fade out. Perfect after a grueling race simulation.",
+    "structure": [
+        {
+            "type": "cooldown_ramp",
+            "start_power": 65,
+            "end_power": 40,
+            "duration_minutes": 20
+        }
+    ]
+}
