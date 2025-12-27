@@ -385,13 +385,6 @@ async def get_todays_workout(
     # Prefer workout with zwo_content, then most recently updated
     rows = result.data if isinstance(result.data, list) else [result.data]
 
-    # Debug: print all rows
-    print(f"[DEBUG] get_todays_workout: Found {len(rows)} records for {target_date}")
-    for i, r in enumerate(rows):
-        print(
-            f"[DEBUG]   Row {i}: name='{r.get('name')}', has_zwo={r.get('zwo_content') is not None}"
-        )
-
     # Sort: prefer zwo_content not null, then by updated_at desc
     def sort_key(row):
         has_zwo = row.get("zwo_content") is not None
@@ -400,12 +393,6 @@ async def get_todays_workout(
 
     rows.sort(key=sort_key)
     data = rows[0]
-
-    # Debug logging for zwo_content (use print for visibility)
-    print(f"[DEBUG] get_todays_workout: Selected workout '{data.get('name')}'")
-    print(
-        f"[DEBUG] get_todays_workout: zwo_content present: {data.get('zwo_content') is not None}"
-    )
 
     # Try to get structured steps from saved JSON
     steps = None
