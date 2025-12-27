@@ -65,12 +65,12 @@ async def generate_workout(
         training_metrics = processor.calculate_training_metrics(activities)
         wellness_metrics = processor.analyze_wellness(wellness_data)
 
-        # Generate workout
+        # Generate workout using enhanced protocol-based approach
         generator = WorkoutGenerator(
             llm, user_profile, max_duration_minutes=request.duration
         )
 
-        workout = generator.generate(
+        workout = generator.generate_enhanced(
             training_metrics,
             wellness_metrics,
             target_date,
