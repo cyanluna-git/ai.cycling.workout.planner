@@ -364,36 +364,12 @@ class WorkoutGenerator:
             ),
         }
 
-        # 3. Build Refinement Prompt
-        system_prompt = TEMPLATE_REFINEMENT_PROMPT
-        user_prompt = self._build_refinement_user_prompt(
-            training_metrics,
-            wellness_metrics,
-            target_date,
-            base_template=assembled_skeleton,
-            notes=notes,
-        )
-
-        logger.info(f"Refining template '{selected_main['name']}' for TSB {tsb:.1f}")
+        # 3. AI BYPASS: Skip LLM refinement, use template directly
+        logger.info(f"Assembling template '{selected_main['name']}' for TSB {tsb:.1f}")
         print(f"[TEMPLATE] Selected: {selected_main['name']}")
+        print(f"[BYPASS] Using assembled template without AI refinement")
 
-        # 4. Generate Refinement with LLM
-        response = self.llm.generate(system_prompt, user_prompt)
-
-        # Debug: print first 500 chars
-        print(f"[REFINER] LLM Response: {response[:200]}...")
-
-        # Parse skeleton response
-        skeleton = self._parse_skeleton_response(response)
-        print(f"[ENHANCED] Skeleton parsed: {skeleton is not None}")
-
-        if skeleton is None:
-            # Use assembled template directly without AI refinement
-            logger.warning("LLM refinement failed, using base template directly")
-            print("[FALLBACK] Using assembled template without AI refinement")
-
-            # Convert assembled_skeleton dict to WorkoutSkeleton
-            skeleton = parse_skeleton_from_dict(assembled_skeleton)
+        skeleton = parse_skeleton_from_dict(assembled_skeleton)
 
         # Build Intervals.icu format
         builder = ProtocolBuilder()
