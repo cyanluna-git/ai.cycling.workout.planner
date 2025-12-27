@@ -304,6 +304,7 @@ class IntervalsClient:
         moving_time: int,
         workout_type: str = "Ride",
         training_load: Optional[int] = None,
+        steps: Optional[list] = None,
     ) -> dict:
         """Create a workout event on the calendar.
 
@@ -317,6 +318,7 @@ class IntervalsClient:
             moving_time: Expected duration in seconds.
             workout_type: Activity type (default: "Ride").
             training_load: Optional planned TSS.
+            steps: Optional list of structured steps (JSON). Preferable to description.
 
         Returns:
             Created event object.
@@ -346,7 +348,26 @@ class IntervalsClient:
         if training_load is not None:
             payload["icu_training_load"] = training_load
 
-        logger.info(f"Creating workout: {name} on {date_str}")
+        if steps is not None:
+            # Intervals.icu expects structured workout in 'workout_doc' field
+            payload["workout_doc"] = {
+                "target": "POWER",
+                "steps": steps,
+            }
+
+        # Debug: Dump payload to file
+        try:
+            import json
+
+            with open("uploaded_workout.json", "w") as f:
+                json.dump(payload, f, indent=2)
+            logger.info("Dumped upload payload to uploaded_workout.json")
+        except Exception as e:
+            logger.error(f"Failed to dump payload: {e}")
+
+        logger.info(
+            f"Creating workout: {name} on {date_str} (Has steps: {bool(steps)})"
+        )
         return self._make_request("POST", endpoint, json_data=payload)
 
     def update_workout(self, event_id: int, **kwargs) -> dict:

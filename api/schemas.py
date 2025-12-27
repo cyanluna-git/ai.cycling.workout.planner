@@ -77,6 +77,9 @@ class GeneratedWorkout(BaseModel):
     warmup: List[str] = Field(default_factory=list, description="Warmup steps")
     main: List[str] = Field(default_factory=list, description="Main set steps")
     cooldown: List[str] = Field(default_factory=list, description="Cooldown steps")
+    steps: Optional[List[dict]] = Field(
+        default=None, description="Structured workout steps (JSON)"
+    )
 
 
 class WorkoutGenerateResponse(BaseModel):
@@ -105,6 +108,9 @@ class WorkoutCreateRequest(BaseModel):
         None, description="Workout type (e.g., SweetSpot)"
     )
     force: bool = Field(False, description="Replace existing workout")
+    steps: Optional[List[dict]] = Field(
+        default=None, description="Structured workout steps for API"
+    )
 
 
 class WorkoutCreateResponse(BaseModel):

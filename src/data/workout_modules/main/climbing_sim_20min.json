@@ -5,7 +5,7 @@
     "description": "A steady, unrelenting climb simulation. Ramping slightly from 85% to 92%.",
     "structure": [
         {
-            "type": "warmup_ramp",
+            "type": "ramp",
             "start_power": 85,
             "end_power": 92,
             "duration_minutes": 20

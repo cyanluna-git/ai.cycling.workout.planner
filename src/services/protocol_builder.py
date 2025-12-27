@@ -74,48 +74,65 @@ class ProtocolBuilder:
 
         Creates a step with power != powerEnd for gradient effect.
         """
-        step_type = "Warmup" if block.type == "warmup_ramp" else "Cooldown"
+        if block.type == "warmup_ramp":
+            step_type = "Warmup"
+            is_warmup = True
+            is_cooldown = False
+        elif block.type == "cooldown_ramp":
+            step_type = "Cooldown"
+            is_warmup = False
+            is_cooldown = True
+        else:
+            step_type = "Interval"
+            is_warmup = False
+            is_cooldown = False
 
-        return {
+        step_data = {
             "type": step_type,
             "duration": block.duration_minutes * 60,
-            "power": {"value": block.start_power, "units": "%ftp"},
-            "powerEnd": {"value": block.end_power, "units": "%ftp"},
+            "ramp": True,
+            "power": {
+                "start": block.start_power,
+                "end": block.end_power,
+                "units": "%ftp",
+            },
         }
+
+        # Add explicit boolean flags for categorization
+        if is_warmup:
+            step_data["warmup"] = True
+        if is_cooldown:
+            step_data["cooldown"] = True
+
+        return step_data
 
     def _build_classic_intervals(
         self, block: ClassicIntervalBlock
     ) -> List[Dict[str, Any]]:
         """Build classic interval steps (4x4, 8x8, etc.).
 
-        Generates alternating work/rest steps for the specified repetitions.
+        Returns a nested repetitions block if count > 1.
         """
-        steps = []
+        # Define the base unit (work + rest)
+        unit_steps = [
+            {
+                "type": "Interval",
+                "duration": block.work_duration_seconds,
+                "power": {"value": block.work_power, "units": "%ftp"},
+            },
+            {
+                "type": "Recovery",
+                "duration": block.rest_duration_seconds,
+                "power": {"value": block.rest_power, "units": "%ftp"},
+            },
+        ]
 
-        for rep in range(block.repetitions):
-            # Work interval
-            steps.append(
-                {
-                    "type": "Interval",
-                    "duration": block.work_duration_seconds,
-                    "power": {"value": block.work_power, "units": "%ftp"},
-                    "name": f"Rep {rep + 1}" if block.name else None,
-                }
-            )
+        # Use nested format for cleaner Intervals.icu representation
+        if block.repetitions > 1:
+            return [{"reps": block.repetitions, "steps": unit_steps}]
 
-            # Rest interval (skip after last rep if very short cooldown follows)
-            steps.append(
-                {
-                    "type": "Recovery",
-                    "duration": block.rest_duration_seconds,
-                    "power": {"value": block.rest_power, "units": "%ftp"},
-                }
-            )
-
-        # Remove the last recovery if it's redundant (cooldown will follow)
-        # This is optional - keeping it for now for full structure
-
-        return steps
+        # If just 1 rep, flatten it (rare for "classic intervals" but possible)
+        return unit_steps
 
     def _build_step_up(self, block: StepUpBlock) -> List[Dict[str, Any]]:
         """Build step-up (staircase) progressive loading.
@@ -137,61 +154,54 @@ class ProtocolBuilder:
         return steps
 
     def _build_barcode(self, block: BarcodeBlock) -> List[Dict[str, Any]]:
-        """Build barcode/micro-burst intervals (30/30, 40/20, etc.).
+        """Build barcode/micro-burst intervals.
 
-        Generates alternating short on/off bursts.
+        Returns a nested repetitions block.
         """
-        steps = []
+        # Define the base unit (on + off)
+        unit_steps = [
+            {
+                "type": "Interval",
+                "duration": block.on_duration_seconds,
+                "power": {"value": block.on_power, "units": "%ftp"},
+            },
+            {
+                "type": "Recovery",
+                "duration": block.off_duration_seconds,
+                "power": {"value": block.off_power, "units": "%ftp"},
+            },
+        ]
 
-        for _ in range(block.repetitions):
-            # ON burst
-            steps.append(
-                {
-                    "type": "Interval",
-                    "duration": block.on_duration_seconds,
-                    "power": {"value": block.on_power, "units": "%ftp"},
-                }
-            )
+        if block.repetitions > 1:
+            return [{"reps": block.repetitions, "steps": unit_steps}]
 
-            # OFF recovery
-            steps.append(
-                {
-                    "type": "Recovery",
-                    "duration": block.off_duration_seconds,
-                    "power": {"value": block.off_power, "units": "%ftp"},
-                }
-            )
-
-        return steps
+        return unit_steps
 
     def _build_over_under(self, block: OverUnderBlock) -> List[Dict[str, Any]]:
         """Build over/under intervals (alternating above/below FTP).
 
-        Creates alternating over-threshold and under-threshold intervals.
+        Returns a nested repetitions block.
         """
-        steps = []
+        # Define the base unit (over + under)
+        unit_steps = [
+            {
+                "type": "Interval",
+                "duration": block.over_duration_seconds,
+                "power": {"value": block.over_power, "units": "%ftp"},
+                "name": "Over",
+            },
+            {
+                "type": "Interval",
+                "duration": block.under_duration_seconds,
+                "power": {"value": block.under_power, "units": "%ftp"},
+                "name": "Under",
+            },
+        ]
 
-        for _ in range(block.repetitions):
-            # Over (above FTP)
-            steps.append(
-                {
-                    "type": "Interval",
-                    "duration": block.over_duration_seconds,
-                    "power": {"value": block.over_power, "units": "%ftp"},
-                    "name": "Over",
-                }
-            )
+        if block.repetitions > 1:
+            return [{"reps": block.repetitions, "steps": unit_steps}]
 
-            # Under (below FTP)
-            steps.append(
-                {
-                    "type": "Interval",
-                    "duration": block.under_duration_seconds,
-                    "power": {"value": block.under_power, "units": "%ftp"},
-                    "name": "Under",
-                }
-            )
-        return steps
+        return unit_steps
 
     def _build_steady(self, block: SteadyBlock) -> Dict[str, Any]:
         """Build a steady-state interval at fixed power."""

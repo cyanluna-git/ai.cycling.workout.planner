@@ -1,0 +1,142 @@
+{
+  "start_date_local": "2025-12-27T00:00:00",
+  "category": "WORKOUT",
+  "name": "[Tmakase] Fresh Endurance Boost",
+  "description": "Warmup\n- 10m 45% -> 70%\n\nMain Set\n- 5m 80%\n- 4m 88%\n- 1m 110%\n- 4m 88%\n- 1m 110%\n- 4m 88%\n- 1m 110%\n- 2m 50%\n- 5m 75%\n- 5m 80%\n- 5m 85%\n- 2m 75%\n- 3m 60%\n- 3m 45%\n- 2m 35%",
+  "type": "Ride",
+  "moving_time": 3420,
+  "icu_training_load": 44,
+  "data": [
+    {
+      "type": "Warmup",
+      "duration": 600,
+      "ramp": true,
+      "power": {
+        "start": 45,
+        "end": 70,
+        "units": "%ftp"
+      },
+      "warmup": true
+    },
+    {
+      "type": "Interval",
+      "duration": 300,
+      "power": {
+        "value": 80,
+        "units": "%ftp"
+      }
+    },
+    {
+      "type": "Interval",
+      "duration": 240,
+      "power": {
+        "value": 88,
+        "units": "%ftp"
+      }
+    },
+    {
+      "type": "Interval",
+      "duration": 60,
+      "power": {
+        "value": 110,
+        "units": "%ftp"
+      }
+    },
+    {
+      "type": "Interval",
+      "duration": 240,
+      "power": {
+        "value": 88,
+        "units": "%ftp"
+      }
+    },
+    {
+      "type": "Interval",
+      "duration": 60,
+      "power": {
+        "value": 110,
+        "units": "%ftp"
+      }
+    },
+    {
+      "type": "Interval",
+      "duration": 240,
+      "power": {
+        "value": 88,
+        "units": "%ftp"
+      }
+    },
+    {
+      "type": "Interval",
+      "duration": 60,
+      "power": {
+        "value": 110,
+        "units": "%ftp"
+      }
+    },
+    {
+      "type": "Interval",
+      "duration": 120,
+      "power": {
+        "value": 50,
+        "units": "%ftp"
+      }
+    },
+    {
+      "type": "Interval",
+      "duration": 300,
+      "power": {
+        "value": 75,
+        "units": "%ftp"
+      }
+    },
+    {
+      "type": "Interval",
+      "duration": 300,
+      "power": {
+        "value": 80,
+        "units": "%ftp"
+      }
+    },
+    {
+      "type": "Interval",
+      "duration": 300,
+      "power": {
+        "value": 85,
+        "units": "%ftp"
+      }
+    },
+    {
+      "type": "Interval",
+      "duration": 120,
+      "power": {
+        "value": 75,
+        "units": "%ftp"
+      }
+    },
+    {
+      "type": "Interval",
+      "duration": 180,
+      "power": {
+        "value": 60,
+        "units": "%ftp"
+      }
+    },
+    {
+      "type": "Interval",
+      "duration": 180,
+      "power": {
+        "value": 45,
+        "units": "%ftp"
+      }
+    },
+    {
+      "type": "Interval",
+      "duration": 120,
+      "power": {
+        "value": 35,
+        "units": "%ftp"
+      }
+    }
+  ]
+}
