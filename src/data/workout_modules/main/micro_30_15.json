@@ -1,15 +1,18 @@
 {
-    "name": "30/15 Micro Intervals",
-    "duration_minutes": 10,
-    "type": "VO2max",
-    "structure": [
-        {
-            "type": "barcode",
-            "on_power": 120,
-            "off_power": 50,
-            "on_duration_seconds": 30,
-            "off_duration_seconds": 15,
-            "repetitions": 13
-        }
-    ]
+  "name": "30/15 Micro Intervals",
+  "duration_minutes": 10,
+  "type": "VO2max",
+  "structure": [
+    {
+      "type": "barcode",
+      "on_power": 120,
+      "off_power": 50,
+      "on_duration_seconds": 30,
+      "off_duration_seconds": 15,
+      "repetitions": 13
+    }
+  ],
+  "estimated_tss": 16,
+  "estimated_if": 1.0,
+  "fatigue_impact": "High"
 }

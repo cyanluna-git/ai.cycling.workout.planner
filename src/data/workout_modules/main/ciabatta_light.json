@@ -1,29 +1,32 @@
 {
-    "name": "Ciabatta Light 40/20",
-    "duration_minutes": 20,
-    "type": "VO2max",
-    "description": "2x10 bursts of 40s @125%/120% with 20s rest. High intensity microbursts.",
-    "structure": [
-        {
-            "type": "barcode",
-            "on_power": 125,
-            "off_power": 56,
-            "on_duration_seconds": 40,
-            "off_duration_seconds": 20,
-            "repetitions": 10
-        },
-        {
-            "type": "steady",
-            "power": 50,
-            "duration_minutes": 5
-        },
-        {
-            "type": "barcode",
-            "on_power": 120,
-            "off_power": 56,
-            "on_duration_seconds": 40,
-            "off_duration_seconds": 20,
-            "repetitions": 10
-        }
-    ]
+  "name": "Ciabatta Light 40/20",
+  "duration_minutes": 20,
+  "type": "VO2max",
+  "description": "2x10 bursts of 40s @125%/120% with 20s rest. High intensity microbursts.",
+  "structure": [
+    {
+      "type": "barcode",
+      "on_power": 125,
+      "off_power": 56,
+      "on_duration_seconds": 40,
+      "off_duration_seconds": 20,
+      "repetitions": 10
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 5
+    },
+    {
+      "type": "barcode",
+      "on_power": 120,
+      "off_power": 56,
+      "on_duration_seconds": 40,
+      "off_duration_seconds": 20,
+      "repetitions": 10
+    }
+  ],
+  "estimated_tss": 30,
+  "estimated_if": 0.95,
+  "fatigue_impact": "Very High"
 }

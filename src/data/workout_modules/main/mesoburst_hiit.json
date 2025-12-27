@@ -1,63 +1,66 @@
 {
-    "name": "MesoBurst HIIT",
-    "duration_minutes": 15,
-    "type": "VO2max",
-    "description": "Descending anaerobic bursts: 90s@150%, 60s@140%, 60s@130%, 60s@120%, 60s@110%. Maximum VO2 recruitment.",
-    "structure": [
-        {
-            "type": "steady",
-            "power": 150,
-            "duration_seconds": 90
-        },
-        {
-            "type": "steady",
-            "power": 65,
-            "duration_seconds": 60
-        },
-        {
-            "type": "steady",
-            "power": 140,
-            "duration_seconds": 60
-        },
-        {
-            "type": "steady",
-            "power": 65,
-            "duration_seconds": 60
-        },
-        {
-            "type": "steady",
-            "power": 130,
-            "duration_seconds": 60
-        },
-        {
-            "type": "steady",
-            "power": 65,
-            "duration_seconds": 60
-        },
-        {
-            "type": "steady",
-            "power": 120,
-            "duration_seconds": 60
-        },
-        {
-            "type": "steady",
-            "power": 65,
-            "duration_seconds": 60
-        },
-        {
-            "type": "steady",
-            "power": 110,
-            "duration_seconds": 60
-        },
-        {
-            "type": "steady",
-            "power": 65,
-            "duration_seconds": 60
-        },
-        {
-            "type": "steady",
-            "power": 50,
-            "duration_minutes": 3
-        }
-    ]
+  "name": "MesoBurst HIIT",
+  "duration_minutes": 15,
+  "type": "VO2max",
+  "description": "Descending anaerobic bursts: 90s@150%, 60s@140%, 60s@130%, 60s@120%, 60s@110%. Maximum VO2 recruitment.",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 150,
+      "duration_seconds": 90
+    },
+    {
+      "type": "steady",
+      "power": 65,
+      "duration_seconds": 60
+    },
+    {
+      "type": "steady",
+      "power": 140,
+      "duration_seconds": 60
+    },
+    {
+      "type": "steady",
+      "power": 65,
+      "duration_seconds": 60
+    },
+    {
+      "type": "steady",
+      "power": 130,
+      "duration_seconds": 60
+    },
+    {
+      "type": "steady",
+      "power": 65,
+      "duration_seconds": 60
+    },
+    {
+      "type": "steady",
+      "power": 120,
+      "duration_seconds": 60
+    },
+    {
+      "type": "steady",
+      "power": 65,
+      "duration_seconds": 60
+    },
+    {
+      "type": "steady",
+      "power": 110,
+      "duration_seconds": 60
+    },
+    {
+      "type": "steady",
+      "power": 65,
+      "duration_seconds": 60
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 3
+    }
+  ],
+  "estimated_tss": 25,
+  "estimated_if": 1.0,
+  "fatigue_impact": "Very High"
 }

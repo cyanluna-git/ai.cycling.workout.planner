@@ -1,11 +1,14 @@
 {
-    "name": "Short Rest",
-    "duration_minutes": 2,
-    "structure": [
-        {
-            "type": "steady",
-            "power": 50,
-            "duration_minutes": 2
-        }
-    ]
+  "name": "Short Rest",
+  "duration_minutes": 2,
+  "structure": [
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 2
+    }
+  ],
+  "estimated_tss": 0,
+  "estimated_if": 0.4,
+  "fatigue_impact": "Recovery"
 }

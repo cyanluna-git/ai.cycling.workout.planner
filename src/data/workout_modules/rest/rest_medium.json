@@ -1,11 +1,14 @@
 {
-    "name": "Medium Rest",
-    "duration_minutes": 4,
-    "structure": [
-        {
-            "type": "steady",
-            "power": 50,
-            "duration_minutes": 4
-        }
-    ]
+  "name": "Medium Rest",
+  "duration_minutes": 4,
+  "structure": [
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 4
+    }
+  ],
+  "estimated_tss": 1,
+  "estimated_if": 0.4,
+  "fatigue_impact": "Recovery"
 }

@@ -1,42 +1,45 @@
 {
-    "name": "Ciabatta 3x9",
-    "duration_minutes": 27,
-    "type": "VO2max",
-    "description": "3 sets of 9x40s @125% with 20s rest. Extended VO2max capacity work.",
-    "structure": [
-        {
-            "type": "barcode",
-            "on_power": 125,
-            "off_power": 56,
-            "on_duration_seconds": 40,
-            "off_duration_seconds": 20,
-            "repetitions": 9
-        },
-        {
-            "type": "steady",
-            "power": 59,
-            "duration_minutes": 8
-        },
-        {
-            "type": "barcode",
-            "on_power": 125,
-            "off_power": 56,
-            "on_duration_seconds": 40,
-            "off_duration_seconds": 20,
-            "repetitions": 9
-        },
-        {
-            "type": "steady",
-            "power": 59,
-            "duration_minutes": 8
-        },
-        {
-            "type": "barcode",
-            "on_power": 125,
-            "off_power": 56,
-            "on_duration_seconds": 40,
-            "off_duration_seconds": 20,
-            "repetitions": 9
-        }
-    ]
+  "name": "Ciabatta 3x9",
+  "duration_minutes": 27,
+  "type": "VO2max",
+  "description": "3 sets of 9x40s @125% with 20s rest. Extended VO2max capacity work.",
+  "structure": [
+    {
+      "type": "barcode",
+      "on_power": 125,
+      "off_power": 56,
+      "on_duration_seconds": 40,
+      "off_duration_seconds": 20,
+      "repetitions": 9
+    },
+    {
+      "type": "steady",
+      "power": 59,
+      "duration_minutes": 8
+    },
+    {
+      "type": "barcode",
+      "on_power": 125,
+      "off_power": 56,
+      "on_duration_seconds": 40,
+      "off_duration_seconds": 20,
+      "repetitions": 9
+    },
+    {
+      "type": "steady",
+      "power": 59,
+      "duration_minutes": 8
+    },
+    {
+      "type": "barcode",
+      "on_power": 125,
+      "off_power": 56,
+      "on_duration_seconds": 40,
+      "off_duration_seconds": 20,
+      "repetitions": 9
+    }
+  ],
+  "estimated_tss": 40,
+  "estimated_if": 0.95,
+  "fatigue_impact": "Very High"
 }

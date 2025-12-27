@@ -1,42 +1,45 @@
 {
-    "name": "SST with Surges",
-    "duration_minutes": 12,
-    "type": "SweetSpot",
-    "structure": [
-        {
-            "type": "steady",
-            "power": 88,
-            "duration_minutes": 3
-        },
-        {
-            "type": "steady",
-            "power": 110,
-            "duration_seconds": 30
-        },
-        {
-            "type": "steady",
-            "power": 88,
-            "duration_minutes": 3
-        },
-        {
-            "type": "steady",
-            "power": 110,
-            "duration_seconds": 30
-        },
-        {
-            "type": "steady",
-            "power": 88,
-            "duration_minutes": 3
-        },
-        {
-            "type": "steady",
-            "power": 110,
-            "duration_seconds": 30
-        },
-        {
-            "type": "steady",
-            "power": 88,
-            "duration_minutes": 1
-        }
-    ]
+  "name": "SST with Surges",
+  "duration_minutes": 12,
+  "type": "SweetSpot",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 88,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 110,
+      "duration_seconds": 30
+    },
+    {
+      "type": "steady",
+      "power": 88,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 110,
+      "duration_seconds": 30
+    },
+    {
+      "type": "steady",
+      "power": 88,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 110,
+      "duration_seconds": 30
+    },
+    {
+      "type": "steady",
+      "power": 88,
+      "duration_minutes": 1
+    }
+  ],
+  "estimated_tss": 16,
+  "estimated_if": 0.9,
+  "fatigue_impact": "Medium"
 }

@@ -1,12 +1,15 @@
 {
-    "name": "Standard Cooldown",
-    "duration_minutes": 10,
-    "structure": [
-        {
-            "type": "cooldown_ramp",
-            "start_power": 70,
-            "end_power": 40,
-            "duration_minutes": 10
-        }
-    ]
+  "name": "Standard Cooldown",
+  "duration_minutes": 10,
+  "structure": [
+    {
+      "type": "cooldown_ramp",
+      "start_power": 70,
+      "end_power": 40,
+      "duration_minutes": 10
+    }
+  ],
+  "estimated_tss": 5,
+  "estimated_if": 0.55,
+  "fatigue_impact": "Low"
 }

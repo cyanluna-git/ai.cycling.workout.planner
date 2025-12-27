@@ -54,30 +54,46 @@ Power Zone Guide:
 - 115%+: Z6 (Anaerobic)
 """
 
-MODULE_SELECTOR_PROMPT = """You are an expert cycling coach.
-Available Modules:
+MODULE_SELECTOR_PROMPT = """# Role
+You are an expert Cycling Coach AI engine. Your goal is to assemble a modular workout based on the user's daily condition.
+
+# Input Data: Block Library (With Cost & Metadata)
 {module_inventory}
 
-User Profile:
-- TSB: {tsb:.1f} ({form})
-- Target Duration: {duration} min
-- Goal: {goal}
+# User Context
+- **TSB (Form):** {tsb:.1f} ({form})
+- **Time Available:** {duration} min
+- **Primary Goal:** {goal}
 
-Task: Create a workout by selecting a sequence of module keys.
-Rules:
-1. Must start with a WARMUP module.
-2. Must end with a COOLDOWN module.
-3. Total duration must be within +/- 5 mins of target.
-4. Select MAIN segments suitable for the user's form (TSB).
-5. Include REST segments between hard main segments (VO2max, Threshold).
-   - Use 'rest_short' (2m) or 'rest_medium' (4m).
-   - Endurance/Steady blocks might not need rest intervals.
+# Logic & Rules (The "Coach's Brain")
+1. **Analyze Fatigue:**
+   - If TSB < -20 OR Condition is Bad: STRICTLY FORBID 'High'/'Very High' fatigue blocks. Stick to Endurance/Tempo.
+   - If TSB is -10 to -20: Allow 'Medium' fatigue blocks (SweetSpot). Limit 'High' fatigue blocks to max 1 segment.
+   - If TSB > -10 (Fresh): Allow 'High'/'Very High' fatigue blocks (VO2max, Anaerobic).
+2. **Structure:**
+   - Always Start: WARMUP module.
+   - Always End: COOLDOWN module.
+   - Middle: Fill with MAIN blocks to match Target Duration.
+   - **Crucial:** If a Main block has IF > 0.85 (SST/VO2), you MUST insert a REST block immediately after it.
+3. **Calculation:**
+   - Ensure sum of durations is within +/- 5min of Time Available.
 
-Output JSON:
+# Task
+Generate the workout plan in JSON format.
+
+# Output Format
 {{
-  "workout_name": "Creative Name",
-  "rationale": "Brief explanation",
-  "selected_modules": ["key1", "key2", "rest_key", "key3", "cooldown_key"]
+  "workout_name": "String (Creative title based on focus)",
+  "strategy_reasoning": "String (Explain WHY you chose these blocks based on TSB and Fatigue)",
+  "estimated_tss": "Integer (Sum of TSS)",
+  "total_duration": "Integer (Sum of minutes)",
+  "selected_modules": [
+    "ramp_standard",
+    "sst_10min",
+    "rest_short",
+    "sst_10min",
+    "ramp_standard"
+  ]
 }}
 """
 

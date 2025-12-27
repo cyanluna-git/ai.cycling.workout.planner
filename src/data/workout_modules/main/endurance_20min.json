@@ -1,12 +1,15 @@
 {
-    "name": "Endurance 20min",
-    "duration_minutes": 20,
-    "type": "Endurance",
-    "structure": [
-        {
-            "type": "steady",
-            "power": 65,
-            "duration_minutes": 20
-        }
-    ]
+  "name": "Endurance 20min",
+  "duration_minutes": 20,
+  "type": "Endurance",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 65,
+      "duration_minutes": 20
+    }
+  ],
+  "estimated_tss": 16,
+  "estimated_if": 0.7,
+  "fatigue_impact": "Low"
 }

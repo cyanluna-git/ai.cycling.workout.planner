@@ -1,12 +1,15 @@
 {
-    "name": "Standard Ramp",
-    "duration_minutes": 10,
-    "structure": [
-        {
-            "type": "warmup_ramp",
-            "start_power": 45,
-            "end_power": 75,
-            "duration_minutes": 10
-        }
-    ]
+  "name": "Standard Ramp",
+  "duration_minutes": 10,
+  "structure": [
+    {
+      "type": "warmup_ramp",
+      "start_power": 45,
+      "end_power": 75,
+      "duration_minutes": 10
+    }
+  ],
+  "estimated_tss": 5,
+  "estimated_if": 0.55,
+  "fatigue_impact": "Low"
 }
