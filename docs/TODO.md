@@ -61,6 +61,98 @@
 
 ---
 
+## 🔧 기존 기능 개선 (Intervals.icu API 활용)
+
+### Workout 업로드 고도화
+- [ ] `/api/v1/athlete/{id}/workouts/bulk` 활용한 대량 업로드
+- [ ] `.fit`, `.mrc`, `.erg` 포맷 다운로드 지원
+
+### Sport Settings 동기화
+- [ ] `/api/v1/athlete/{athleteId}/sport-settings/{id}` - FTP, 파워존, HR존 자동 동기화
+- [ ] 운동 생성 시 사용자의 실제 존 설정 반영
+
+### 실시간 피트니스 동기화
+- [ ] webhook/polling으로 자동 동기화 구현
+
+---
+
+## 🚀 신규 기능 계획 (Intervals.icu API 활용)
+
+### Phase 16: Wellness 데이터 통합
+
+**목적**
+사용자의 일일 건강 상태를 추적하고 컨디션에 맞는 맞춤형 운동을 제안
+
+**베네핏**
+- 과훈련 방지 및 부상 리스크 감소
+- HRV, 수면 품질 기반 회복 상태 파악
+- 개인화된 운동 강도 자동 조절로 최적의 훈련 효과
+
+**구현 방향**
+- [ ] `/api/v1/athlete/{id}/wellness` API 연동
+- [ ] 대시보드에 웰니스 지표 표시 (수면, HRV, 체중, 스트레스, 피로도)
+- [ ] 웰니스 점수 기반 운동 강도 자동 조절 로직
+- [ ] 컨디션 불량 시 회복 운동 또는 휴식 권장 알림
+
+---
+
+### Phase 17: Power Curve / Fitness 분석 대시보드
+
+**목적**
+선수의 피트니스 수준과 훈련 부하를 시각적으로 분석하여 훈련 상태 파악
+
+**베네핏**
+- MMP 커브로 현재 체력 수준과 약점 파악
+- CTL/ATL/TSB 추적으로 피크 컨디션 타이밍 예측
+- 과훈련 징후 조기 발견
+
+**구현 방향**
+- [ ] `/api/v1/athlete/{id}/power-curves` - MMP(Maximum Mean Power) 커브 시각화
+- [ ] `/api/v1/athlete/{id}/hr-curves` - 심박수 커브 표시
+- [ ] CTL(Chronic Training Load) / ATL(Acute Training Load) / TSB(Training Stress Balance) 차트
+- [ ] 피트니스 트렌드 분석 및 예측 그래프
+- [ ] 목표 이벤트까지의 피크 컨디션 시뮬레이션
+
+---
+
+### Phase 18: 훈련 계획 관리 (Training Plans)
+
+**목적**
+AI가 생성한 개별 운동을 체계적인 훈련 블록으로 구성하여 장기 훈련 관리
+
+**베네핏**
+- 주기화 훈련(Periodization) 지원
+- 목표 레이스/이벤트 기반 역산 계획
+- 훈련 일관성 및 연속성 향상
+
+**구현 방향**
+- [ ] `/api/v1/athlete/{id}/folders` - 훈련 계획 폴더 생성/관리 연동
+- [ ] `/api/v1/athlete/{id}/training-plan` - 훈련 블록 적용 기능
+- [ ] AI 생성 운동을 주간/월간 계획으로 묶어서 일괄 적용
+- [ ] 훈련 계획 템플릿 (베이스, 빌드, 피크, 테이퍼)
+- [ ] 계획 진행률 및 준수율 트래킹
+
+---
+
+### Phase 19: Activity 분석 강화
+
+**목적**
+완료된 운동을 상세 분석하여 목표 대비 수행도를 평가하고 개선점 도출
+
+**베네핏**
+- 계획한 운동 vs 실제 수행 비교로 정확한 피드백
+- 인터벌 품질 분석으로 훈련 효과 극대화
+- 장기적인 성과 추적 및 성장 지표 확인
+
+**구현 방향**
+- [ ] `/api/v1/activity/{id}/intervals` - 인터벌별 상세 분석 표시
+- [ ] `/api/v1/activity/{id}/power-curve` - 활동별 파워 커브 시각화
+- [ ] 운동 목표(계획) vs 실제 수행 비교 분석 리포트
+- [ ] 인터벌 준수율, 파워 타겟 적중률 등 KPI 계산
+- [ ] 과거 동일 운동과의 성과 비교
+
+---
+
 ## 배포 정보
 
 | 서비스 | URL |
