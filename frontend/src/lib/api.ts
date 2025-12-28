@@ -82,6 +82,46 @@ export interface WorkoutGenerateRequest {
     indoor: boolean;
 }
 
+// --- Sport Settings ---
+
+export interface PowerZone {
+    id: number;
+    name: string;
+    min_watts: number | null;
+    max_watts: number | null;
+}
+
+export interface HRZone {
+    id: number;
+    name: string;
+    min_bpm: number | null;
+    max_bpm: number | null;
+}
+
+export interface SportSettings {
+    // Power settings
+    ftp: number | null;
+    eftp: number | null;
+    ftp_source: string | null;
+
+    // Heart rate settings
+    max_hr: number | null;
+    lthr: number | null;
+    resting_hr: number | null;
+
+    // Zones
+    power_zones: PowerZone[];
+    hr_zones: HRZone[];
+
+    // Other metrics
+    weight: number | null;
+    w_per_kg: number | null;
+    pace_threshold: number | null;
+
+    // Sport type
+    sport_types: string[];
+}
+
 // --- API Functions ---
 
 export async function fetchFitness(token: string): Promise<FitnessData> {
@@ -89,6 +129,14 @@ export async function fetchFitness(token: string): Promise<FitnessData> {
         headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) throw new Error('Failed to fetch fitness data');
+    return res.json();
+}
+
+export async function fetchSportSettings(token: string, sport: string = 'Ride'): Promise<SportSettings> {
+    const res = await fetch(`${API_BASE}/api/sport-settings?sport=${sport}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to fetch sport settings');
     return res.json();
 }
 
