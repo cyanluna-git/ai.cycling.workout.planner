@@ -75,6 +75,61 @@ class FitnessResponse(BaseModel):
     profile: AthleteProfile
 
 
+# --- Sport Settings ---
+
+
+class PowerZone(BaseModel):
+    """Power training zone."""
+
+    id: int = Field(..., description="Zone number (1-7)")
+    name: str = Field(..., description="Zone name (e.g., 'Recovery', 'Threshold')")
+    min_watts: Optional[int] = Field(None, description="Min watts for this zone")
+    max_watts: Optional[int] = Field(None, description="Max watts for this zone")
+
+
+class HRZone(BaseModel):
+    """Heart rate training zone."""
+
+    id: int = Field(..., description="Zone number (1-5)")
+    name: str = Field(..., description="Zone name (e.g., 'Z1', 'Threshold')")
+    min_bpm: Optional[int] = Field(None, description="Min HR for this zone")
+    max_bpm: Optional[int] = Field(None, description="Max HR for this zone")
+
+
+class SportSettings(BaseModel):
+    """Sport-specific settings from Intervals.icu."""
+
+    # Power settings
+    ftp: Optional[int] = Field(None, description="Functional Threshold Power (W)")
+    eftp: Optional[int] = Field(None, description="Estimated FTP from power curve")
+    ftp_source: Optional[str] = Field(
+        None, description="FTP source (manual, mmp_model)"
+    )
+
+    # Heart rate settings
+    max_hr: Optional[int] = Field(None, description="Maximum Heart Rate (bpm)")
+    lthr: Optional[int] = Field(None, description="Lactate Threshold Heart Rate (bpm)")
+    resting_hr: Optional[int] = Field(None, description="Resting Heart Rate (bpm)")
+
+    # Zones
+    power_zones: List[PowerZone] = Field(
+        default_factory=list, description="Power training zones"
+    )
+    hr_zones: List[HRZone] = Field(
+        default_factory=list, description="HR training zones"
+    )
+
+    # Other metrics
+    weight: Optional[float] = Field(None, description="Weight (kg)")
+    w_per_kg: Optional[float] = Field(None, description="Watts per kg (FTP/weight)")
+    pace_threshold: Optional[float] = Field(None, description="Threshold pace (min/km)")
+
+    # Sport type
+    sport_types: List[str] = Field(
+        default_factory=list, description="Sport types (e.g., ['Ride', 'VirtualRide'])"
+    )
+
+
 # --- Workout Generation ---
 
 
