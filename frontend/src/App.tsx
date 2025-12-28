@@ -6,6 +6,7 @@ import { SettingsPage } from "@/pages/SettingsPage";
 import { OnboardingPage } from "@/pages/OnboardingPage";
 import { LandingPage } from "@/pages/LandingPage";
 import { FitnessCard } from "@/components/FitnessCard";
+import { WellnessCard } from "@/components/WellnessCard";
 import { WorkoutForm } from "@/components/WorkoutForm";
 import { WorkoutPreview } from "@/components/WorkoutPreview";
 import { WeeklyCalendarCard } from "@/components/WeeklyCalendarCard";
@@ -94,7 +95,10 @@ function Dashboard() {
           {/* Left Column */}
           <div className="space-y-6">
             {fitness && (
-              <FitnessCard training={fitness.training} wellness={fitness.wellness} profile={fitness.profile} />
+              <>
+                <FitnessCard training={fitness.training} wellness={fitness.wellness} profile={fitness.profile} />
+                <WellnessCard wellness={fitness.wellness} />
+              </>
             )}
             <WorkoutForm onGenerate={handleGenerate} isLoading={isLoading} />
           </div>

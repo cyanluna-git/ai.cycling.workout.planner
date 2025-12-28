@@ -18,12 +18,43 @@ class TrainingMetrics(BaseModel):
 
 
 class WellnessMetrics(BaseModel):
-    """Current wellness metrics."""
+    """Current wellness metrics from Intervals.icu."""
 
+    # Basic metrics
     readiness: str = Field(..., description="Training readiness")
-    hrv: Optional[float] = Field(None, description="Heart Rate Variability")
-    rhr: Optional[int] = Field(None, description="Resting Heart Rate")
+    hrv: Optional[float] = Field(None, description="Heart Rate Variability (RMSSD)")
+    hrv_sdnn: Optional[float] = Field(None, description="HRV SDNN")
+    rhr: Optional[int] = Field(None, description="Resting Heart Rate (bpm)")
     sleep_hours: Optional[float] = Field(None, description="Hours of sleep")
+    sleep_score: Optional[float] = Field(None, description="Sleep score (0-100)")
+    sleep_quality: Optional[int] = Field(None, description="Sleep quality (1-5)")
+
+    # Physical state
+    weight: Optional[float] = Field(None, description="Weight (kg)")
+    body_fat: Optional[float] = Field(None, description="Body fat percentage")
+    vo2max: Optional[float] = Field(None, description="VO2max estimate")
+
+    # Subjective ratings (1-5 scale)
+    soreness: Optional[int] = Field(None, description="Muscle soreness (1-5)")
+    fatigue: Optional[int] = Field(None, description="Fatigue level (1-5)")
+    stress: Optional[int] = Field(None, description="Stress level (1-5)")
+    mood: Optional[int] = Field(None, description="Mood (1-5)")
+    motivation: Optional[int] = Field(None, description="Motivation (1-5)")
+
+    # Health metrics
+    spo2: Optional[float] = Field(None, description="Blood oxygen saturation (%)")
+    systolic: Optional[int] = Field(None, description="Systolic blood pressure (mmHg)")
+    diastolic: Optional[int] = Field(
+        None, description="Diastolic blood pressure (mmHg)"
+    )
+    respiration: Optional[float] = Field(
+        None, description="Respiration rate (breaths/min)"
+    )
+
+    # Computed/derived
+    readiness_score: Optional[float] = Field(
+        None, description="Computed readiness score (0-100)"
+    )
 
 
 class AthleteProfile(BaseModel):
