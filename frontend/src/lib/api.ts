@@ -14,10 +14,35 @@ export interface TrainingMetrics {
 }
 
 export interface WellnessMetrics {
+    // Basic metrics
     readiness: string;
     hrv: number | null;
+    hrv_sdnn: number | null;
     rhr: number | null;
     sleep_hours: number | null;
+    sleep_score: number | null;
+    sleep_quality: number | null;
+
+    // Physical state
+    weight: number | null;
+    body_fat: number | null;
+    vo2max: number | null;
+
+    // Subjective ratings (1-5 scale)
+    soreness: number | null;
+    fatigue: number | null;
+    stress: number | null;
+    mood: number | null;
+    motivation: number | null;
+
+    // Health metrics
+    spo2: number | null;
+    systolic: number | null;
+    diastolic: number | null;
+    respiration: number | null;
+
+    // Computed/derived
+    readiness_score: number | null;
 }
 
 export interface AthleteProfile {
