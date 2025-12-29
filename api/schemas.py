@@ -18,12 +18,43 @@ class TrainingMetrics(BaseModel):
 
 
 class WellnessMetrics(BaseModel):
-    """Current wellness metrics."""
+    """Current wellness metrics from Intervals.icu."""
 
+    # Basic metrics
     readiness: str = Field(..., description="Training readiness")
-    hrv: Optional[float] = Field(None, description="Heart Rate Variability")
-    rhr: Optional[int] = Field(None, description="Resting Heart Rate")
+    hrv: Optional[float] = Field(None, description="Heart Rate Variability (RMSSD)")
+    hrv_sdnn: Optional[float] = Field(None, description="HRV SDNN")
+    rhr: Optional[int] = Field(None, description="Resting Heart Rate (bpm)")
     sleep_hours: Optional[float] = Field(None, description="Hours of sleep")
+    sleep_score: Optional[float] = Field(None, description="Sleep score (0-100)")
+    sleep_quality: Optional[int] = Field(None, description="Sleep quality (1-5)")
+
+    # Physical state
+    weight: Optional[float] = Field(None, description="Weight (kg)")
+    body_fat: Optional[float] = Field(None, description="Body fat percentage")
+    vo2max: Optional[float] = Field(None, description="VO2max estimate")
+
+    # Subjective ratings (1-5 scale)
+    soreness: Optional[int] = Field(None, description="Muscle soreness (1-5)")
+    fatigue: Optional[int] = Field(None, description="Fatigue level (1-5)")
+    stress: Optional[int] = Field(None, description="Stress level (1-5)")
+    mood: Optional[int] = Field(None, description="Mood (1-5)")
+    motivation: Optional[int] = Field(None, description="Motivation (1-5)")
+
+    # Health metrics
+    spo2: Optional[float] = Field(None, description="Blood oxygen saturation (%)")
+    systolic: Optional[int] = Field(None, description="Systolic blood pressure (mmHg)")
+    diastolic: Optional[int] = Field(
+        None, description="Diastolic blood pressure (mmHg)"
+    )
+    respiration: Optional[float] = Field(
+        None, description="Respiration rate (breaths/min)"
+    )
+
+    # Computed/derived
+    readiness_score: Optional[float] = Field(
+        None, description="Computed readiness score (0-100)"
+    )
 
 
 class AthleteProfile(BaseModel):
@@ -34,6 +65,7 @@ class AthleteProfile(BaseModel):
     lthr: Optional[int] = Field(None, description="Lactate Threshold Heart Rate (bpm)")
     weight: Optional[float] = Field(None, description="Weight (kg)")
     w_per_kg: Optional[float] = Field(None, description="Watts per kg (FTP/weight)")
+    vo2max: Optional[float] = Field(None, description="Estimated VO2max")
 
 
 class FitnessResponse(BaseModel):
@@ -42,6 +74,61 @@ class FitnessResponse(BaseModel):
     training: TrainingMetrics
     wellness: WellnessMetrics
     profile: AthleteProfile
+
+
+# --- Sport Settings ---
+
+
+class PowerZone(BaseModel):
+    """Power training zone."""
+
+    id: int = Field(..., description="Zone number (1-7)")
+    name: str = Field(..., description="Zone name (e.g., 'Recovery', 'Threshold')")
+    min_watts: Optional[int] = Field(None, description="Min watts for this zone")
+    max_watts: Optional[int] = Field(None, description="Max watts for this zone")
+
+
+class HRZone(BaseModel):
+    """Heart rate training zone."""
+
+    id: int = Field(..., description="Zone number (1-5)")
+    name: str = Field(..., description="Zone name (e.g., 'Z1', 'Threshold')")
+    min_bpm: Optional[int] = Field(None, description="Min HR for this zone")
+    max_bpm: Optional[int] = Field(None, description="Max HR for this zone")
+
+
+class SportSettings(BaseModel):
+    """Sport-specific settings from Intervals.icu."""
+
+    # Power settings
+    ftp: Optional[int] = Field(None, description="Functional Threshold Power (W)")
+    eftp: Optional[int] = Field(None, description="Estimated FTP from power curve")
+    ftp_source: Optional[str] = Field(
+        None, description="FTP source (manual, mmp_model)"
+    )
+
+    # Heart rate settings
+    max_hr: Optional[int] = Field(None, description="Maximum Heart Rate (bpm)")
+    lthr: Optional[int] = Field(None, description="Lactate Threshold Heart Rate (bpm)")
+    resting_hr: Optional[int] = Field(None, description="Resting Heart Rate (bpm)")
+
+    # Zones
+    power_zones: List[PowerZone] = Field(
+        default_factory=list, description="Power training zones"
+    )
+    hr_zones: List[HRZone] = Field(
+        default_factory=list, description="HR training zones"
+    )
+
+    # Other metrics
+    weight: Optional[float] = Field(None, description="Weight (kg)")
+    w_per_kg: Optional[float] = Field(None, description="Watts per kg (FTP/weight)")
+    pace_threshold: Optional[float] = Field(None, description="Threshold pace (min/km)")
+
+    # Sport type
+    sport_types: List[str] = Field(
+        default_factory=list, description="Sport types (e.g., ['Ride', 'VirtualRide'])"
+    )
 
 
 # --- Workout Generation ---

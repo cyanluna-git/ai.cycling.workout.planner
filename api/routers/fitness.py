@@ -12,6 +12,9 @@ from ..schemas import (
     Activity,
     WeeklyCalendarResponse,
     WeeklyEvent,
+    SportSettings,
+    PowerZone,
+    HRZone,
 )
 
 import sys
@@ -79,9 +82,10 @@ async def get_fitness(
         max_hr = ride_settings.get("max_hr")
         weight = athlete_data.get("icu_weight")  # weight is in icu_weight, not weight
 
-        # Get eFTP from mmp_model if available
+        # Get eFTP and VO2max from mmp_model if available
         mmp_model = ride_settings.get("mmp_model", {}) or {}
         eftp = mmp_model.get("ftp") if mmp_model else None
+        vo2max_estimate = mmp_model.get("vo2max") if mmp_model else None
 
         # Calculate W/kg if both FTP and weight are available
         w_per_kg = round(ftp / weight, 2) if ftp and weight else None
@@ -96,8 +100,24 @@ async def get_fitness(
             wellness=WellnessMetrics(
                 readiness=wellness.readiness,
                 hrv=wellness.hrv,
+                hrv_sdnn=wellness.hrv_sdnn,
                 rhr=wellness.rhr,
                 sleep_hours=wellness.sleep_hours,
+                sleep_score=wellness.sleep_score,
+                sleep_quality=wellness.sleep_quality,
+                weight=wellness.weight,
+                body_fat=wellness.body_fat,
+                vo2max=wellness.vo2max or vo2max_estimate,  # Fallback to mmp_model
+                soreness=wellness.soreness,
+                fatigue=wellness.fatigue,
+                stress=wellness.stress,
+                mood=wellness.mood,
+                motivation=wellness.motivation,
+                spo2=wellness.spo2,
+                systolic=wellness.systolic,
+                diastolic=wellness.diastolic,
+                respiration=wellness.respiration,
+                readiness_score=wellness.readiness_score,
             ),
             profile=AthleteProfile(
                 ftp=ftp,
@@ -105,7 +125,144 @@ async def get_fitness(
                 lthr=lthr,
                 weight=weight,
                 w_per_kg=w_per_kg,
+                vo2max=vo2max_estimate,
             ),
+        )
+
+        # Cache the response
+        set_cached(user_id, cache_key, response)
+
+        return response
+    except UserApiServiceError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except IntervalsAPIError as e:
+        raise HTTPException(status_code=502, detail=f"Intervals.icu API error: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/sport-settings", response_model=SportSettings)
+async def get_sport_settings(
+    sport: str = "Ride",
+    refresh: bool = False,
+    user: dict = Depends(get_current_user),
+):
+    """Get sport-specific settings (FTP, power zones, HR zones) from Intervals.icu.
+
+    Args:
+        sport: Sport type to get settings for (default: 'Ride').
+        refresh: If True, bypass cache and fetch fresh data.
+    """
+    user_id = user["id"]
+    cache_key = f"sport_settings:{sport}"
+
+    # Check cache first (unless refresh is requested)
+    if not refresh:
+        cached = get_cached(user_id, cache_key)
+        if cached:
+            return cached
+
+    try:
+        client = await get_user_intervals_client(user_id)
+        athlete_data = client.get_athlete_profile()
+
+        # Find sport settings for requested sport
+        sport_settings = athlete_data.get("sportSettings", [])
+        ride_settings = next(
+            (s for s in sport_settings if sport in s.get("types", [])),
+            sport_settings[0] if sport_settings else {},
+        )
+
+        # Extract FTP and related
+        ftp = ride_settings.get("ftp")
+        mmp_model = ride_settings.get("mmp_model", {}) or {}
+        eftp = mmp_model.get("ftp") if mmp_model else None
+        ftp_source = "mmp_model" if eftp else "manual"
+
+        # HR settings
+        max_hr = ride_settings.get("max_hr")
+        lthr = ride_settings.get("lthr")
+        resting_hr = ride_settings.get("resting_hr")
+
+        # Extract power zones
+        power_zones_raw = ride_settings.get("power_zones", []) or []
+        power_zones = []
+        for i, z in enumerate(power_zones_raw):
+            if isinstance(z, dict):
+                power_zones.append(
+                    PowerZone(
+                        id=i + 1,
+                        name=z.get("name", f"Z{i+1}"),
+                        min_watts=z.get("min"),
+                        max_watts=z.get("max"),
+                    )
+                )
+            elif isinstance(z, list) and len(z) >= 2:
+                zone_names = [
+                    "Recovery",
+                    "Endurance",
+                    "Tempo",
+                    "Threshold",
+                    "VO2max",
+                    "Anaerobic",
+                    "Neuromuscular",
+                ]
+                power_zones.append(
+                    PowerZone(
+                        id=i + 1,
+                        name=zone_names[i] if i < len(zone_names) else f"Z{i+1}",
+                        min_watts=int(z[0]) if z[0] else None,
+                        max_watts=int(z[1]) if len(z) > 1 and z[1] else None,
+                    )
+                )
+
+        # Extract HR zones
+        hr_zones_raw = ride_settings.get("hr_zones", []) or []
+        hr_zones = []
+        for i, z in enumerate(hr_zones_raw):
+            if isinstance(z, dict):
+                hr_zones.append(
+                    HRZone(
+                        id=i + 1,
+                        name=z.get("name", f"Z{i+1}"),
+                        min_bpm=z.get("min"),
+                        max_bpm=z.get("max"),
+                    )
+                )
+            elif isinstance(z, list) and len(z) >= 2:
+                hr_zone_names = [
+                    "Recovery",
+                    "Endurance",
+                    "Tempo",
+                    "Threshold",
+                    "VO2max",
+                ]
+                hr_zones.append(
+                    HRZone(
+                        id=i + 1,
+                        name=hr_zone_names[i] if i < len(hr_zone_names) else f"Z{i+1}",
+                        min_bpm=int(z[0]) if z[0] else None,
+                        max_bpm=int(z[1]) if len(z) > 1 and z[1] else None,
+                    )
+                )
+
+        # Calculate W/kg
+        weight = athlete_data.get("icu_weight")
+        w_per_kg = round(ftp / weight, 2) if ftp and weight else None
+
+        response = SportSettings(
+            ftp=ftp,
+            eftp=eftp,
+            ftp_source=ftp_source,
+            max_hr=max_hr,
+            lthr=lthr,
+            resting_hr=resting_hr,
+            power_zones=power_zones,
+            hr_zones=hr_zones,
+            weight=weight,
+            w_per_kg=w_per_kg,
+            pace_threshold=ride_settings.get("threshold_pace"),
+            sport_types=ride_settings.get("types", []),
         )
 
         # Cache the response

@@ -37,12 +37,37 @@ class TrainingMetrics:
 
 @dataclass
 class WellnessMetrics:
-    """Wellness metrics summary."""
+    """Wellness metrics summary from Intervals.icu."""
 
-    hrv: Optional[float]  # Heart Rate Variability
+    # Basic metrics
+    hrv: Optional[float]  # Heart Rate Variability (RMSSD)
+    hrv_sdnn: Optional[float]  # HRV SDNN
     rhr: Optional[float]  # Resting Heart Rate
     sleep_hours: Optional[float]  # Sleep duration
+    sleep_score: Optional[float]  # Sleep score (0-100)
+    sleep_quality: Optional[int]  # Sleep quality (1-5)
     readiness: str  # Overall readiness assessment
+
+    # Physical state
+    weight: Optional[float]  # Weight (kg)
+    body_fat: Optional[float]  # Body fat percentage
+    vo2max: Optional[float]  # VO2max estimate
+
+    # Subjective ratings (1-5 scale)
+    soreness: Optional[int]  # Muscle soreness
+    fatigue: Optional[int]  # Fatigue level
+    stress: Optional[int]  # Stress level
+    mood: Optional[int]  # Mood
+    motivation: Optional[int]  # Motivation
+
+    # Health metrics
+    spo2: Optional[float]  # Blood oxygen saturation (%)
+    systolic: Optional[int]  # Systolic blood pressure (mmHg)
+    diastolic: Optional[int]  # Diastolic blood pressure (mmHg)
+    respiration: Optional[float]  # Respiration rate (breaths/min)
+
+    # Computed/derived
+    readiness_score: Optional[float]  # Computed readiness score (0-100)
 
 
 class DataProcessor:
@@ -164,37 +189,99 @@ class DataProcessor:
             wellness_data: List of wellness objects from Intervals.icu.
 
         Returns:
-            WellnessMetrics with summary data.
+            WellnessMetrics with comprehensive wellness data.
         """
         if not wellness_data:
             logger.warning("No wellness data provided")
             return WellnessMetrics(
                 hrv=None,
+                hrv_sdnn=None,
                 rhr=None,
                 sleep_hours=None,
+                sleep_score=None,
+                sleep_quality=None,
                 readiness="Unknown",
+                weight=None,
+                body_fat=None,
+                vo2max=None,
+                soreness=None,
+                fatigue=None,
+                stress=None,
+                mood=None,
+                motivation=None,
+                spo2=None,
+                systolic=None,
+                diastolic=None,
+                respiration=None,
+                readiness_score=None,
             )
 
         # Get latest wellness data
         latest = max(wellness_data, key=lambda x: x.get("id", ""))
 
+        # Basic metrics
         hrv = latest.get("hrv")
+        hrv_sdnn = latest.get("hrvSDNN")
         rhr = latest.get("restingHR")
         sleep_secs = latest.get("sleepSecs")
         sleep_hours = sleep_secs / 3600 if sleep_secs else None
+        sleep_score = latest.get("sleepScore")
+        sleep_quality = latest.get("sleepQuality")
 
-        # Determine readiness based on available data
-        readiness = self._assess_readiness(hrv, rhr, sleep_hours, latest)
+        # Physical state
+        weight = latest.get("weight")
+        body_fat = latest.get("bodyFat")
+        vo2max = latest.get("vo2max")
 
-        sleep_str = f"{sleep_hours:.1f}h" if sleep_hours else "N/A"
+        # Subjective ratings
+        soreness = latest.get("soreness")
+        fatigue = latest.get("fatigue")
+        stress = latest.get("stress")
+        mood = latest.get("mood")
+        motivation = latest.get("motivation")
+
+        # Health metrics
+        spo2 = latest.get("spO2")
+        systolic = latest.get("systolic")
+        diastolic = latest.get("diastolic")
+        respiration = latest.get("respiration")
+
+        # Readiness score from Intervals.icu (if available)
+        readiness_score = latest.get("readiness")
+
+        # Determine readiness text based on available data
+        readiness_text = self._assess_readiness(hrv, rhr, sleep_hours, latest)
+
+        # Log summary
         logger.info(
-            f"Wellness: HRV={hrv}, RHR={rhr}, Sleep={sleep_str}, Readiness={readiness}"
+            f"Wellness: HRV={hrv}, RHR={rhr}, Sleep={sleep_hours:.1f}h "
+            f"VO2max={vo2max}, Weight={weight}, Readiness={readiness_text}"
+            if sleep_hours
+            else f"Wellness: HRV={hrv}, RHR={rhr}, Sleep=N/A, "
+            f"VO2max={vo2max}, Weight={weight}, Readiness={readiness_text}"
         )
+
         return WellnessMetrics(
             hrv=hrv,
+            hrv_sdnn=hrv_sdnn,
             rhr=rhr,
             sleep_hours=sleep_hours,
-            readiness=readiness,
+            sleep_score=sleep_score,
+            sleep_quality=sleep_quality,
+            readiness=readiness_text,
+            weight=weight,
+            body_fat=body_fat,
+            vo2max=vo2max,
+            soreness=soreness,
+            fatigue=fatigue,
+            stress=stress,
+            mood=mood,
+            motivation=motivation,
+            spo2=spo2,
+            systolic=systolic,
+            diastolic=diastolic,
+            respiration=respiration,
+            readiness_score=readiness_score,
         )
 
     def _assess_readiness(

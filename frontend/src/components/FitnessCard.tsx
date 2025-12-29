@@ -24,16 +24,22 @@ export function FitnessCard({ training, wellness, profile }: FitnessCardProps) {
         return "🛏️";
     };
 
+    const getReadinessColor = (readiness: string) => {
+        if (readiness.includes("Poor")) return "text-red-500";
+        if (readiness.includes("Good")) return "text-green-500";
+        return "text-yellow-500";
+    };
+
     return (
         <Card className="w-full">
             <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center gap-2">
-                    📊 현재 훈련 상태
+                    📊 오늘의 컨디션
                 </CardTitle>
             </CardHeader>
-            <CardContent>
-                {/* Profile Section */}
-                <div className="flex flex-wrap gap-3 mb-4 p-3 bg-muted/50 rounded-lg">
+            <CardContent className="space-y-4">
+                {/* Profile Section - Compact */}
+                <div className="flex flex-wrap gap-3 p-3 bg-muted/50 rounded-lg text-sm">
                     {profile.ftp && (
                         <div className="flex items-center gap-1">
                             <span className="text-xs text-muted-foreground">FTP</span>
@@ -46,76 +52,88 @@ export function FitnessCard({ training, wellness, profile }: FitnessCardProps) {
                             <span className="font-bold text-blue-500">{profile.w_per_kg}</span>
                         </div>
                     )}
-                    {profile.max_hr && (
-                        <div className="flex items-center gap-1">
-                            <span className="text-xs text-muted-foreground">Max HR</span>
-                            <span className="font-bold">{profile.max_hr}</span>
-                        </div>
-                    )}
-                    {profile.lthr && (
-                        <div className="flex items-center gap-1">
-                            <span className="text-xs text-muted-foreground">LTHR</span>
-                            <span className="font-bold">{profile.lthr}</span>
-                        </div>
-                    )}
                     {profile.weight && (
                         <div className="flex items-center gap-1">
                             <span className="text-xs text-muted-foreground">체중</span>
                             <span className="font-bold">{profile.weight}kg</span>
                         </div>
                     )}
+                    {profile.vo2max && (
+                        <div className="flex items-center gap-1">
+                            <span className="text-xs text-muted-foreground">VO2max</span>
+                            <span className="font-bold text-emerald-500">{profile.vo2max.toFixed(1)}</span>
+                        </div>
+                    )}
                 </div>
 
+                {/* Training Load & Wellness - Two Columns */}
                 <div className="grid grid-cols-2 gap-4">
-                    {/* Training Metrics */}
-                    <div className="space-y-3">
+                    {/* Left: Training Metrics */}
+                    <div className="space-y-2">
+                        <div className="text-xs font-medium text-muted-foreground mb-1">📈 훈련 부하</div>
                         <div className="flex justify-between items-baseline">
                             <span className="text-sm text-muted-foreground">CTL (체력)</span>
-                            <span className="text-xl font-bold">{training.ctl.toFixed(1)}</span>
+                            <span className="text-lg font-bold">{training.ctl.toFixed(1)}</span>
                         </div>
                         <div className="flex justify-between items-baseline">
                             <span className="text-sm text-muted-foreground">ATL (피로)</span>
-                            <span className="text-xl font-bold">{training.atl.toFixed(1)}</span>
+                            <span className="text-lg font-bold">{training.atl.toFixed(1)}</span>
                         </div>
                         <div className="flex justify-between items-baseline">
-                            <span className="text-sm text-muted-foreground">TSB (컨디션)</span>
-                            <span className={`text-xl font-bold ${getTsbColor(training.tsb)}`}>
+                            <span className="text-sm text-muted-foreground">TSB</span>
+                            <span className={`text-lg font-bold ${getTsbColor(training.tsb)}`}>
                                 {getTsbEmoji(training.tsb)} {training.tsb.toFixed(1)}
                             </span>
                         </div>
                     </div>
 
-                    {/* Wellness */}
-                    <div className="space-y-3">
-                        <div className="flex justify-between items-baseline">
-                            <span className="text-sm text-muted-foreground">상태</span>
-                            <span className="text-sm font-medium">{training.form_status}</span>
-                        </div>
-                        <div className="flex justify-between items-baseline">
-                            <span className="text-sm text-muted-foreground">준비도</span>
-                            <span className={`text-sm font-medium ${wellness.readiness.includes("Poor") ? "text-red-500" :
-                                    wellness.readiness.includes("Good") ? "text-green-500" :
-                                        "text-yellow-500"
-                                }`}>
-                                {wellness.readiness}
-                            </span>
-                        </div>
+                    {/* Right: Wellness Metrics */}
+                    <div className="space-y-2">
+                        <div className="text-xs font-medium text-muted-foreground mb-1">💚 웰니스</div>
                         {wellness.hrv && (
                             <div className="flex justify-between items-baseline">
                                 <span className="text-sm text-muted-foreground">HRV</span>
-                                <span className="text-xl font-bold">{wellness.hrv}</span>
+                                <span className="text-lg font-bold text-blue-500">{wellness.hrv.toFixed(0)} ms</span>
                             </div>
                         )}
                         {wellness.rhr && (
                             <div className="flex justify-between items-baseline">
-                                <span className="text-sm text-muted-foreground">RHR</span>
-                                <span className="text-xl font-bold">{wellness.rhr} bpm</span>
+                                <span className="text-sm text-muted-foreground">안정 심박</span>
+                                <span className="text-lg font-bold">{wellness.rhr} bpm</span>
                             </div>
                         )}
+                        {wellness.sleep_hours && (
+                            <div className="flex justify-between items-baseline">
+                                <span className="text-sm text-muted-foreground">수면</span>
+                                <span className={`text-lg font-bold ${wellness.sleep_hours >= 7 ? 'text-green-500' : wellness.sleep_hours >= 6 ? 'text-yellow-500' : 'text-red-500'}`}>
+                                    {wellness.sleep_hours.toFixed(1)}h
+                                </span>
+                            </div>
+                        )}
+                        {wellness.sleep_score && !wellness.sleep_hours && (
+                            <div className="flex justify-between items-baseline">
+                                <span className="text-sm text-muted-foreground">수면 점수</span>
+                                <span className={`text-lg font-bold ${wellness.sleep_score >= 80 ? 'text-green-500' : wellness.sleep_score >= 60 ? 'text-yellow-500' : 'text-red-500'}`}>
+                                    {wellness.sleep_score.toFixed(0)}점
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Readiness - Single Bottom Section */}
+                <div className="pt-3 border-t">
+                    <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground">오늘의 준비도</span>
+                            <span className="text-xs text-muted-foreground">{training.form_status}</span>
+                        </div>
+                        <span className={`font-bold ${getReadinessColor(wellness.readiness)}`}>
+                            {wellness.readiness}
+                        </span>
                     </div>
                 </div>
             </CardContent>
         </Card>
     );
 }
-
