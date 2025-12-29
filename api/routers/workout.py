@@ -2,7 +2,7 @@
 
 import logging
 from fastapi import APIRouter, HTTPException, Depends
-from datetime import date
+from datetime import date, timedelta
 
 from ..schemas import (
     WorkoutGenerateRequest,
@@ -64,8 +64,6 @@ async def generate_workout(
         start_of_week = today
         # Go back to monday
         while start_of_week.weekday() > 0:  # 0 is Monday
-            from datetime import timedelta
-
             start_of_week -= timedelta(days=1)
 
         yesterday = today - timedelta(days=1)
