@@ -105,6 +105,9 @@ async def update_settings(
         raise HTTPException(status_code=400, detail=str(e))
 
 
+from ..services.cache_service import clear_user_cache
+
+
 @router.put("/settings/api-keys")
 async def update_api_keys(
     api_keys: UserApiKeys, user: dict = Depends(get_current_user)
@@ -114,25 +117,23 @@ async def update_api_keys(
 
     try:
         logger.info(f"Updating API keys for user {user['id']}")
-        logger.debug(f"Received athlete_id: {api_keys.athlete_id}")
 
         # In production, encrypt these keys before storing
-        result = (
-            supabase.table("user_api_keys")
-            .upsert(
-                {
-                    "user_id": user["id"],
-                    "intervals_api_key": api_keys.intervals_api_key,
-                    "athlete_id": api_keys.athlete_id,
-                },
-                on_conflict="user_id",
-            )
-            .execute()
+        supabase.table("user_api_keys").upsert(
+            {
+                "user_id": user["id"],
+                "intervals_api_key": api_keys.intervals_api_key,
+                "athlete_id": api_keys.athlete_id,
+            },
+            on_conflict="user_id",
+        ).execute()
+
+        # Clear cache so new API keys are used immediately
+        clear_user_cache(user["id"])
+
+        logger.info(
+            f"Successfully updated API keys and cleared cache for user {user['id']}"
         )
-
-        logger.info(f"API keys upsert result: {result}")
-        logger.debug(f"Stored data: {result.data}")
-
         return {"message": "API keys updated successfully"}
     except Exception as e:
         logger.exception(f"Failed to update API keys for user {user['id']}")
