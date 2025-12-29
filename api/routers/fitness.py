@@ -82,9 +82,10 @@ async def get_fitness(
         max_hr = ride_settings.get("max_hr")
         weight = athlete_data.get("icu_weight")  # weight is in icu_weight, not weight
 
-        # Get eFTP from mmp_model if available
+        # Get eFTP and VO2max from mmp_model if available
         mmp_model = ride_settings.get("mmp_model", {}) or {}
         eftp = mmp_model.get("ftp") if mmp_model else None
+        vo2max_estimate = mmp_model.get("vo2max") if mmp_model else None
 
         # Calculate W/kg if both FTP and weight are available
         w_per_kg = round(ftp / weight, 2) if ftp and weight else None
@@ -106,7 +107,7 @@ async def get_fitness(
                 sleep_quality=wellness.sleep_quality,
                 weight=wellness.weight,
                 body_fat=wellness.body_fat,
-                vo2max=wellness.vo2max,
+                vo2max=wellness.vo2max or vo2max_estimate,  # Fallback to mmp_model
                 soreness=wellness.soreness,
                 fatigue=wellness.fatigue,
                 stress=wellness.stress,
@@ -124,6 +125,7 @@ async def get_fitness(
                 lthr=lthr,
                 weight=weight,
                 w_per_kg=w_per_kg,
+                vo2max=vo2max_estimate,
             ),
         )
 

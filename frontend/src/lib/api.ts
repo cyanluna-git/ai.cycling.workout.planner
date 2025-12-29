@@ -51,6 +51,7 @@ export interface AthleteProfile {
     lthr: number | null;
     weight: number | null;
     w_per_kg: number | null;
+    vo2max: number | null;
 }
 
 export interface FitnessData {

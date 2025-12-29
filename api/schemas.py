@@ -65,6 +65,7 @@ class AthleteProfile(BaseModel):
     lthr: Optional[int] = Field(None, description="Lactate Threshold Heart Rate (bpm)")
     weight: Optional[float] = Field(None, description="Weight (kg)")
     w_per_kg: Optional[float] = Field(None, description="Watts per kg (FTP/weight)")
+    vo2max: Optional[float] = Field(None, description="Estimated VO2max")
 
 
 class FitnessResponse(BaseModel):
