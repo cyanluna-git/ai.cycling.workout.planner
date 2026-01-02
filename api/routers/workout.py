@@ -30,6 +30,7 @@ from ..services.user_api_service import (
     RateLimitExceededError,
 )
 from ..services.cache_service import clear_user_cache
+from ..services.audit_service import log_audit_event, AuditEventType
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -117,6 +118,19 @@ async def generate_workout(
 
         # Increment usage count on success
         await increment_usage(user["id"])
+
+        # Log audit event
+        await log_audit_event(
+            event_type=AuditEventType.WORKOUT_GENERATED,
+            user_id=user["id"],
+            details={
+                "workout_name": workout.name,
+                "workout_type": workout.workout_type,
+                "duration_minutes": workout.estimated_duration_minutes,
+                "estimated_tss": workout.estimated_tss,
+                "target_date": str(target_date),
+            },
+        )
 
         logger.info(f"Successfully generated workout for user {user['id']}")
         return WorkoutGenerateResponse(
@@ -209,6 +223,17 @@ async def create_workout(
                 "event_id": event.get("id"),
                 "steps": request.steps,
                 "zwo_content": zwo_content,  # Store ZWO for accurate chart rendering
+            },
+        )
+
+        # Log successful sync to Intervals.icu
+        await log_audit_event(
+            event_type=AuditEventType.WORKOUT_SYNC_SUCCESS,
+            user_id=user["id"],
+            details={
+                "workout_name": request.name,
+                "target_date": request.target_date,
+                "event_id": event.get("id"),
             },
         )
 

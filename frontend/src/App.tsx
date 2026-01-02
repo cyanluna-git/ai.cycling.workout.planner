@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthPage } from "@/pages/AuthPage";
 import { ResetPasswordPage } from "@/pages/ResetPasswordPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { OnboardingPage } from "@/pages/OnboardingPage";
 import { LandingPage } from "@/pages/LandingPage";
+import { AdminPage } from "@/pages/AdminPage";
 import { FitnessCard } from "@/components/FitnessCard";
 import { WorkoutForm } from "@/components/WorkoutForm";
 import { WorkoutPreview } from "@/components/WorkoutPreview";
@@ -12,9 +13,37 @@ import { WeeklyCalendarCard } from "@/components/WeeklyCalendarCard";
 import { Button } from "@/components/ui/button";
 import { useDashboard } from "@/hooks/useDashboard";
 
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
 function Dashboard() {
   const { user, session, signOut } = useAuth();
   const [showSettings, setShowSettings] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Check admin status on mount
+  const checkAdminStatus = useCallback(async () => {
+    if (!session?.access_token) return;
+
+    try {
+      const response = await fetch(`${API_BASE}/api/admin/check`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setIsAdmin(data.is_admin || false);
+      }
+    } catch (error) {
+      console.error('Failed to check admin status:', error);
+    }
+  }, [session?.access_token]);
+
+  useEffect(() => {
+    checkAdminStatus();
+  }, [checkAdminStatus]);
 
   // Use custom hook for all dashboard state and logic
   const {
@@ -59,6 +88,10 @@ function Dashboard() {
     return <SettingsPage onBack={() => setShowSettings(false)} />;
   }
 
+  if (showAdmin) {
+    return <AdminPage onBack={() => setShowAdmin(false)} />;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -78,6 +111,11 @@ function Dashboard() {
             >
               💬 피드백
             </a>
+            {isAdmin && (
+              <Button variant="outline" size="sm" onClick={() => setShowAdmin(true)}>
+                🔧 관리자
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
               ⚙️ 설정
             </Button>
