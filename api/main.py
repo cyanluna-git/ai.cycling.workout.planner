@@ -31,6 +31,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Request logging middleware for admin monitoring
+from .middleware import RequestLoggingMiddleware
+
+app.add_middleware(RequestLoggingMiddleware)
+
 # Include routers
 app.include_router(auth.router, prefix="/api", tags=["auth"])
 app.include_router(settings.router, prefix="/api", tags=["settings"])
