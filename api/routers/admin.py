@@ -28,6 +28,45 @@ def verify_admin_secret(x_admin_secret: Optional[str] = Header(None)) -> None:
         raise HTTPException(status_code=401, detail="Invalid admin secret")
 
 
+def get_admin_user(authorization: Optional[str] = Header(None)) -> str:
+    """Dependency to verify admin user from JWT token."""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Authorization required")
+
+    token = authorization[7:]
+
+    try:
+        from src.clients.supabase_client import get_supabase_client
+
+        supabase = get_supabase_client()
+        user = supabase.auth.get_user(token)
+
+        if not user or not user.user:
+            raise HTTPException(status_code=401, detail="Invalid token")
+
+        user_id = user.user.id
+
+        # Check admin status
+        admin_supabase = get_supabase_admin_client()
+        result = (
+            admin_supabase.table("user_settings")
+            .select("is_admin")
+            .eq("user_id", user_id)
+            .single()
+            .execute()
+        )
+
+        if not result.data or not result.data.get("is_admin", False):
+            raise HTTPException(status_code=403, detail="Admin access required")
+
+        return user_id
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Authentication failed: {str(e)}")
+
+
 class AuditLogResponse(BaseModel):
     """Response model for audit logs."""
 
@@ -50,7 +89,7 @@ class AuditLogsListResponse(BaseModel):
 
 @router.get("/admin/audit-logs", response_model=AuditLogsListResponse)
 async def get_audit_logs(
-    x_admin_secret: Optional[str] = Header(None),
+    admin_user_id: str = Depends(get_admin_user),
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=100),
     event_type: Optional[str] = Query(None),
@@ -58,9 +97,8 @@ async def get_audit_logs(
 ):
     """Get audit logs with pagination and filtering.
 
-    Requires X-Admin-Secret header for authentication.
+    Requires admin user authentication via JWT token.
     """
-    verify_admin_secret(x_admin_secret)
 
     supabase = get_supabase_admin_client()
 
@@ -338,45 +376,6 @@ async def verify_admin_user(user_id: str) -> bool:
         return result.data.get("is_admin", False) if result.data else False
     except Exception:
         return False
-
-
-def get_admin_user(authorization: Optional[str] = Header(None)) -> str:
-    """Dependency to verify admin user from JWT token."""
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Authorization required")
-
-    token = authorization[7:]
-
-    try:
-        from src.clients.supabase_client import get_supabase_client
-
-        supabase = get_supabase_client()
-        user = supabase.auth.get_user(token)
-
-        if not user or not user.user:
-            raise HTTPException(status_code=401, detail="Invalid token")
-
-        user_id = user.user.id
-
-        # Check admin status
-        admin_supabase = get_supabase_admin_client()
-        result = (
-            admin_supabase.table("user_settings")
-            .select("is_admin")
-            .eq("user_id", user_id)
-            .single()
-            .execute()
-        )
-
-        if not result.data or not result.data.get("is_admin", False):
-            raise HTTPException(status_code=403, detail="Admin access required")
-
-        return user_id
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Authentication failed: {str(e)}")
 
 
 # ============================================
