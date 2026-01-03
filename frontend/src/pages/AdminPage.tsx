@@ -68,6 +68,11 @@ export function AdminPage({ onBack }: AdminPageProps) {
     // Weekly workout stats
     const [weeklyWorkouts, setWeeklyWorkouts] = useState<Record<string, number>>({});
 
+    // User workout stats
+    const [userStats, setUserStats] = useState<{ user_id: string; email: string; count: number }[]>([]);
+    const [topUser, setTopUser] = useState<{ user_id: string; email: string; count: number } | null>(null);
+    const [uniqueUsers, setUniqueUsers] = useState(0);
+
     const getHeaders = useCallback(() => ({
         'Authorization': `Bearer ${session?.access_token}`,
         'Content-Type': 'application/json',
@@ -89,7 +94,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
                 setStats(data);
             }
 
-            // Fetch weekly workout stats
+            // Fetch weekly workout stats (with user stats)
             const workoutResponse = await fetch(`${API_BASE}/api/admin/stats/workouts?days=7`, {
                 headers: getHeaders(),
             });
@@ -97,6 +102,9 @@ export function AdminPage({ onBack }: AdminPageProps) {
             if (workoutResponse.ok) {
                 const workoutData = await workoutResponse.json();
                 setWeeklyWorkouts(workoutData.daily_workouts || {});
+                setUserStats(workoutData.user_stats || []);
+                setTopUser(workoutData.top_user || null);
+                setUniqueUsers(workoutData.unique_users || 0);
             }
         } catch (error) {
             console.error('Failed to fetch stats:', error);
@@ -348,6 +356,70 @@ export function AdminPage({ onBack }: AdminPageProps) {
                                             </tbody>
                                         </table>
                                     </div>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        {/* User Workout Stats Card */}
+                        <Card>
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-lg">👤 사용자별 워크아웃 생성</CardTitle>
+                                <CardDescription>최근 7일간 사용자별 생성 횟수 (총 {uniqueUsers}명)</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                {statsLoading ? (
+                                    <div className="text-center py-4 text-muted-foreground">로딩 중...</div>
+                                ) : (
+                                    <>
+                                        {/* Top User Highlight */}
+                                        {topUser && (
+                                            <div className="mb-4 p-4 rounded-lg bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 border border-yellow-200 dark:border-yellow-800">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-2xl">🏆</span>
+                                                    <div>
+                                                        <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">최다 생성 유저</p>
+                                                        <p className="text-lg font-bold text-yellow-900 dark:text-yellow-100">
+                                                            {topUser.email} - {topUser.count}회
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* User Stats Table */}
+                                        {userStats.length > 0 ? (
+                                            <div className="overflow-x-auto">
+                                                <table className="w-full text-sm">
+                                                    <thead>
+                                                        <tr className="border-b">
+                                                            <th className="py-2 px-3 text-left">순위</th>
+                                                            <th className="py-2 px-3 text-left">이메일</th>
+                                                            <th className="py-2 px-3 text-right">생성 횟수</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {userStats.slice(0, 10).map((user, index) => (
+                                                            <tr key={user.user_id} className="border-b hover:bg-muted/50">
+                                                                <td className="py-2 px-3 text-muted-foreground">
+                                                                    {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}`}
+                                                                </td>
+                                                                <td className="py-2 px-3 font-mono text-xs">
+                                                                    {user.email}
+                                                                </td>
+                                                                <td className="py-2 px-3 text-right font-bold text-green-600">
+                                                                    {user.count}회
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        ) : (
+                                            <div className="text-center py-4 text-muted-foreground">
+                                                최근 7일간 생성된 워크아웃이 없습니다.
+                                            </div>
+                                        )}
+                                    </>
                                 )}
                             </CardContent>
                         </Card>
