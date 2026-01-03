@@ -72,6 +72,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
     const [userStats, setUserStats] = useState<{ user_id: string; email: string; count: number }[]>([]);
     const [topUser, setTopUser] = useState<{ user_id: string; email: string; count: number } | null>(null);
     const [uniqueUsers, setUniqueUsers] = useState(0);
+    const [userStatsDays, setUserStatsDays] = useState<1 | 7 | 30>(7);
 
     const getHeaders = useCallback(() => ({
         'Authorization': `Bearer ${session?.access_token}`,
@@ -95,7 +96,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
             }
 
             // Fetch weekly workout stats (with user stats)
-            const workoutResponse = await fetch(`${API_BASE}/api/admin/stats/workouts?days=7`, {
+            const workoutResponse = await fetch(`${API_BASE}/api/admin/stats/workouts?days=${userStatsDays}`, {
                 headers: getHeaders(),
             });
 
@@ -111,7 +112,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
         } finally {
             setStatsLoading(false);
         }
-    }, [session?.access_token, getHeaders]);
+    }, [session?.access_token, getHeaders, userStatsDays]);
 
     // Fetch API logs
     const fetchApiLogs = useCallback(async (page: number = 1) => {
@@ -363,8 +364,37 @@ export function AdminPage({ onBack }: AdminPageProps) {
                         {/* User Workout Stats Card */}
                         <Card>
                             <CardHeader className="pb-2">
-                                <CardTitle className="text-lg">👤 사용자별 워크아웃 생성</CardTitle>
-                                <CardDescription>최근 7일간 사용자별 생성 횟수 (총 {uniqueUsers}명)</CardDescription>
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <CardTitle className="text-lg">👤 사용자별 워크아웃 생성</CardTitle>
+                                        <CardDescription>
+                                            {userStatsDays === 1 ? '오늘' : userStatsDays === 7 ? '최근 7일간' : '최근 30일간'} 사용자별 생성 횟수 (총 {uniqueUsers}명)
+                                        </CardDescription>
+                                    </div>
+                                    <div className="flex gap-1">
+                                        <Button
+                                            variant={userStatsDays === 1 ? 'default' : 'outline'}
+                                            size="sm"
+                                            onClick={() => setUserStatsDays(1)}
+                                        >
+                                            일일
+                                        </Button>
+                                        <Button
+                                            variant={userStatsDays === 7 ? 'default' : 'outline'}
+                                            size="sm"
+                                            onClick={() => setUserStatsDays(7)}
+                                        >
+                                            주간
+                                        </Button>
+                                        <Button
+                                            variant={userStatsDays === 30 ? 'default' : 'outline'}
+                                            size="sm"
+                                            onClick={() => setUserStatsDays(30)}
+                                        >
+                                            월간
+                                        </Button>
+                                    </div>
+                                </div>
                             </CardHeader>
                             <CardContent>
                                 {statsLoading ? (
