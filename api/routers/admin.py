@@ -543,10 +543,58 @@ async def get_workout_stats(
         .execute()
     )
 
+    # Count workouts per user
+    user_counts: dict[str, int] = {}
+    for log in workouts.data or []:
+        user_id = log.get("user_id")
+        if user_id:
+            user_counts[user_id] = user_counts.get(user_id, 0) + 1
+
+    # Find top user
+    top_user = None
+    top_count = 0
+    if user_counts:
+        top_user = max(user_counts, key=lambda x: user_counts[x])
+        top_count = user_counts[top_user]
+
+    # Get user emails for display (from audit_logs details if available)
+    user_emails: dict[str, str] = {}
+    # Extract emails from audit_logs details if present
+    for log in workouts.data or []:
+        user_id = log.get("user_id")
+        details = log.get("details", {})
+        if user_id and isinstance(details, dict):
+            email = details.get("email") or details.get("user_email")
+            if email:
+                user_emails[user_id] = email
+
+    # Build per-user stats with emails
+    user_stats = [
+        {
+            "user_id": uid,
+            "email": user_emails.get(uid, uid[:8] + "..."),
+            "count": count,
+        }
+        for uid, count in sorted(user_counts.items(), key=lambda x: -x[1])
+    ]
+
     return {
         "daily_workouts": daily_workouts,
         "total_generated": len(workouts.data or []),
         "total_synced": synced.count or 0,
+        "user_stats": user_stats,
+        "top_user": (
+            {
+                "user_id": top_user,
+                "email": user_emails.get(
+                    top_user, top_user[:8] + "..." if top_user else None
+                ),
+                "count": top_count,
+            }
+            if top_user
+            else None
+        ),
+        "unique_users": len(user_counts),
     }
 
 
