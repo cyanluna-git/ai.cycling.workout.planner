@@ -1,0 +1,50 @@
+# AI Cycling Coach - Project Context & Rules
+
+## 🚀 Project Overview
+**AI Cycling Coach**는 사이클리스트를 위한 맞춤형 워크아웃 생성 및 관리 플랫폼입니다. Intervals.icu의 데이터와 최신 LLM(Groq, Gemini)을 결합하여 개인화된 훈련 계획을 제공합니다.
+
+## 🛠 Tech Stack
+### Backend
+- **Framework**: FastAPI (Python 3.11+)
+- **Runtime**: Google Cloud Run (Region: `asia-northeast3`)
+- **CI/CD**: GCP Cloud Build
+- **Main Dependencies**: `openai`, `supabase`, `requests`, `uvicorn`
+
+### Frontend
+- **Framework**: React 19 + TypeScript + Vite 7
+- **Styling**: Tailwind CSS 4 + Shadcn UI (Radix UI)
+- **Charts**: Recharts (Workout analysis & progress)
+- **Hosting**: Vercel
+
+### Infrastructure & Services
+- **Database/Auth**: Supabase (PostgreSQL)
+- **AI Gateway**: Vercel AI Gateway (LLM Proxy & Fallback)
+- **LLM Providers**: 
+  - Primary: **Groq** (llama-3.3-70b-versatile)
+  - Fallback: **Google Gemini** (2.0 Flash, 1.5 Flash)
+- **External API**: **Intervals.icu** (Athlete fitness/wellness/calendar data)
+
+## 📂 Project Structure
+- `/api/`: Backend logic
+  - `/routers/`: API endpoints (admin, workout, fitness, etc.)
+  - `/services/`: Business logic (model management, LLM orchestration)
+  - `/schemas/`: Pydantic models
+- `/src/`: Core engine logic
+  - `/clients/`: External service clients (Supabase, Intervals, LLM)
+  - `/services/`: Backend-agnostic services (Workout generation logic)
+- `/frontend/`: React application code
+  - `/src/pages/`: Main views (Dashboard, Admin, Settings)
+  - `/src/components/`: Reusable UI components
+- `/docs/`: Infrastructure and technical documentation
+
+## 📜 Development Rules
+1. **Aesthetics First**: UI는 항상 프리미엄하고 모던한 감성을 유지해야 합니다 (Vibrant colors, smooth transitions, glassmorphism).
+2. **Backend Performance**: Cloud Run 응답 속도를 최적화해야 하며, LLM 호출은 반드시 Vercel AI Gateway를 거쳐야 합니다.
+3. **Fallback Strategy**: 모든 AI 기능은 Groq 실패 시 Gemini로 자동 전환되는 구조를 유지해야 합니다.
+4. **Data Integrity**: Intervals.icu와 Supabase 간의 데이터 동기화 시 정합성을 최우선으로 합니다.
+5. **Clean Code**: Python은 PEP8, TypeScript는 ESLint/Prettier 규칙을 준수합니다.
+
+## 🔗 Key URLs
+- **Backend API**: `https://cycling-coach-backend-25085100592.asia-northeast3.run.app`
+- **API Docs**: `/docs` (Swagger)
+- **GCP Project**: `gen-lang-client-0043735738`
