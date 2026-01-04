@@ -266,6 +266,94 @@ class HuggingFaceClient(BaseLLMClient):
         return ""
 
 
+class VercelGatewayClient(BaseLLMClient):
+    """Vercel AI Gateway client - unified LLM access with auto rate limiting.
+
+    Uses Vercel's AI Gateway which provides:
+    - Automatic rate limit handling and retries
+    - Fallback between providers
+    - Usage analytics and monitoring
+    - OpenAI-compatible API
+    """
+
+    def __init__(
+        self,
+        api_key: str,
+        model: str = "groq/llama-3.3-70b-versatile",
+        fallback_models: list[str] | None = None,
+    ):
+        """Initialize Vercel Gateway client.
+
+        Args:
+            api_key: Vercel AI Gateway API key.
+            model: Model in format 'provider/model-name'.
+            fallback_models: Optional list of fallback models.
+        """
+        try:
+            from openai import OpenAI
+        except ImportError:
+            raise ImportError(
+                "openai package is required. Install with: pip install openai"
+            )
+
+        self.client = OpenAI(
+            api_key=api_key, base_url="https://ai-gateway.vercel.sh/v1"
+        )
+        self.model = model
+        self.fallback_models = fallback_models or [
+            "google/gemini-2.0-flash",
+            "openai/gpt-4o-mini",
+        ]
+
+    def generate(self, system_prompt: str, user_prompt: str) -> str:
+        """Generate a response using Vercel AI Gateway.
+
+        The Gateway handles rate limiting, retries, and fallbacks automatically.
+
+        Args:
+            system_prompt: System message setting the context.
+            user_prompt: User message with the actual request.
+
+        Returns:
+            Generated text response.
+        """
+        logger.info(f"Generating with Vercel AI Gateway ({self.model})...")
+
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                temperature=0.7,
+                max_tokens=1000,
+            )
+            return response.choices[0].message.content or ""
+        except Exception as e:
+            # Try fallback models if primary fails
+            logger.warning(
+                f"Primary model {self.model} failed: {e}, trying fallbacks..."
+            )
+            for fallback in self.fallback_models:
+                try:
+                    logger.info(f"Trying fallback: {fallback}")
+                    response = self.client.chat.completions.create(
+                        model=fallback,
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_prompt},
+                        ],
+                        temperature=0.7,
+                        max_tokens=1000,
+                    )
+                    return response.choices[0].message.content or ""
+                except Exception as fallback_error:
+                    logger.warning(f"Fallback {fallback} failed: {fallback_error}")
+                    continue
+            raise Exception(f"All models failed. Last error: {e}")
+
+
 # Quota/Rate limit error patterns for each provider
 QUOTA_ERROR_PATTERNS = [
     "quota",

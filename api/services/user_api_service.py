@@ -219,7 +219,8 @@ async def get_user_intervals_client(user_id: str) -> IntervalsClient:
 def get_server_llm_client() -> LLMClient:
     """Create an LLMClient configured with server's environment variables.
 
-    Uses multiple LLM providers with automatic fallback on quota errors.
+    Prioritizes Vercel AI Gateway if configured, otherwise falls back to
+    direct API calls with automatic fallback on quota errors.
     Models are loaded from database (llm_models table).
 
     Returns:
@@ -228,8 +229,25 @@ def get_server_llm_client() -> LLMClient:
     Raises:
         UserApiServiceError: If no LLM API keys are configured.
     """
-    from src.clients.llm import FallbackLLMClient
+    from src.clients.llm import FallbackLLMClient, VercelGatewayClient
     from api.services.model_service import get_active_models
+
+    # Check for Vercel AI Gateway first (recommended)
+    vercel_gateway_key = os.getenv("VERCEL_AI_GATEWAY_API_KEY")
+    if vercel_gateway_key:
+        logger.info("Using Vercel AI Gateway for LLM calls")
+        gateway_client = VercelGatewayClient(
+            api_key=vercel_gateway_key,
+            model="groq/llama-3.3-70b-versatile",
+            fallback_models=[
+                "google/gemini-2.0-flash",
+                "openai/gpt-4o-mini",
+            ],
+        )
+        return LLMClient(gateway_client)
+
+    # Fallback to direct API calls if Vercel Gateway not configured
+    logger.info("Vercel AI Gateway not configured, using direct API calls")
 
     # Collect all available API keys
     groq_api_key = os.getenv("GROQ_API_KEY")
