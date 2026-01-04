@@ -372,10 +372,58 @@ async def save_workout(user_id: str, workout_data: dict) -> dict:
         raise
 
 
+def _select_best_workout(workout_events: list) -> Optional[dict]:
+    """Select the best workout from multiple options.
+
+    Priority:
+    1. AI Coach generated workouts ([AICoach] or AI Generated in name)
+    2. Most recently updated
+
+    Args:
+        workout_events: List of WORKOUT category events
+
+    Returns:
+        Selected workout event, or None if list is empty
+    """
+    if not workout_events:
+        return None
+
+    # Separate AI Coach workouts from others
+    ai_workouts = []
+    other_workouts = []
+
+    for event in workout_events:
+        name = event.get("name", "")
+        # Check if it's from AI Coach
+        if "[AICoach]" in name or "AI Generated" in name:
+            ai_workouts.append(event)
+        else:
+            other_workouts.append(event)
+
+    # Prefer AI Coach workouts
+    candidates = ai_workouts if ai_workouts else other_workouts
+
+    # Sort by updated timestamp (most recent first)
+    candidates.sort(
+        key=lambda x: x.get("updated", ""), reverse=True
+    )
+
+    selected = candidates[0]
+
+    # Log selection if multiple options
+    if len(workout_events) > 1:
+        logger.info(
+            f"Multiple workouts found ({len(workout_events)}), "
+            f"selected: {selected.get('name')} (AI Coach: {selected in ai_workouts})"
+        )
+
+    return selected
+
+
 async def get_todays_workout(
     user_id: str, target_date: str = None
 ) -> Optional[GeneratedWorkout]:
-    """Get saved workout for a specific date.
+    """Get workout directly from Intervals.icu (Single Source of Truth).
 
     Args:
         user_id: User ID.
@@ -387,57 +435,60 @@ async def get_todays_workout(
     if not target_date:
         target_date = date.today().isoformat()
 
-    supabase = get_supabase_admin_client()
+    try:
+        # Get Intervals client for this user
+        intervals = await get_user_intervals_client(user_id)
 
-    result = (
-        supabase.table("saved_workouts")
-        .select("*")
-        .eq("user_id", user_id)
-        .eq("workout_date", target_date)
-        .execute()
-    )
+        # Fetch events for the target date
+        events = intervals.get_events(target_date, target_date)
 
-    if not result or not result.data:
+        # Filter for WORKOUT category only (exclude ACTIVITY, NOTE, etc.)
+        workout_events = [e for e in events if e.get("category") == "WORKOUT"]
+
+        if not workout_events:
+            logger.info(f"No workout found on Intervals.icu for {target_date}")
+            return None
+
+        # Select workout with priority:
+        # 1. AI Coach generated workouts ([AICoach] or AI Generated)
+        # 2. Most recently updated
+        workout_event = _select_best_workout(workout_events)
+
+        if not workout_event:
+            logger.info(f"No suitable workout found for {target_date}")
+            return None
+
+        # Parse workout_doc from Intervals.icu
+        from src.services.intervals_parser import (
+            parse_workout_doc_steps,
+            extract_workout_sections,
+        )
+
+        workout_doc = workout_event.get("workout_doc")
+        steps = parse_workout_doc_steps(workout_doc) if workout_doc else []
+
+        # Extract workout sections for display
+        warmup_steps, main_steps, cooldown_steps = extract_workout_sections(steps)
+
+        # Create GeneratedWorkout from Intervals data
+        return GeneratedWorkout(
+            name=workout_event.get("name", "Workout"),
+            workout_type=workout_event.get("type", "Ride"),
+            estimated_tss=workout_event.get("icu_training_load"),
+            estimated_duration_minutes=workout_event.get("moving_time", 0) // 60,
+            workout_text=workout_event.get("description", ""),
+            design_goal=None,  # Not stored in Intervals
+            steps=steps,
+            warmup=warmup_steps,
+            main=main_steps,
+            cooldown=cooldown_steps,
+            zwo_content=None,  # Can regenerate if needed
+        )
+
+    except Exception as e:
+        logger.exception(f"Error fetching workout from Intervals.icu for {target_date}")
+        # Don't fall back to local DB - Intervals.icu is single source of truth
         return None
-
-    # Prefer workout with zwo_content, then most recently updated
-    rows = result.data if isinstance(result.data, list) else [result.data]
-
-    # Sort: prefer zwo_content not null, then by updated_at desc
-    def sort_key(row):
-        has_zwo = row.get("zwo_content") is not None
-        updated = row.get("updated_at", "")
-        return (not has_zwo, updated)  # False < True, so not has_zwo puts has_zwo first
-
-    rows.sort(key=sort_key)
-    data = rows[0]
-
-    # Try to get structured steps from saved JSON
-    steps = None
-    if data.get("steps_json"):
-        try:
-            steps = json.loads(data["steps_json"])
-        except json.JSONDecodeError:
-            logger.warning(f"Failed to parse steps_json for workout {data.get('name')}")
-
-    # Parse workout text to reconstruct sections (fallback)
-    from api.routers.workout import _parse_workout_sections
-
-    warmup, main, cooldown = _parse_workout_sections(data["workout_text"])
-
-    return GeneratedWorkout(
-        name=data["name"],
-        workout_type=data.get("workout_type", "Custom"),
-        design_goal=data.get("design_goal"),
-        estimated_tss=data.get("estimated_tss"),
-        estimated_duration_minutes=data.get("duration_minutes", 60),
-        workout_text=data["workout_text"],
-        warmup=warmup,
-        main=main,
-        cooldown=cooldown,
-        steps=steps,
-        zwo_content=data.get("zwo_content"),  # Return ZWO for chart rendering
-    )
 
 
 async def sync_workout_from_intervals(user_id: str, event: dict) -> None:

@@ -64,7 +64,11 @@ export function WorkoutPreview({ workout, onRegister, isRegistering, isRegistere
                 )}
 
                 {/* Power Profile Chart */}
-                <WorkoutChart workoutText={workout.workout_text} zwoContent={workout.zwo_content} />
+                <WorkoutChart
+                    workoutText={workout.workout_text}
+                    zwoContent={workout.zwo_content}
+                    steps={workout.steps}
+                />
 
                 {/* Workout Sections */}
                 <div className="bg-muted/50 rounded-lg p-4 font-mono text-sm space-y-3">

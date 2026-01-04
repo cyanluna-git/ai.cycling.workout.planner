@@ -1,5 +1,6 @@
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, ReferenceLine, Cell } from 'recharts';
 import { parseZwoToChartData, getMaxTime, getMaxPower, type ChartDataPoint } from '@/lib/zwo-parser';
+import { stepsToChartData } from '@/lib/steps-to-chart';
 
 interface WorkoutStep {
     time: number;      // Start time in minutes
@@ -18,6 +19,7 @@ interface ChartSegment {
 interface WorkoutChartProps {
     workoutText: string;
     zwoContent?: string;  // ZWO XML content for accurate rendering
+    steps?: any[];        // Structured JSON steps from Intervals.icu
     ftp?: number;
 }
 
@@ -139,21 +141,26 @@ function stepsToBarData(steps: WorkoutStep[]): ChartSegment[] {
     }));
 }
 
-export function WorkoutChart({ workoutText, zwoContent }: WorkoutChartProps) {
-    // Use ZWO content if available, otherwise parse from text
+export function WorkoutChart({ workoutText, zwoContent, steps }: WorkoutChartProps) {
+    // Priority: steps JSON > ZWO content > text parsing
     let barData: ChartDataPoint[] = [];
     let maxTime = 60;
     let maxPower = 100;
 
-    if (zwoContent) {
+    if (steps && steps.length > 0) {
+        // Use structured JSON steps from Intervals.icu (most accurate!)
+        barData = stepsToChartData(steps);
+        maxTime = getMaxTime(barData);
+        maxPower = getMaxPower(barData);
+    } else if (zwoContent) {
         // Use ZWO parser for accurate rendering
         barData = parseZwoToChartData(zwoContent);
         maxTime = getMaxTime(barData);
         maxPower = getMaxPower(barData);
     } else {
         // Fallback to text parsing
-        const steps = parseWorkoutSteps(workoutText);
-        const segments = stepsToBarData(steps);
+        const workoutSteps = parseWorkoutSteps(workoutText);
+        const segments = stepsToBarData(workoutSteps);
 
         if (segments.length === 0) {
             return null;
