@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker
+.dockerignore
+
+# Git
+.git/
+.gitignore
+
+# Testing
+tests/
+*.test.py
+pytest.ini
+.coverage
+htmlcov/
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Frontend (not needed for backend)
+frontend/
+node_modules/
+
+# Local config (secrets in env vars)
+.env
+.env.local
+.env.*.local
+*.env
+
+# Cache
+.mypy_cache/
+.pytest_cache/
+
+# Misc
+*.log
+*.tmp
+uploaded_*.json
