@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import type { GeneratedWorkout } from "@/lib/api";
 import { WorkoutChart, getZoneColor } from "./WorkoutChart";
 import { cleanWorkoutName } from "@/lib/workout-utils";
+import { formatWorkoutSections } from "@/lib/format-workout-steps";
 
 interface WorkoutPreviewProps {
     workout: GeneratedWorkout;
@@ -43,6 +44,11 @@ function formatStepWithWatts(step: string, ftp: number): { text: string; color: 
 }
 
 export function WorkoutPreview({ workout, onRegister, isRegistering, isRegistered, ftp = 250 }: WorkoutPreviewProps) {
+    // Use structured steps if available (preferred), otherwise fall back to pre-formatted text
+    const sections = workout.steps && workout.steps.length > 0
+        ? formatWorkoutSections(workout.steps, ftp)
+        : null;
+
     return (
         <Card className="w-full">
             <CardHeader className="pb-2">
@@ -72,40 +78,75 @@ export function WorkoutPreview({ workout, onRegister, isRegistering, isRegistere
 
                 {/* Workout Sections */}
                 <div className="bg-muted/50 rounded-lg p-4 font-mono text-sm space-y-3">
-                    {workout.warmup.length > 0 && (
-                        <div>
-                            <div className="text-muted-foreground mb-1">Warmup</div>
-                            {workout.warmup.map((step, i) => {
-                                const formatted = formatStepWithWatts(step, ftp);
-                                return (
-                                    <div key={i} style={{ color: formatted.color }}>- {formatted.text}</div>
-                                );
-                            })}
-                        </div>
-                    )}
+                    {sections ? (
+                        // Use structured steps (preferred)
+                        <>
+                            {sections.warmup.length > 0 && (
+                                <div>
+                                    <div className="text-muted-foreground mb-1">Warmup</div>
+                                    {sections.warmup.map((step, i) => (
+                                        <div key={i} style={{ color: step.color }}>- {step.text}</div>
+                                    ))}
+                                </div>
+                            )}
 
-                    {workout.main.length > 0 && (
-                        <div>
-                            <div className="text-muted-foreground mb-1">Main Set</div>
-                            {workout.main.map((step, i) => {
-                                const formatted = formatStepWithWatts(step, ftp);
-                                return (
-                                    <div key={i} style={{ color: formatted.color }} className="font-medium">- {formatted.text}</div>
-                                );
-                            })}
-                        </div>
-                    )}
+                            {sections.main.length > 0 && (
+                                <div>
+                                    <div className="text-muted-foreground mb-1">Main Set</div>
+                                    {sections.main.map((step, i) => (
+                                        <div key={i} style={{ color: step.color }} className="font-medium">- {step.text}</div>
+                                    ))}
+                                </div>
+                            )}
 
-                    {workout.cooldown.length > 0 && (
-                        <div>
-                            <div className="text-muted-foreground mb-1">Cooldown</div>
-                            {workout.cooldown.map((step, i) => {
-                                const formatted = formatStepWithWatts(step, ftp);
-                                return (
-                                    <div key={i} style={{ color: formatted.color }}>- {formatted.text}</div>
-                                );
-                            })}
-                        </div>
+                            {sections.cooldown.length > 0 && (
+                                <div>
+                                    <div className="text-muted-foreground mb-1">Cooldown</div>
+                                    {sections.cooldown.map((step, i) => (
+                                        <div key={i} style={{ color: step.color }}>- {step.text}</div>
+                                    ))}
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        // Fallback to pre-formatted text (backward compatibility)
+                        <>
+                            {workout.warmup.length > 0 && (
+                                <div>
+                                    <div className="text-muted-foreground mb-1">Warmup</div>
+                                    {workout.warmup.map((step, i) => {
+                                        const formatted = formatStepWithWatts(step, ftp);
+                                        return (
+                                            <div key={i} style={{ color: formatted.color }}>- {formatted.text}</div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+
+                            {workout.main.length > 0 && (
+                                <div>
+                                    <div className="text-muted-foreground mb-1">Main Set</div>
+                                    {workout.main.map((step, i) => {
+                                        const formatted = formatStepWithWatts(step, ftp);
+                                        return (
+                                            <div key={i} style={{ color: formatted.color }} className="font-medium">- {formatted.text}</div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+
+                            {workout.cooldown.length > 0 && (
+                                <div>
+                                    <div className="text-muted-foreground mb-1">Cooldown</div>
+                                    {workout.cooldown.map((step, i) => {
+                                        const formatted = formatStepWithWatts(step, ftp);
+                                        return (
+                                            <div key={i} style={{ color: formatted.color }}>- {formatted.text}</div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
 
