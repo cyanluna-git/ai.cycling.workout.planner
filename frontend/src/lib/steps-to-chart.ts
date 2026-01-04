@@ -2,25 +2,7 @@
  * Convert workout steps JSON to chart data
  */
 
-import { type ChartDataPoint } from './zwo-parser';
-
-interface PowerSpec {
-    value?: number;
-    start?: number;
-    end?: number;
-    units: string;
-}
-
-interface Step {
-    duration: number;  // seconds
-    power?: PowerSpec;
-    ramp?: boolean;
-    warmup?: boolean;
-    cooldown?: boolean;
-    repeat?: number;
-    steps?: Step[];
-    text?: string;
-}
+import type { WorkoutStep, ChartDataPoint } from '@/types/workout';
 
 const RESOLUTION = 10; // 10-second resolution for chart
 
@@ -33,7 +15,7 @@ function getZoneColor(power: number): string {
     return '#ef4444';                        // Z6/Z7
 }
 
-export function stepsToChartData(steps: Step[]): ChartDataPoint[] {
+export function stepsToChartData(steps: WorkoutStep[]): ChartDataPoint[] {
     const chartData: ChartDataPoint[] = [];
     let currentTime = 0; // in seconds
 
@@ -46,7 +28,7 @@ export function stepsToChartData(steps: Step[]): ChartDataPoint[] {
     return chartData;
 }
 
-function calculateStepDuration(step: Step): number {
+function calculateStepDuration(step: WorkoutStep): number {
     // For repeat blocks, calculate total duration from nested steps
     if (step.repeat && step.steps) {
         const nestedDuration = step.steps.reduce((sum, nestedStep) => {
@@ -59,7 +41,7 @@ function calculateStepDuration(step: Step): number {
     return step.duration || 0;
 }
 
-function processStep(step: Step, startTime: number, chartData: ChartDataPoint[]): void {
+function processStep(step: WorkoutStep, startTime: number, chartData: ChartDataPoint[]): void {
     const { duration, power, ramp, repeat, steps: nestedSteps } = step;
 
     // Handle repeat blocks

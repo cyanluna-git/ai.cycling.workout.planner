@@ -1,8 +1,10 @@
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, ReferenceLine, Cell } from 'recharts';
 import { parseZwoToChartData, getMaxTime, getMaxPower, type ChartDataPoint } from '@/lib/zwo-parser';
 import { stepsToChartData } from '@/lib/steps-to-chart';
+import type { WorkoutStep } from '@/types/workout';
 
-interface WorkoutStep {
+// Legacy type for text parsing fallback (deprecated)
+interface ParsedWorkoutStep {
     time: number;      // Start time in minutes
     duration: number;  // Duration of this step in minutes
     power: number;     // Power as % FTP
@@ -19,7 +21,7 @@ interface ChartSegment {
 interface WorkoutChartProps {
     workoutText: string;
     zwoContent?: string;  // ZWO XML content for accurate rendering
-    steps?: any[];        // Structured JSON steps from Intervals.icu
+    steps?: WorkoutStep[];  // Structured JSON steps from Intervals.icu (strongly typed)
     ftp?: number;
 }
 
@@ -34,9 +36,11 @@ function parseDuration(val: string, unit: string): number {
 
 /**
  * Parse workout text into chart data
+ * @deprecated This is a fallback for when structured steps are not available.
+ * With Intervals.icu as single source of truth, this should rarely be used.
  */
-export function parseWorkoutSteps(text: string): WorkoutStep[] {
-    const steps: WorkoutStep[] = [];
+export function parseWorkoutSteps(text: string): ParsedWorkoutStep[] {
+    const steps: ParsedWorkoutStep[] = [];
     let currentTime = 0;
 
     // Split by lines or commas
@@ -132,7 +136,7 @@ export function getZoneColor(power: number): string {
 /**
  * Convert steps to bar chart data
  */
-function stepsToBarData(steps: WorkoutStep[]): ChartSegment[] {
+function stepsToBarData(steps: ParsedWorkoutStep[]): ChartSegment[] {
     return steps.map(step => ({
         start: step.time,
         end: step.time + step.duration,
@@ -158,7 +162,8 @@ export function WorkoutChart({ workoutText, zwoContent, steps }: WorkoutChartPro
         maxTime = getMaxTime(barData);
         maxPower = getMaxPower(barData);
     } else {
-        // Fallback to text parsing
+        // Fallback to text parsing (deprecated)
+        console.warn('⚠️ WorkoutChart: Falling back to text parsing. Structured steps not available.');
         const workoutSteps = parseWorkoutSteps(workoutText);
         const segments = stepsToBarData(workoutSteps);
 

@@ -2,11 +2,10 @@
  * ZWO Parser - Parses ZWO (Zwift Workout) XML to chart data
  */
 
-export interface ChartDataPoint {
-    time: number;     // minutes
-    power: number;    // percentage
-    color: string;
-}
+import type { ChartDataPoint } from '@/types/workout';
+
+// Re-export for backward compatibility
+export type { ChartDataPoint };
 
 /**
  * Get zone color based on power percentage
