@@ -235,13 +235,13 @@ def get_server_llm_client() -> LLMClient:
     # Check for Vercel AI Gateway first (recommended)
     vercel_gateway_key = os.getenv("VERCEL_AI_GATEWAY_API_KEY")
     if vercel_gateway_key:
-        logger.info("Using Vercel AI Gateway for LLM calls")
+        logger.info("Using Vercel AI Gateway for LLM calls (Groq + Google)")
         gateway_client = VercelGatewayClient(
             api_key=vercel_gateway_key,
             model="groq/llama-3.3-70b-versatile",
             fallback_models=[
                 "google/gemini-2.0-flash",
-                "openai/gpt-4o-mini",
+                "google/gemini-1.5-flash",
             ],
         )
         return LLMClient(gateway_client)
