@@ -196,37 +196,7 @@ async def create_workout(
         # Clear cache for this user (calendar will have new workout)
         clear_user_cache(user["id"], keys=["calendar", "fitness"])
 
-        # Save to local database for persistence
-        from ..services.user_api_service import save_workout
-
-        # Generate ZWO for storage
-        zwo_content = None
-        if request.steps:
-            try:
-                from src.services.zwo_converter import ZWOConverter
-
-                converter = ZWOConverter(workout_name=request.name)
-                zwo_content = converter.convert(request.steps)
-            except Exception as e:
-                logger.warning(f"Failed to generate ZWO for storage: {e}")
-
-        await save_workout(
-            user["id"],
-            {
-                "name": request.name,
-                "target_date": request.target_date,
-                "workout_text": request.workout_text,
-                "design_goal": request.design_goal,
-                "workout_type": request.workout_type,
-                "estimated_tss": request.estimated_tss,
-                "duration_minutes": request.duration_minutes,
-                "event_id": event.get("id"),
-                "steps": request.steps,
-                "zwo_content": zwo_content,  # Store ZWO for accurate chart rendering
-            },
-        )
-
-        # Log successful sync to Intervals.icu
+        # Log successful creation on Intervals.icu (No local DB save!)
         await log_audit_event(
             event_type=AuditEventType.WORKOUT_SYNC_SUCCESS,
             user_id=user["id"],
