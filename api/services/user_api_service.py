@@ -37,6 +37,7 @@ class UserSettingsData:
     max_hr: int = 190
     lthr: int = 170
     training_goal: str = "지구력 강화"
+    exclude_barcode_workouts: bool = False
 
 
 class UserApiServiceError(Exception):
@@ -171,7 +172,7 @@ async def get_user_settings(user_id: str) -> UserSettingsData:
 
     result = (
         supabase.table("user_settings")
-        .select("ftp, max_hr, lthr, training_goal")
+        .select("ftp, max_hr, lthr, training_goal, exclude_barcode_workouts")
         .eq("user_id", user_id)
         .maybe_single()
         .execute()
@@ -186,6 +187,7 @@ async def get_user_settings(user_id: str) -> UserSettingsData:
         max_hr=data.get("max_hr", 190),
         lthr=data.get("lthr", 170),
         training_goal=data.get("training_goal", "지구력 강화"),
+        exclude_barcode_workouts=data.get("exclude_barcode_workouts", False),
     )
 
 
@@ -302,6 +304,7 @@ async def get_user_profile(user_id: str) -> UserProfile:
         max_hr=settings.max_hr,
         lthr=settings.lthr,
         training_goal=settings.training_goal,
+        exclude_barcode_workouts=settings.exclude_barcode_workouts,
     )
 
 

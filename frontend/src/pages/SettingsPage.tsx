@@ -12,6 +12,7 @@ interface Settings {
     max_hr: number
     lthr: number
     training_goal: string
+    exclude_barcode_workouts?: boolean
 }
 
 interface ApiKeysCheck {
@@ -25,6 +26,7 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
         max_hr: 190,
         lthr: 170,
         training_goal: '지구력 강화',
+        exclude_barcode_workouts: false,
     })
     const [apiKeys, setApiKeys] = useState({
         intervals_api_key: '',
@@ -149,6 +151,25 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                                 }
                                 placeholder="예: 지구력 강화, 스프린트 파워 향상"
                             />
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <input
+                                type="checkbox"
+                                id="exclude_barcode"
+                                checked={settings.exclude_barcode_workouts ?? false}
+                                onChange={(e) =>
+                                    setSettings({ ...settings, exclude_barcode_workouts: e.target.checked })
+                                }
+                                className="h-4 w-4 rounded border-gray-300"
+                            />
+                            <div>
+                                <label htmlFor="exclude_barcode" className="text-sm font-medium cursor-pointer">
+                                    바코드형 인터벌 워크아웃 제외 (40/20, 30/30 등)
+                                </label>
+                                <p className="text-xs text-muted-foreground">
+                                    ERG 반응이 느린 스마트 롤러 등에 권장
+                                </p>
+                            </div>
                         </div>
                         <Button onClick={saveSettings} disabled={saving}>
                             {saving ? '저장 중...' : '목표 저장'}
