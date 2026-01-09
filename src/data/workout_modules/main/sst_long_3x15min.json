@@ -1,0 +1,32 @@
+{
+  "name": "SST Long 3x15min",
+  "duration_minutes": 55,
+  "type": "SweetSpot",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 88,
+      "duration_minutes": 15
+    },
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 88,
+      "duration_minutes": 15
+    },
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 88,
+      "duration_minutes": 15
+    }
+  ]
+}

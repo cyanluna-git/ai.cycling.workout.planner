@@ -1,0 +1,42 @@
+{
+  "name": "VO2 Long 4x5min",
+  "duration_minutes": 35,
+  "type": "VO2max",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 110,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 110,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 110,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 110,
+      "duration_minutes": 5
+    }
+  ]
+}

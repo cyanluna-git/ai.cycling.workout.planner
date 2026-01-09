@@ -1,0 +1,52 @@
+{
+  "name": "VO2 Classic 5x3min",
+  "duration_minutes": 27,
+  "type": "VO2max",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 115,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 115,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 115,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 115,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 115,
+      "duration_minutes": 3
+    }
+  ]
+}

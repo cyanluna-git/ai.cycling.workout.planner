@@ -1,0 +1,22 @@
+{
+  "name": "Tempo Sustained 2x20min",
+  "duration_minutes": 45,
+  "type": "Tempo",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 80,
+      "duration_minutes": 20
+    },
+    {
+      "type": "steady",
+      "power": 65,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 80,
+      "duration_minutes": 20
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "name": "SST Volume 6x6min",
+  "duration_minutes": 51,
+  "type": "SweetSpot",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 90,
+      "duration_minutes": 6
+    },
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 90,
+      "duration_minutes": 6
+    },
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 90,
+      "duration_minutes": 6
+    },
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 90,
+      "duration_minutes": 6
+    },
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 90,
+      "duration_minutes": 6
+    },
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 90,
+      "duration_minutes": 6
+    }
+  ]
+}

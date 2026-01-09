@@ -1,0 +1,52 @@
+{
+  "name": "SST Short 5x6min",
+  "duration_minutes": 42,
+  "type": "SweetSpot",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 92,
+      "duration_minutes": 6
+    },
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 92,
+      "duration_minutes": 6
+    },
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 92,
+      "duration_minutes": 6
+    },
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 92,
+      "duration_minutes": 6
+    },
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 92,
+      "duration_minutes": 6
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "Threshold Classic 2x20min",
+  "duration_minutes": 50,
+  "type": "Threshold",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 95,
+      "duration_minutes": 20
+    },
+    {
+      "type": "steady",
+      "power": 55,
+      "duration_minutes": 10
+    },
+    {
+      "type": "steady",
+      "power": 95,
+      "duration_minutes": 20
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "name": "VO2 Strong 4x4min",
+  "duration_minutes": 28,
+  "type": "VO2max",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 118,
+      "duration_minutes": 4
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 4
+    },
+    {
+      "type": "steady",
+      "power": 118,
+      "duration_minutes": 4
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 4
+    },
+    {
+      "type": "steady",
+      "power": 118,
+      "duration_minutes": 4
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 4
+    },
+    {
+      "type": "steady",
+      "power": 118,
+      "duration_minutes": 4
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "Tempo Steady 20min",
+  "duration_minutes": 20,
+  "type": "Tempo",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 80,
+      "duration_minutes": 20
+    }
+  ]
+}

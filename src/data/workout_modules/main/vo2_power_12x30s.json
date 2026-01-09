@@ -1,0 +1,122 @@
+{
+  "name": "VO2 Power 12x30s",
+  "duration_minutes": 12,
+  "type": "VO2max",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 130,
+      "duration_seconds": 30
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_seconds": 30
+    },
+    {
+      "type": "steady",
+      "power": 130,
+      "duration_seconds": 30
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_seconds": 30
+    },
+    {
+      "type": "steady",
+      "power": 130,
+      "duration_seconds": 30
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_seconds": 30
+    },
+    {
+      "type": "steady",
+      "power": 130,
+      "duration_seconds": 30
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_seconds": 30
+    },
+    {
+      "type": "steady",
+      "power": 130,
+      "duration_seconds": 30
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_seconds": 30
+    },
+    {
+      "type": "steady",
+      "power": 130,
+      "duration_seconds": 30
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_seconds": 30
+    },
+    {
+      "type": "steady",
+      "power": 130,
+      "duration_seconds": 30
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_seconds": 30
+    },
+    {
+      "type": "steady",
+      "power": 130,
+      "duration_seconds": 30
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_seconds": 30
+    },
+    {
+      "type": "steady",
+      "power": 130,
+      "duration_seconds": 30
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_seconds": 30
+    },
+    {
+      "type": "steady",
+      "power": 130,
+      "duration_seconds": 30
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_seconds": 30
+    },
+    {
+      "type": "steady",
+      "power": 130,
+      "duration_seconds": 30
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_seconds": 30
+    },
+    {
+      "type": "steady",
+      "power": 130,
+      "duration_seconds": 30
+    }
+  ]
+}

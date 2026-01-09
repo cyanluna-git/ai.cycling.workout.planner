@@ -1,0 +1,82 @@
+{
+  "name": "VO2 Blast 8x2min",
+  "duration_minutes": 30,
+  "type": "VO2max",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 120,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 120,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 120,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 120,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 120,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 120,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 120,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 120,
+      "duration_minutes": 2
+    }
+  ]
+}

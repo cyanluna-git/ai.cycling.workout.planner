@@ -1,0 +1,32 @@
+{
+  "name": "Threshold Build 3x10min",
+  "duration_minutes": 40,
+  "type": "Threshold",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 98,
+      "duration_minutes": 10
+    },
+    {
+      "type": "steady",
+      "power": 55,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 98,
+      "duration_minutes": 10
+    },
+    {
+      "type": "steady",
+      "power": 55,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 98,
+      "duration_minutes": 10
+    }
+  ]
+}

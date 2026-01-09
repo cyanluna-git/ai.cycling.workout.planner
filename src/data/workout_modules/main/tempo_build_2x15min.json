@@ -1,0 +1,22 @@
+{
+  "name": "Tempo Build 2x15min",
+  "duration_minutes": 35,
+  "type": "Tempo",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 82,
+      "duration_minutes": 15
+    },
+    {
+      "type": "steady",
+      "power": 65,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 82,
+      "duration_minutes": 15
+    }
+  ]
+}

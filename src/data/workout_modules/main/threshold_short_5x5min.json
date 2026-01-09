@@ -1,0 +1,52 @@
+{
+  "name": "Threshold Short 5x5min",
+  "duration_minutes": 37,
+  "type": "Threshold",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 100,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 55,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 100,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 55,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 100,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 55,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 100,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 55,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 100,
+      "duration_minutes": 5
+    }
+  ]
+}

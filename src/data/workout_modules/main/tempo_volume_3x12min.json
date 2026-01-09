@@ -1,0 +1,32 @@
+{
+  "name": "Tempo Volume 3x12min",
+  "duration_minutes": 44,
+  "type": "Tempo",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 82,
+      "duration_minutes": 12
+    },
+    {
+      "type": "steady",
+      "power": 65,
+      "duration_minutes": 4
+    },
+    {
+      "type": "steady",
+      "power": 82,
+      "duration_minutes": 12
+    },
+    {
+      "type": "steady",
+      "power": 65,
+      "duration_minutes": 4
+    },
+    {
+      "type": "steady",
+      "power": 82,
+      "duration_minutes": 12
+    }
+  ]
+}
