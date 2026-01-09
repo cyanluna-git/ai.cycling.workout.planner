@@ -14,27 +14,32 @@ app = FastAPI(
     version="1.0.0",
 )
 
+# Request logging middleware for admin monitoring (added BEFORE CORS)
+from .middleware import RequestLoggingMiddleware
+
+app.add_middleware(RequestLoggingMiddleware)
+
 # CORS configuration - 분리 배포용
 # Vercel 프론트엔드에서 Render 백엔드로 요청 허용
+# NOTE: This must be the LAST middleware added (so it runs FIRST)
 origins = [
     "http://localhost:5173",  # Vite dev server
     "http://localhost:3000",  # Alternative dev
+    "http://localhost:3005",  # Alternative dev port
+    "http://localhost:8000",  # Default uvicorn
+    "http://localhost:8005",  # Alternative dev port
     "https://*.vercel.app",  # Vercel preview deployments
     "https://ai-cycling-workout-planner.vercel.app",  # Production
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 개발 중에는 전체 허용, 배포 후 origins로 변경
+    allow_origins=origins,  # Use specific origins instead of ["*"]
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
-
-# Request logging middleware for admin monitoring
-from .middleware import RequestLoggingMiddleware
-
-app.add_middleware(RequestLoggingMiddleware)
 
 # Include routers
 app.include_router(auth.router, prefix="/api", tags=["auth"])

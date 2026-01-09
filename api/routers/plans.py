@@ -120,7 +120,7 @@ async def get_current_weekly_plan(user: dict = Depends(get_current_user)):
         .execute()
     )
 
-    if not plan_result.data:
+    if not plan_result or not plan_result.data:
         return None
 
     plan = plan_result.data
@@ -200,31 +200,34 @@ async def generate_weekly_plan(
         .execute()
     )
 
-    user_settings = settings_result.data or {}
+    user_settings = (
+        settings_result.data if settings_result and settings_result.data else {}
+    )
 
     # Get current fitness metrics from Intervals.icu
     try:
-        from ..services.user_api_service import UserApiService
+        from ..services.user_api_service import get_user_intervals_client
+        from src.services.data_processor import DataProcessor
 
-        api_service = UserApiService(user["id"])
-        fitness_data = api_service.get_fitness_data()
+        intervals_client = await get_user_intervals_client(user["id"])
+        processor = DataProcessor()
+        activities = intervals_client.get_recent_activities(days=42)
+        training = processor.calculate_training_metrics(activities)
 
-        ctl = fitness_data.get("training", {}).get("ctl", 50.0)
-        atl = fitness_data.get("training", {}).get("atl", 50.0)
-        tsb = fitness_data.get("training", {}).get("tsb", 0.0)
-        form_status = fitness_data.get("training", {}).get("form_status", "Neutral")
+        ctl = training.ctl
+        atl = training.atl
+        tsb = training.tsb
+        form_status = training.form_status
     except Exception as e:
         logger.warning(f"Failed to get fitness data, using defaults: {e}")
         ctl, atl, tsb = 50.0, 50.0, 0.0
         form_status = "Neutral"
 
     # Generate plan with AI
-    from .weekly_plan_service import WeeklyPlanGenerator
-    from src.clients.llm import LLMClient
-    from src.config import load_config
+    from ..services.weekly_plan_service import WeeklyPlanGenerator
+    from ..services.user_api_service import get_server_llm_client
 
-    config = load_config()
-    llm_client = LLMClient.from_config(config.llm)
+    llm_client = get_server_llm_client()
 
     generator = WeeklyPlanGenerator(llm_client, user_settings)
     weekly_plan = generator.generate_weekly_plan(
@@ -301,7 +304,7 @@ async def get_today_workout(user: dict = Depends(get_current_user)):
         .execute()
     )
 
-    if not workout_result.data:
+    if not workout_result or not workout_result.data:
         return TodayWorkoutResponse(
             has_plan=False,
             workout=None,
@@ -323,18 +326,18 @@ async def get_today_workout(user: dict = Depends(get_current_user)):
     # Get wellness hint (if available)
     wellness_hint = None
     try:
-        from ..services.user_api_service import UserApiService
+        from ..services.user_api_service import get_user_intervals_client
+        from src.services.data_processor import DataProcessor
 
-        api_service = UserApiService(user["id"])
-        fitness_data = api_service.get_fitness_data()
+        intervals_client = await get_user_intervals_client(user["id"])
+        processor = DataProcessor()
+        activities = intervals_client.get_recent_activities(days=42)
+        training = processor.calculate_training_metrics(activities)
 
-        tsb = fitness_data.get("training", {}).get("tsb", 0)
-        hrv = fitness_data.get("wellness", {}).get("hrv")
+        tsb = training.tsb
 
         if tsb < -20:
             wellness_hint = "⚠️ TSB가 매우 낮습니다. 가벼운 운동을 권장합니다."
-        elif hrv and hrv < 40:
-            wellness_hint = "💤 HRV가 평소보다 낮습니다. 컨디션을 고려해주세요."
     except Exception:
         pass
 
@@ -376,7 +379,7 @@ async def regenerate_today_workout(
         .execute()
     )
 
-    if not workout_result.data:
+    if not workout_result or not workout_result.data:
         raise HTTPException(status_code=404, detail="No workout found for today")
 
     workout_id = workout_result.data["id"]
@@ -390,19 +393,24 @@ async def regenerate_today_workout(
         .execute()
     )
 
-    user_settings = settings_result.data or {}
+    user_settings = (
+        settings_result.data if settings_result and settings_result.data else {}
+    )
 
     # Get current fitness metrics
     try:
-        from ..services.user_api_service import UserApiService
+        from ..services.user_api_service import get_user_intervals_client
+        from src.services.data_processor import DataProcessor
 
-        api_service = UserApiService(user["id"])
-        fitness_data = api_service.get_fitness_data()
+        intervals_client = await get_user_intervals_client(user["id"])
+        processor = DataProcessor()
+        activities = intervals_client.get_recent_activities(days=42)
+        training = processor.calculate_training_metrics(activities)
 
-        ctl = fitness_data.get("training", {}).get("ctl", 50.0)
-        atl = fitness_data.get("training", {}).get("atl", 50.0)
-        tsb = fitness_data.get("training", {}).get("tsb", 0.0)
-        form_status = fitness_data.get("training", {}).get("form_status", "Neutral")
+        ctl = training.ctl
+        atl = training.atl
+        tsb = training.tsb
+        form_status = training.form_status
     except Exception as e:
         logger.warning(f"Failed to get fitness data: {e}")
         raise HTTPException(
@@ -411,11 +419,10 @@ async def regenerate_today_workout(
 
     # Generate single workout using enhanced generator
     from src.services.workout_generator import WorkoutGenerator
-    from src.clients.llm import LLMClient
-    from src.config import load_config, UserProfile
+    from ..services.user_api_service import get_server_llm_client
+    from src.config import UserProfile
 
-    config = load_config()
-    llm_client = LLMClient.from_config(config.llm)
+    llm_client = get_server_llm_client()
 
     # Build user profile
     profile = UserProfile(
@@ -432,22 +439,21 @@ async def regenerate_today_workout(
         max_duration_minutes=user_settings.get("preferred_duration", 60),
     )
 
-    # Create training metrics
-    from src.services.data_processor import TrainingMetrics, WellnessMetrics
+    # Create training metrics (import at function scope to avoid issues)
+    from src.services.data_processor import TrainingMetrics as TM, WellnessMetrics as WM
 
-    training_metrics = TrainingMetrics(
+    training_metrics = TM(
         ctl=ctl,
         atl=atl,
         tsb=tsb,
-        form_status=form_status,
     )
 
-    wellness_data = fitness_data.get("wellness", {})
-    wellness_metrics = WellnessMetrics(
-        readiness=wellness_data.get("readiness", "Unknown"),
-        hrv=wellness_data.get("hrv"),
-        rhr=wellness_data.get("rhr"),
-        sleep_hours=wellness_data.get("sleep_hours"),
+    # Create minimal wellness metrics (we don't have detailed data here)
+    wellness_metrics = WM(
+        readiness="Unknown",
+        hrv=None,
+        rhr=None,
+        sleep_hours=None,
     )
 
     # Generate new workout
@@ -503,7 +509,7 @@ async def skip_workout(workout_id: str, user: dict = Depends(get_current_user)):
         .execute()
     )
 
-    if not workout_result.data:
+    if not workout_result or not workout_result.data:
         raise HTTPException(status_code=404, detail="Workout not found")
 
     # Update status
@@ -531,7 +537,7 @@ async def delete_weekly_plan(plan_id: str, user: dict = Depends(get_current_user
         .execute()
     )
 
-    if not plan_result.data:
+    if not plan_result or not plan_result.data:
         raise HTTPException(status_code=404, detail="Plan not found")
 
     # Delete (cascades to daily_workouts)
