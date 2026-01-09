@@ -8,7 +8,7 @@ import sys
 import logging
 from datetime import date, datetime, timedelta
 from typing import Optional, List
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 from pydantic import BaseModel
 
 sys.path.insert(
@@ -105,10 +105,16 @@ def get_next_week_dates() -> tuple:
 
 
 @router.get("/plans/weekly", response_model=Optional[WeeklyPlanResponse])
-async def get_current_weekly_plan(user: dict = Depends(get_current_user)):
+async def get_current_weekly_plan(
+    week_start_date: Optional[date] = Query(
+        None, description="Target date (YYYY-MM-DD) to determine the week"
+    ),
+    user: dict = Depends(get_current_user),
+):
     """Get the current week's plan."""
     supabase = get_supabase_admin_client()
-    week_start, week_end = get_week_dates()
+
+    week_start, week_end = get_week_dates(week_start_date)
 
     # Get weekly plan
     plan_result = (
@@ -285,7 +291,7 @@ async def generate_weekly_plan(
     logger.info(f"Generated weekly plan {plan_id} for user {user['id']}")
 
     # Return the created plan
-    return await get_current_weekly_plan(user)
+    return await get_current_weekly_plan(week_start, user)
 
 
 @router.get("/plans/today", response_model=TodayWorkoutResponse)
