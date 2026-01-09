@@ -348,7 +348,7 @@ least_used = tracker.get_least_used_modules(
 ## Future Enhancements
 
 Potential additions:
-- Weight module selection toward least-used modules for variety
+- ~~Weight module selection toward least-used modules for variety~~ ✅ **IMPLEMENTED** (v2.0)
 - Track module selection by TSB/form (e.g., which modules used when fresh vs fatigued)
 - Import from TrainerRoad, Zwift, or other platforms
 - Auto-generate variations of popular modules

@@ -14,7 +14,9 @@ from typing import Dict, List, Optional
 logger = logging.getLogger(__name__)
 
 # Usage stats file location
-USAGE_STATS_FILE = Path(__file__).parent.parent.parent / "data" / "module_usage_stats.json"
+USAGE_STATS_FILE = (
+    Path(__file__).parent.parent.parent / "data" / "module_usage_stats.json"
+)
 
 
 class ModuleUsageTracker:
@@ -44,19 +46,20 @@ class ModuleUsageTracker:
             }
 
         try:
-            with open(self.stats_file, 'r') as f:
+            with open(self.stats_file, "r") as f:
                 data = json.load(f)
 
             # Convert to defaultdict for easier access
             if "modules" in data:
                 data["modules"] = defaultdict(
-                    lambda: {"count": 0, "last_used": None},
-                    data["modules"]
+                    lambda: {"count": 0, "last_used": None}, data["modules"]
                 )
 
             if "by_category" in data:
                 for category in data["by_category"]:
-                    data["by_category"][category] = defaultdict(int, data["by_category"][category])
+                    data["by_category"][category] = defaultdict(
+                        int, data["by_category"][category]
+                    )
 
             return data
 
@@ -90,13 +93,15 @@ class ModuleUsageTracker:
                 "last_updated": datetime.now().isoformat(),
             }
 
-            with open(self.stats_file, 'w') as f:
+            with open(self.stats_file, "w") as f:
                 json.dump(data, f, indent=2)
 
         except Exception as e:
             logger.error(f"Failed to save usage stats: {e}")
 
-    def record_selection(self, module_keys: List[str], categories: Optional[Dict[str, str]] = None):
+    def record_selection(
+        self, module_keys: List[str], categories: Optional[Dict[str, str]] = None
+    ):
         """Record module selection.
 
         Args:
@@ -125,7 +130,9 @@ class ModuleUsageTracker:
         # Save to disk
         self._save_stats()
 
-        logger.info(f"Recorded selection of {len(module_keys)} modules (total: {self.stats['total_selections']})")
+        logger.info(
+            f"Recorded selection of {len(module_keys)} modules (total: {self.stats['total_selections']})"
+        )
 
     def get_module_stats(self, module_key: str) -> Dict:
         """Get statistics for a specific module.
@@ -149,7 +156,9 @@ class ModuleUsageTracker:
         """
         return dict(self.stats["by_category"].get(category, {}))
 
-    def get_top_modules(self, category: Optional[str] = None, limit: int = 10) -> List[tuple]:
+    def get_top_modules(
+        self, category: Optional[str] = None, limit: int = 10
+    ) -> List[tuple]:
         """Get most frequently used modules.
 
         Args:
@@ -171,7 +180,7 @@ class ModuleUsageTracker:
         self,
         available_modules: List[str],
         category: Optional[str] = None,
-        limit: int = 10
+        limit: int = 10,
     ) -> List[str]:
         """Get least frequently used modules from available list.
 
@@ -198,6 +207,85 @@ class ModuleUsageTracker:
 
         return [key for key, _ in sorted_modules[:limit]]
 
+    def get_balance_hints(
+        self, available_modules: Dict[str, List[str]], top_n: int = 3
+    ) -> str:
+        """Generate balance hints for AI prompt.
+
+        Identifies least-used modules in each category and formats
+        them as recommendations for the AI.
+
+        Args:
+            available_modules: Dict mapping category -> list of module keys
+            top_n: Number of underused modules to recommend per category
+
+        Returns:
+            Formatted string with recommendations for AI
+        """
+        hints = []
+
+        for category, modules in available_modules.items():
+            if not modules:
+                continue
+
+            # Get least used modules for this category
+            least_used = self.get_least_used_modules(
+                available_modules=modules, category=category, limit=top_n
+            )
+
+            if least_used:
+                module_list = ", ".join(f"[{m}]" for m in least_used)
+                hints.append(f"  - {category.upper()}: Consider {module_list}")
+
+        if not hints:
+            return "  (No usage data yet - all modules equally weighted)"
+
+        return "\n".join(hints)
+
+    def calculate_priority_weights(
+        self, module_keys: List[str], category: Optional[str] = None
+    ) -> Dict[str, float]:
+        """Calculate priority weights for modules based on usage.
+
+        Modules used less frequently get higher weights.
+        Uses inverse frequency weighting with smoothing.
+
+        Args:
+            module_keys: List of module keys to calculate weights for
+            category: Optional category filter
+
+        Returns:
+            Dict mapping module_key -> weight (0.5 to 2.0 scale)
+        """
+        if not module_keys:
+            return {}
+
+        # Get usage counts
+        if category:
+            stats = self.stats["by_category"].get(category, {})
+        else:
+            stats = {k: v["count"] for k, v in self.stats["modules"].items()}
+
+        # Get counts for each module (0 if never used)
+        counts = [stats.get(key, 0) for key in module_keys]
+
+        # Handle case where all counts are 0
+        max_count = max(counts) if counts else 0
+        if max_count == 0:
+            return {key: 1.0 for key in module_keys}
+
+        # Calculate inverse weights (smoothed)
+        # Less used = higher weight, more used = lower weight
+        # Scale: 0.5 (heavily used) to 2.0 (never used)
+        weights = {}
+        for key, count in zip(module_keys, counts):
+            # Inverse ratio with smoothing
+            usage_ratio = count / (max_count + 1)  # Add 1 to avoid div by zero
+            weight = 2.0 - (1.5 * usage_ratio)  # Scale to 0.5-2.0
+            weights[key] = round(weight, 2)
+
+        return weights
+
     def get_summary(self) -> Dict:
         """Get summary statistics.
 
@@ -218,14 +306,14 @@ class ModuleUsageTracker:
         """Print a human-readable usage report."""
         summary = self.get_summary()
 
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("WORKOUT MODULE USAGE REPORT")
-        print("="*60)
+        print("=" * 60)
         print(f"\nTotal Selections: {summary['total_selections']}")
         print(f"Unique Modules Used: {summary['unique_modules_used']}")
 
         print("\nCategory Totals:")
-        for category, total in summary['category_totals'].items():
+        for category, total in summary["category_totals"].items():
             print(f"  {category.capitalize():12} {total:>5}")
 
         print("\nTop 10 Most Used Modules (Overall):")
@@ -239,7 +327,7 @@ class ModuleUsageTracker:
             for i, (module, count) in enumerate(top_category, 1):
                 print(f"  {i}. {module:30} {count:>5} times")
 
-        print("\n" + "="*60 + "\n")
+        print("\n" + "=" * 60 + "\n")
 
 
 # Global tracker instance
