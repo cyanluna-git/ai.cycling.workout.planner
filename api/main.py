@@ -6,7 +6,7 @@ REST API endpoints for the React frontend.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import workout, fitness, auth, settings, admin
+from .routers import workout, fitness, auth, settings, admin, plans
 
 app = FastAPI(
     title="AI Cycling Coach API",
@@ -41,6 +41,7 @@ app.include_router(auth.router, prefix="/api", tags=["auth"])
 app.include_router(settings.router, prefix="/api", tags=["settings"])
 app.include_router(fitness.router, prefix="/api", tags=["fitness"])
 app.include_router(workout.router, prefix="/api", tags=["workout"])
+app.include_router(plans.router, prefix="/api", tags=["plans"])
 app.include_router(admin.router, prefix="/api", tags=["admin"])
 
 
