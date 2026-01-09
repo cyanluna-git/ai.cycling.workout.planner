@@ -1,0 +1,22 @@
+{
+  "name": "Two Stage Cooldown 15min",
+  "duration_minutes": 15,
+  "structure": [
+    {
+      "type": "steady",
+      "power": 70,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 55,
+      "duration_minutes": 5
+    },
+    {
+      "type": "cooldown_ramp",
+      "start_power": 55,
+      "end_power": 40,
+      "duration_minutes": 5
+    }
+  ]
+}

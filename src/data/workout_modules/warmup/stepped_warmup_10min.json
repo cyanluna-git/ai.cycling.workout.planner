@@ -1,0 +1,26 @@
+{
+  "name": "Stepped Warmup 10min",
+  "duration_minutes": 10,
+  "structure": [
+    {
+      "type": "steady",
+      "power": 45,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 55,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 65,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 75,
+      "duration_minutes": 2
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "Very Easy Rest 8min",
+  "duration_minutes": 8,
+  "structure": [
+    {
+      "type": "steady",
+      "power": 45,
+      "duration_minutes": 8
+    }
+  ]
+}

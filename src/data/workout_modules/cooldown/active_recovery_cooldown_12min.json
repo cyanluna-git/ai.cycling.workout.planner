@@ -1,0 +1,21 @@
+{
+  "name": "Active Recovery Cooldown 12min",
+  "duration_minutes": 12,
+  "structure": [
+    {
+      "type": "steady",
+      "power": 70,
+      "duration_minutes": 4
+    },
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_minutes": 4
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 4
+    }
+  ]
+}

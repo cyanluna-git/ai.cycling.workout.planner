@@ -118,22 +118,41 @@ class WorkoutAssembler:
             # Add a default cooldown (flush_and_fade is a proper cooldown with downward ramp)
             selected_modules.append("flush_and_fade")
 
+        # Track module categories for usage statistics
+        module_categories = {}
+
         for key in selected_modules:
             module = None
+            category = None
+
             if key in self.warmup_modules:
                 module = self.warmup_modules[key]
+                category = "warmup"
             elif key in self.main_segments:
                 module = self.main_segments[key]
                 main_segments.append(module)
+                category = "main"
             elif key in self.rest_segments:
                 module = self.rest_segments[key]
+                category = "rest"
             elif key in self.cooldown_modules:
                 module = self.cooldown_modules[key]
+                category = "cooldown"
 
             if module:
                 structure.extend(module["structure"])
+                if category:
+                    module_categories[key] = category
             else:
                 logger.warning(f"Module key '{key}' not found in inventory")
+
+        # Record module usage for statistics
+        try:
+            from .module_usage_tracker import get_tracker
+            tracker = get_tracker()
+            tracker.record_selection(selected_modules, module_categories)
+        except Exception as e:
+            logger.warning(f"Failed to record module usage: {e}")
 
         # Calculate stats
         actual_duration = self._calculate_duration(structure)
