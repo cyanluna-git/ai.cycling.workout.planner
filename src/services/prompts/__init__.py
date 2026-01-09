@@ -65,7 +65,7 @@ Generate the workout plan in JSON format.
     "sst_10min",
     "rest_short",
     "sst_10min",
-    "ramp_standard"
+    "flush_and_fade"
   ]
 }}
 """
