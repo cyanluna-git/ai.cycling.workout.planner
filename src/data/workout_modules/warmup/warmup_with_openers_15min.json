@@ -1,0 +1,41 @@
+{
+  "name": "Warmup with Openers 15min",
+  "duration_minutes": 15,
+  "structure": [
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 7
+    },
+    {
+      "type": "steady",
+      "power": 90,
+      "duration_seconds": 30
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 100,
+      "duration_seconds": 30
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 110,
+      "duration_seconds": 30
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 2
+    }
+  ]
+}

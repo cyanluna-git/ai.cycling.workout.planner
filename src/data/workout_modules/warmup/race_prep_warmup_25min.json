@@ -1,0 +1,51 @@
+{
+  "name": "Race Prep Warmup 25min",
+  "duration_minutes": 25,
+  "structure": [
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 10
+    },
+    {
+      "type": "steady",
+      "power": 65,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 90,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 100,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 110,
+      "duration_seconds": 30
+    },
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_seconds": 30
+    }
+  ]
+}

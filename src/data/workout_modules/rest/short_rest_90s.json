@@ -1,0 +1,11 @@
+{
+  "name": "Short Rest 90s",
+  "duration_minutes": 1.5,
+  "structure": [
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_seconds": 90
+    }
+  ]
+}

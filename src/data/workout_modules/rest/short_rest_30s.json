@@ -1,0 +1,11 @@
+{
+  "name": "Short Rest 30s",
+  "duration_minutes": 0.5,
+  "structure": [
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_seconds": 30
+    }
+  ]
+}

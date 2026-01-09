@@ -1,0 +1,12 @@
+{
+  "name": "Fade Out 15min",
+  "duration_minutes": 15,
+  "structure": [
+    {
+      "type": "cooldown_ramp",
+      "start_power": 65,
+      "end_power": 45,
+      "duration_minutes": 15
+    }
+  ]
+}

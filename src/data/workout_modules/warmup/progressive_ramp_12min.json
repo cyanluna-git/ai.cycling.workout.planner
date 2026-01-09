@@ -1,0 +1,12 @@
+{
+  "name": "Progressive Ramp 12min",
+  "duration_minutes": 12,
+  "structure": [
+    {
+      "type": "warmup_ramp",
+      "start_power": 40,
+      "end_power": 70,
+      "duration_minutes": 12
+    }
+  ]
+}

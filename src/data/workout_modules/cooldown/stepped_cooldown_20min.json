@@ -1,0 +1,26 @@
+{
+  "name": "Stepped Cooldown 20min",
+  "duration_minutes": 20,
+  "structure": [
+    {
+      "type": "steady",
+      "power": 70,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 40,
+      "duration_minutes": 5
+    }
+  ]
+}

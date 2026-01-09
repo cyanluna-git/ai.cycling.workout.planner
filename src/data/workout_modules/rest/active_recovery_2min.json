@@ -1,0 +1,11 @@
+{
+  "name": "Active Recovery 2min",
+  "duration_minutes": 2,
+  "structure": [
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_minutes": 2
+    }
+  ]
+}
