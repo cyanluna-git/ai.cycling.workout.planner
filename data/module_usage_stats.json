@@ -1,21 +1,21 @@
 {
-  "total_selections": 3,
+  "total_selections": 5,
   "modules": {
     "progressive_ramp_15min": {
       "count": 3,
       "last_used": "2026-01-10T00:05:38.488329"
     },
     "sst_10min": {
-      "count": 7,
-      "last_used": "2026-01-10T00:05:38.488329"
+      "count": 9,
+      "last_used": "2026-01-10T00:18:49.117171"
     },
     "rest_short": {
-      "count": 2,
-      "last_used": "2026-01-10T00:05:38.488329"
+      "count": 3,
+      "last_used": "2026-01-10T00:18:49.117171"
     },
     "fade_out_5min": {
-      "count": 1,
-      "last_used": "2026-01-10T00:04:39.916064"
+      "count": 2,
+      "last_used": "2026-01-10T00:18:32.816419"
     },
     "easy_rest_2min": {
       "count": 1,
@@ -24,23 +24,53 @@
     "fade_out_10min": {
       "count": 2,
       "last_used": "2026-01-10T00:05:38.488329"
+    },
+    "progressive_ramp_5min": {
+      "count": 1,
+      "last_used": "2026-01-10T00:18:32.816419"
+    },
+    "sst_extended_1x40min": {
+      "count": 1,
+      "last_used": "2026-01-10T00:18:32.816419"
+    },
+    "very_easy_rest_5min": {
+      "count": 1,
+      "last_used": "2026-01-10T00:18:32.816419"
+    },
+    "tempo_15min": {
+      "count": 1,
+      "last_used": "2026-01-10T00:18:32.816419"
+    },
+    "ramp_standard": {
+      "count": 1,
+      "last_used": "2026-01-10T00:18:49.117171"
+    },
+    "flush_and_fade": {
+      "count": 1,
+      "last_used": "2026-01-10T00:18:49.117171"
     }
   },
   "by_category": {
     "warmup": {
-      "progressive_ramp_15min": 3
+      "progressive_ramp_15min": 3,
+      "progressive_ramp_5min": 1,
+      "ramp_standard": 1
     },
     "main": {
-      "sst_10min": 7
+      "sst_10min": 9,
+      "sst_extended_1x40min": 1,
+      "tempo_15min": 1
     },
     "rest": {
-      "rest_short": 2,
-      "easy_rest_2min": 1
+      "rest_short": 3,
+      "easy_rest_2min": 1,
+      "very_easy_rest_5min": 1
     },
     "cooldown": {
-      "fade_out_5min": 1,
-      "fade_out_10min": 2
+      "fade_out_5min": 2,
+      "fade_out_10min": 2,
+      "flush_and_fade": 1
     }
   },
-  "last_updated": "2026-01-10T00:05:38.488386"
+  "last_updated": "2026-01-10T00:18:49.117235"
 }
