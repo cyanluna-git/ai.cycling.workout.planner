@@ -14,10 +14,14 @@ import {
     fetchWeeklyCalendar,
     fetchTodaysWorkout,
     checkApiConfigured,
+    fetchWeeklyPlan,
+    generateWeeklyPlan,
+    deleteWeeklyPlan,
     type FitnessData,
     type GeneratedWorkout,
     type WorkoutGenerateRequest,
     type WeeklyCalendarData,
+    type WeeklyPlan,
 } from "@/lib/api";
 
 interface DashboardState {
@@ -25,7 +29,10 @@ interface DashboardState {
     fitness: FitnessData | null;
     workout: GeneratedWorkout | null;
     weeklyCalendar: WeeklyCalendarData | null;
+    weeklyPlan: WeeklyPlan | null;
     isLoadingCalendar: boolean;
+    isLoadingPlan: boolean;
+    isGeneratingPlan: boolean;
     isLoading: boolean;
     isRegistering: boolean;
     error: string | null;
@@ -37,6 +44,8 @@ interface DashboardActions {
     handleRegister: () => Promise<void>;
     handleSelectDate: (date: string) => Promise<void>;
     handleOnboardingComplete: () => void;
+    handleGenerateWeeklyPlan: () => Promise<void>;
+    handleDeleteWeeklyPlan: (planId: string) => Promise<void>;
     clearMessages: () => void;
 }
 
@@ -50,7 +59,10 @@ export function useDashboard(): UseDashboardReturn {
     const [fitness, setFitness] = useState<FitnessData | null>(null);
     const [workout, setWorkout] = useState<GeneratedWorkout | null>(null);
     const [weeklyCalendar, setWeeklyCalendar] = useState<WeeklyCalendarData | null>(null);
+    const [weeklyPlan, setWeeklyPlan] = useState<WeeklyPlan | null>(null);
     const [isLoadingCalendar, setIsLoadingCalendar] = useState(false);
+    const [isLoadingPlan, setIsLoadingPlan] = useState(false);
+    const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isRegistering, setIsRegistering] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -85,6 +97,13 @@ export function useDashboard(): UseDashboardReturn {
                 })
                 .catch(console.error)
                 .finally(() => setIsLoadingCalendar(false));
+
+            // Fetch weekly plan
+            setIsLoadingPlan(true);
+            fetchWeeklyPlan(session.access_token)
+                .then(setWeeklyPlan)
+                .catch(console.error)
+                .finally(() => setIsLoadingPlan(false));
         }
     }, [session, isApiConfigured]);
 
@@ -184,13 +203,52 @@ export function useDashboard(): UseDashboardReturn {
         setSuccess(null);
     }, []);
 
+    const handleGenerateWeeklyPlan = useCallback(async () => {
+        if (!session?.access_token) {
+            setError("인증 토큰이 없습니다.");
+            return;
+        }
+
+        setIsGeneratingPlan(true);
+        setError(null);
+        setSuccess(null);
+
+        try {
+            const plan = await generateWeeklyPlan(session.access_token);
+            setWeeklyPlan(plan);
+            setSuccess("✅ 주간 워크아웃 계획이 생성되었습니다!");
+        } catch (e) {
+            setError(`주간 계획 생성 실패: ${e instanceof Error ? e.message : String(e)}`);
+        } finally {
+            setIsGeneratingPlan(false);
+        }
+    }, [session]);
+
+    const handleDeleteWeeklyPlan = useCallback(async (planId: string) => {
+        if (!session?.access_token) {
+            setError("인증 토큰이 없습니다.");
+            return;
+        }
+
+        try {
+            await deleteWeeklyPlan(session.access_token, planId);
+            setWeeklyPlan(null);
+            setSuccess("주간 계획이 삭제되었습니다.");
+        } catch (e) {
+            setError(`삭제 실패: ${e instanceof Error ? e.message : String(e)}`);
+        }
+    }, [session]);
+
     return {
         // State
         isApiConfigured,
         fitness,
         workout,
         weeklyCalendar,
+        weeklyPlan,
         isLoadingCalendar,
+        isLoadingPlan,
+        isGeneratingPlan,
         isLoading,
         isRegistering,
         error,
@@ -200,6 +258,8 @@ export function useDashboard(): UseDashboardReturn {
         handleRegister,
         handleSelectDate,
         handleOnboardingComplete,
+        handleGenerateWeeklyPlan,
+        handleDeleteWeeklyPlan,
         clearMessages,
     };
 }

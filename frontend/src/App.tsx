@@ -10,6 +10,7 @@ import { FitnessCard } from "@/components/FitnessCard";
 import { WorkoutForm } from "@/components/WorkoutForm";
 import { WorkoutPreview } from "@/components/WorkoutPreview";
 import { WeeklyCalendarCard } from "@/components/WeeklyCalendarCard";
+import { WeeklyPlanCard } from "@/components/WeeklyPlanCard";
 import { Button } from "@/components/ui/button";
 import { useDashboard } from "@/hooks/useDashboard";
 
@@ -51,7 +52,10 @@ function Dashboard() {
     fitness,
     workout,
     weeklyCalendar,
+    weeklyPlan,
     isLoadingCalendar,
+    isLoadingPlan,
+    isGeneratingPlan,
     isLoading,
     isRegistering,
     error,
@@ -60,6 +64,8 @@ function Dashboard() {
     handleRegister,
     handleSelectDate,
     handleOnboardingComplete,
+    handleGenerateWeeklyPlan,
+    handleDeleteWeeklyPlan,
   } = useDashboard();
 
   // Show loading while checking API config
@@ -139,6 +145,15 @@ function Dashboard() {
 
           {/* Right Column */}
           <div className="space-y-4">
+            {/* Weekly Plan Card - New Feature */}
+            <WeeklyPlanCard
+              plan={weeklyPlan}
+              isLoading={isLoadingPlan}
+              isGenerating={isGeneratingPlan}
+              onGenerate={handleGenerateWeeklyPlan}
+              onDelete={handleDeleteWeeklyPlan}
+            />
+
             <WeeklyCalendarCard
               calendar={weeklyCalendar}
               isLoading={isLoadingCalendar}
