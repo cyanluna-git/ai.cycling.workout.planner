@@ -1,0 +1,12 @@
+{
+  "name": "Threshold Continuous 1x30min",
+  "duration_minutes": 30,
+  "type": "Threshold",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 95,
+      "duration_minutes": 30
+    }
+  ]
+}

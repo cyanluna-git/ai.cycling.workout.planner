@@ -1,0 +1,32 @@
+{
+  "name": "Threshold Ladder 3x15min",
+  "duration_minutes": 55,
+  "type": "Threshold",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 96,
+      "duration_minutes": 15
+    },
+    {
+      "type": "steady",
+      "power": 55,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 96,
+      "duration_minutes": 15
+    },
+    {
+      "type": "steady",
+      "power": 55,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 96,
+      "duration_minutes": 15
+    }
+  ]
+}

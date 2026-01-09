@@ -1,0 +1,12 @@
+{
+  "name": "SST Long 1x30min",
+  "duration_minutes": 30,
+  "type": "SweetSpot",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 88,
+      "duration_minutes": 30
+    }
+  ]
+}

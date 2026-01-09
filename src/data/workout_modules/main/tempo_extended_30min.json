@@ -1,0 +1,12 @@
+{
+  "name": "Tempo Extended 30min",
+  "duration_minutes": 30,
+  "type": "Tempo",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 78,
+      "duration_minutes": 30
+    }
+  ]
+}

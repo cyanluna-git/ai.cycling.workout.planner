@@ -1,0 +1,42 @@
+{
+  "name": "SST Power 4x10min",
+  "duration_minutes": 55,
+  "type": "SweetSpot",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 90,
+      "duration_minutes": 10
+    },
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 90,
+      "duration_minutes": 10
+    },
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 90,
+      "duration_minutes": 10
+    },
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 90,
+      "duration_minutes": 10
+    }
+  ]
+}

@@ -1,0 +1,142 @@
+{
+  "name": "Over Under 4x9min",
+  "duration_minutes": 36,
+  "type": "Mixed",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 95,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 105,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 95,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 105,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 95,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 105,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 95,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 105,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 95,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 105,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 95,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 105,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 95,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 105,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 95,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 105,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 95,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 105,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 95,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 105,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 95,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 105,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 95,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 105,
+      "duration_minutes": 1
+    }
+  ]
+}

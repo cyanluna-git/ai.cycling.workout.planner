@@ -1,0 +1,52 @@
+{
+  "name": "SST Steady 5x8min",
+  "duration_minutes": 56,
+  "type": "SweetSpot",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 90,
+      "duration_minutes": 8
+    },
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_minutes": 4
+    },
+    {
+      "type": "steady",
+      "power": 90,
+      "duration_minutes": 8
+    },
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_minutes": 4
+    },
+    {
+      "type": "steady",
+      "power": 90,
+      "duration_minutes": 8
+    },
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_minutes": 4
+    },
+    {
+      "type": "steady",
+      "power": 90,
+      "duration_minutes": 8
+    },
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_minutes": 4
+    },
+    {
+      "type": "steady",
+      "power": 90,
+      "duration_minutes": 8
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "SST Continuous 2x20min",
+  "duration_minutes": 45,
+  "type": "SweetSpot",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 88,
+      "duration_minutes": 20
+    },
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 88,
+      "duration_minutes": 20
+    }
+  ]
+}

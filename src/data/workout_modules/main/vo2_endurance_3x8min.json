@@ -1,0 +1,32 @@
+{
+  "name": "VO2 Endurance 3x8min",
+  "duration_minutes": 40,
+  "type": "VO2max",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 105,
+      "duration_minutes": 8
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 8
+    },
+    {
+      "type": "steady",
+      "power": 105,
+      "duration_minutes": 8
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 8
+    },
+    {
+      "type": "steady",
+      "power": 105,
+      "duration_minutes": 8
+    }
+  ]
+}

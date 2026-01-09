@@ -1,0 +1,36 @@
+{
+  "total_selections": 1,
+  "modules": {
+    "progressive_ramp_15min": {
+      "count": 1,
+      "last_used": "2026-01-10T00:04:39.916064"
+    },
+    "sst_10min": {
+      "count": 3,
+      "last_used": "2026-01-10T00:04:39.916064"
+    },
+    "rest_short": {
+      "count": 1,
+      "last_used": "2026-01-10T00:04:39.916064"
+    },
+    "fade_out_5min": {
+      "count": 1,
+      "last_used": "2026-01-10T00:04:39.916064"
+    }
+  },
+  "by_category": {
+    "warmup": {
+      "progressive_ramp_15min": 1
+    },
+    "main": {
+      "sst_10min": 3
+    },
+    "rest": {
+      "rest_short": 1
+    },
+    "cooldown": {
+      "fade_out_5min": 1
+    }
+  },
+  "last_updated": "2026-01-10T00:04:39.916202"
+}

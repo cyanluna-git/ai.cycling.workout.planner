@@ -1,0 +1,32 @@
+{
+  "name": "VO2 Aerobic 3x6min",
+  "duration_minutes": 30,
+  "type": "VO2max",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 108,
+      "duration_minutes": 6
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 6
+    },
+    {
+      "type": "steady",
+      "power": 108,
+      "duration_minutes": 6
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 6
+    },
+    {
+      "type": "steady",
+      "power": 108,
+      "duration_minutes": 6
+    }
+  ]
+}

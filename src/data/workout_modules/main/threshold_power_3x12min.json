@@ -1,0 +1,32 @@
+{
+  "name": "Threshold Power 3x12min",
+  "duration_minutes": 48,
+  "type": "Threshold",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 97,
+      "duration_minutes": 12
+    },
+    {
+      "type": "steady",
+      "power": 55,
+      "duration_minutes": 6
+    },
+    {
+      "type": "steady",
+      "power": 97,
+      "duration_minutes": 12
+    },
+    {
+      "type": "steady",
+      "power": 55,
+      "duration_minutes": 6
+    },
+    {
+      "type": "steady",
+      "power": 97,
+      "duration_minutes": 12
+    }
+  ]
+}

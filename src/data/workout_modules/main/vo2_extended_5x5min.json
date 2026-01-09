@@ -1,0 +1,52 @@
+{
+  "name": "VO2 Extended 5x5min",
+  "duration_minutes": 37,
+  "type": "VO2max",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 108,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 108,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 108,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 108,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 108,
+      "duration_minutes": 5
+    }
+  ]
+}

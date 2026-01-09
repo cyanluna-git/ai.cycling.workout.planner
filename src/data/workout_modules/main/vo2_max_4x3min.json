@@ -1,0 +1,42 @@
+{
+  "name": "VO2 Max 4x3min",
+  "duration_minutes": 24,
+  "type": "VO2max",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 120,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 4
+    },
+    {
+      "type": "steady",
+      "power": 120,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 4
+    },
+    {
+      "type": "steady",
+      "power": 120,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 4
+    },
+    {
+      "type": "steady",
+      "power": 120,
+      "duration_minutes": 3
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "name": "VO2 Hard 6x3min",
+  "duration_minutes": 33,
+  "type": "VO2max",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 118,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 118,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 118,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 118,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 118,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 118,
+      "duration_minutes": 3
+    }
+  ]
+}

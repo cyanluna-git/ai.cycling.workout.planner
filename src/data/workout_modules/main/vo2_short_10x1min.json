@@ -1,0 +1,102 @@
+{
+  "name": "VO2 Short 10x1min",
+  "duration_minutes": 19,
+  "type": "VO2max",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 125,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 125,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 125,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 125,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 125,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 125,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 125,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 125,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 125,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 125,
+      "duration_minutes": 1
+    }
+  ]
+}
