@@ -257,6 +257,10 @@ class WeeklyPlanGenerator:
         Returns:
             List of 7 DailyPlan objects
         """
+        if not response:
+            logger.warning("Empty response from LLM, using fallback")
+            return self._generate_fallback_plan(week_start)
+
         # Extract JSON from response
         try:
             # Try to find JSON array in response
@@ -266,6 +270,13 @@ class WeeklyPlanGenerator:
                 plans_data = json.loads(json_str)
             else:
                 plans_data = json.loads(response)
+
+            if not isinstance(plans_data, list):
+                logger.warning(
+                    f"Parsed JSON is {type(plans_data)}, expected list. Using fallback."
+                )
+                return self._generate_fallback_plan(week_start)
+
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse weekly plan response: {e}")
             logger.debug(f"Response was: {response[:500]}...")
