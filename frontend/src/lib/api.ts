@@ -253,3 +253,112 @@ export async function fetchWeeklyCalendar(token: string): Promise<WeeklyCalendar
     if (!res.ok) throw new Error('Failed to fetch weekly calendar');
     return res.json();
 }
+
+// --- Weekly Plan (New Feature) ---
+
+export interface DailyWorkout {
+    id?: string;
+    workout_date: string;
+    day_name: string;
+    planned_name?: string;
+    planned_type?: string;
+    planned_duration?: number;
+    planned_tss?: number;
+    planned_rationale?: string;
+    actual_name?: string;
+    actual_type?: string;
+    status: string;
+}
+
+export interface WeeklyPlan {
+    id: string;
+    week_start: string;
+    week_end: string;
+    status: string;
+    training_style?: string;
+    total_planned_tss?: number;
+    daily_workouts: DailyWorkout[];
+}
+
+export interface TodayWorkout {
+    has_plan: boolean;
+    workout?: DailyWorkout;
+    wellness_hint?: string;
+    can_regenerate: boolean;
+}
+
+export async function fetchWeeklyPlan(token: string): Promise<WeeklyPlan | null> {
+    const res = await fetch(`${API_BASE}/api/plans/weekly`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to fetch weekly plan');
+    const data = await res.json();
+    return data;
+}
+
+export async function generateWeeklyPlan(
+    token: string,
+    weekStart?: string
+): Promise<WeeklyPlan> {
+    const res = await fetch(`${API_BASE}/api/plans/weekly/generate`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ week_start: weekStart }),
+    });
+    if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || 'Failed to generate weekly plan');
+    }
+    return res.json();
+}
+
+export async function fetchTodayPlan(token: string): Promise<TodayWorkout> {
+    const res = await fetch(`${API_BASE}/api/plans/today`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to fetch today plan');
+    return res.json();
+}
+
+export async function regenerateTodayWorkout(
+    token: string,
+    reason?: string
+): Promise<{ success: boolean; workout?: unknown }> {
+    const res = await fetch(`${API_BASE}/api/plans/today/regenerate`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ reason }),
+    });
+    if (!res.ok) throw new Error('Failed to regenerate workout');
+    return res.json();
+}
+
+export async function skipWorkout(
+    token: string,
+    workoutId: string
+): Promise<{ success: boolean }> {
+    const res = await fetch(`${API_BASE}/api/plans/daily/${workoutId}/skip`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to skip workout');
+    return res.json();
+}
+
+export async function deleteWeeklyPlan(
+    token: string,
+    planId: string
+): Promise<{ success: boolean }> {
+    const res = await fetch(`${API_BASE}/api/plans/weekly/${planId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to delete plan');
+    return res.json();
+}
