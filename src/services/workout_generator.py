@@ -161,9 +161,10 @@ class WorkoutGenerator:
         goal: str,
         weekly_tss: int = 0,
         yesterday_load: int = 0,
+        exclude_barcode: bool = False,
     ) -> dict:
         """Use LLM to select module keys from inventory."""
-        inventory_text = get_module_inventory_text()
+        inventory_text = get_module_inventory_text(exclude_barcode=exclude_barcode)
 
         prompt = MODULE_SELECTOR_PROMPT.format(
             module_inventory=inventory_text,
@@ -247,7 +248,11 @@ class WorkoutGenerator:
         # Use new modular assembler
         from .workout_assembler import WorkoutAssembler
 
-        assembler = WorkoutAssembler(tsb=tsb, training_goal=self.profile.training_goal)
+        assembler = WorkoutAssembler(
+            tsb=tsb,
+            training_goal=self.profile.training_goal,
+            exclude_barcode=self.profile.exclude_barcode_workouts
+        )
 
         # AI-Driven Selection with Fallback
         try:
@@ -264,6 +269,7 @@ class WorkoutGenerator:
                 goal=goal_desc,
                 weekly_tss=weekly_tss,
                 yesterday_load=yesterday_load,
+                exclude_barcode=self.profile.exclude_barcode_workouts,
             )
 
             logger.info(

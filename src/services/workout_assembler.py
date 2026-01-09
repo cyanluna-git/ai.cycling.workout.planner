@@ -9,10 +9,10 @@ import random
 import logging
 from typing import Dict, List, Any, Optional
 from .workout_modules import (
-    WARMUP_MODULES,
-    MAIN_SEGMENTS,
-    REST_SEGMENTS,
-    COOLDOWN_MODULES,
+    self.warmup_modules,
+    self.main_segments,
+    self.rest_segments,
+    self.cooldown_modules,
 )
 
 logger = logging.getLogger(__name__)
@@ -21,9 +21,15 @@ logger = logging.getLogger(__name__)
 class WorkoutAssembler:
     """Assembles workouts from modular segments based on target duration."""
 
-    def __init__(self, tsb: float = 0.0, training_goal: str = ""):
+    def __init__(self, tsb: float = 0.0, training_goal: str = "", exclude_barcode: bool = False):
         self.tsb = tsb
         self.training_goal = training_goal
+        self.exclude_barcode = exclude_barcode
+
+        # Load filtered modules
+        from .workout_modules import get_filtered_modules
+        self.warmup_modules, self.main_segments, self.rest_segments, self.cooldown_modules = \
+            get_filtered_modules(exclude_barcode)
 
     def assemble(
         self,
@@ -43,19 +49,19 @@ class WorkoutAssembler:
 
         # 1. Select warmup based on duration
         if target_duration <= 30:
-            warmup = WARMUP_MODULES["ramp_short"]
+            warmup = self.warmup_modules["ramp_short"]
         elif target_duration <= 60:
-            warmup = WARMUP_MODULES["ramp_standard"]
+            warmup = self.warmup_modules["ramp_standard"]
         else:
-            warmup = WARMUP_MODULES["ramp_extended"]
+            warmup = self.warmup_modules["ramp_extended"]
 
         # 2. Select cooldown based on duration
         if target_duration <= 30:
-            cooldown = COOLDOWN_MODULES["ramp_short"]
+            cooldown = self.cooldown_modules["ramp_short"]
         elif target_duration <= 60:
-            cooldown = COOLDOWN_MODULES["ramp_standard"]
+            cooldown = self.cooldown_modules["ramp_standard"]
         else:
-            cooldown = COOLDOWN_MODULES["flush_and_fade"]
+            cooldown = self.cooldown_modules["flush_and_fade"]
 
         # 3. Calculate remaining time for main set
         warmup_time = warmup["duration_minutes"]
@@ -76,7 +82,7 @@ class WorkoutAssembler:
             structure.extend(segment["structure"])
             # Add rest between segments (except after last one)
             if i < len(main_segments) - 1:
-                rest = REST_SEGMENTS["rest_short"]
+                rest = self.rest_segments["rest_short"]
                 structure.extend(rest["structure"])
 
         structure.extend(cooldown["structure"])
@@ -109,15 +115,15 @@ class WorkoutAssembler:
 
         for key in selected_modules:
             module = None
-            if key in WARMUP_MODULES:
-                module = WARMUP_MODULES[key]
-            elif key in MAIN_SEGMENTS:
-                module = MAIN_SEGMENTS[key]
+            if key in self.warmup_modules:
+                module = self.warmup_modules[key]
+            elif key in self.main_segments:
+                module = self.main_segments[key]
                 main_segments.append(module)
-            elif key in REST_SEGMENTS:
-                module = REST_SEGMENTS[key]
-            elif key in COOLDOWN_MODULES:
-                module = COOLDOWN_MODULES[key]
+            elif key in self.rest_segments:
+                module = self.rest_segments[key]
+            elif key in self.cooldown_modules:
+                module = self.cooldown_modules[key]
 
             if module:
                 structure.extend(module["structure"])
@@ -172,13 +178,13 @@ class WorkoutAssembler:
         # Get segments matching preference
         matching_segments = [
             (key, seg)
-            for key, seg in MAIN_SEGMENTS.items()
+            for key, seg in self.main_segments.items()
             if seg.get("type", "Mixed") in preferred_types
         ]
 
         # If no matches, use all segments
         if not matching_segments:
-            matching_segments = list(MAIN_SEGMENTS.items())
+            matching_segments = list(self.main_segments.items())
 
         # Fill time with segments
         selected = []

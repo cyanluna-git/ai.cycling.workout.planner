@@ -34,6 +34,7 @@ class UserProfile:
     max_hr: int  # Maximum Heart Rate
     lthr: int  # Lactate Threshold Heart Rate
     training_goal: str
+    exclude_barcode_workouts: bool = False  # Exclude barcode-style intervals (40/20, 30/30)
 
 
 @dataclass

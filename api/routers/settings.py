@@ -27,6 +27,7 @@ class UserSettings(BaseModel):
     max_hr: int = 190
     lthr: int = 170
     training_goal: str = "지구력 강화"
+    exclude_barcode_workouts: bool = False
 
 
 class UserApiKeys(BaseModel):
@@ -74,6 +75,7 @@ async def get_settings(user: dict = Depends(get_current_user)):
             max_hr=settings_data.get("max_hr", 190),
             lthr=settings_data.get("lthr", 170),
             training_goal=settings_data.get("training_goal", "지구력 강화"),
+            exclude_barcode_workouts=settings_data.get("exclude_barcode_workouts", False),
         ),
         api_keys_configured=bool(
             api_keys_data.get("intervals_api_key") and api_keys_data.get("athlete_id")
@@ -96,6 +98,7 @@ async def update_settings(
                 "max_hr": settings.max_hr,
                 "lthr": settings.lthr,
                 "training_goal": settings.training_goal,
+                "exclude_barcode_workouts": settings.exclude_barcode_workouts,
             },
             on_conflict="user_id",
         ).execute()

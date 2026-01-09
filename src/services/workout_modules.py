@@ -17,6 +17,53 @@ logger = logging.getLogger(__name__)
 BASE_DIR = Path(__file__).parent.parent / "data" / "workout_modules"
 
 
+def is_barcode_module(module_data: dict) -> bool:
+    """Detect if a module is a barcode-style workout.
+
+    Checks:
+    1. Module structure contains block with {"type": "barcode"}
+    2. Module key/name contains "micro" or "burst"
+
+    Args:
+        module_data: Module dictionary from JSON
+
+    Returns:
+        True if module is barcode-style
+    """
+    # Check structure for barcode blocks
+    structure = module_data.get("structure", [])
+    for block in structure:
+        if block.get("type") == "barcode":
+            return True
+
+    # Check name for barcode indicators
+    name = module_data.get("name", "").lower()
+    if "micro" in name or "burst" in name:
+        return True
+
+    return False
+
+
+def filter_barcode_modules(modules: dict, exclude_barcode: bool) -> dict:
+    """Filter out barcode workouts if user preference is set.
+
+    Args:
+        modules: Dictionary of module_key -> module_data
+        exclude_barcode: If True, remove barcode modules
+
+    Returns:
+        Filtered dictionary of modules
+    """
+    if not exclude_barcode:
+        return modules
+
+    return {
+        key: data
+        for key, data in modules.items()
+        if not is_barcode_module(data)
+    }
+
+
 def _enrich_metadata(data: dict, category: str):
     """Calculate and inject metadata if missing."""
     if "estimated_tss" in data and "estimated_if" in data and "fatigue_impact" in data:
@@ -70,7 +117,7 @@ def _enrich_metadata(data: dict, category: str):
         data["fatigue_impact"] = fatigue
 
 
-def _load_modules(category: str) -> Dict[str, Dict[str, Any]]:
+def _load_modules(category: str, exclude_barcode: bool = False) -> Dict[str, Dict[str, Any]]:
     """Load JSON modules from a category directory."""
     modules = {}
     category_dir = BASE_DIR / category
@@ -91,7 +138,8 @@ def _load_modules(category: str) -> Dict[str, Dict[str, Any]]:
         except Exception as e:
             logger.error(f"Failed to load module {json_file}: {e}")
 
-    return modules
+    # Apply barcode filter if needed
+    return filter_barcode_modules(modules, exclude_barcode)
 
 
 # Load dictionaries on module import
@@ -101,8 +149,24 @@ REST_SEGMENTS = _load_modules("rest")
 COOLDOWN_MODULES = _load_modules("cooldown")
 
 
-def get_module_inventory_text() -> str:
+def get_filtered_modules(exclude_barcode: bool = False) -> tuple:
+    """Get all modules with optional barcode filtering.
+
+    Returns:
+        Tuple of (warmup, main, rest, cooldown) module dictionaries
+    """
+    warmup = _load_modules("warmup", exclude_barcode)
+    main = _load_modules("main", exclude_barcode)
+    rest = _load_modules("rest", exclude_barcode)
+    cooldown = _load_modules("cooldown", exclude_barcode)
+
+    return warmup, main, rest, cooldown
+
+
+def get_module_inventory_text(exclude_barcode: bool = False) -> str:
     """Format all modules into a text inventory for LLM prompts."""
+    warmup, main, rest, cooldown = get_filtered_modules(exclude_barcode)
+
     inventory = []
 
     def _fmt(key, data):
@@ -118,23 +182,23 @@ def get_module_inventory_text() -> str:
         return f"- [{key}] Dur: {dur} | TSS: {tss} | IF: {if_val} | Fatigue: {fatigue} | Desc: {name}"
 
     inventory.append("--- WARMUP MODULES ---")
-    for key, data in sorted(WARMUP_MODULES.items()):
+    for key, data in sorted(warmup.items()):
         inventory.append(_fmt(key, data))
 
     inventory.append("\n--- MAIN SEGMENTS ---")
-    for key, data in sorted(MAIN_SEGMENTS.items()):
+    for key, data in sorted(main.items()):
         # Group by Intensity for better AI readability? Or just sorted name.
         # Sorted by key is fine.
         inventory.append(_fmt(key, data))
 
     inventory.append("\n--- REST SEGMENTS ---")
-    for key, data in sorted(REST_SEGMENTS.items()):
+    for key, data in sorted(rest.items()):
         inventory.append(
             f"- [{key}] Dur: {data['duration_minutes']}m | Fatigue: Recovery | Desc: {data['name']}"
         )
 
     inventory.append("\n--- COOLDOWN MODULES ---")
-    for key, data in sorted(COOLDOWN_MODULES.items()):
+    for key, data in sorted(cooldown.items()):
         inventory.append(_fmt(key, data))
 
     return "\n".join(inventory)
