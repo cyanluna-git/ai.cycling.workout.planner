@@ -8,12 +8,6 @@ Composes warmup + main segments + cooldown to match target duration.
 import random
 import logging
 from typing import Dict, List, Any, Optional
-from .workout_modules import (
-    self.warmup_modules,
-    self.main_segments,
-    self.rest_segments,
-    self.cooldown_modules,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -107,11 +101,22 @@ class WorkoutAssembler:
         }
 
     def assemble_from_plan(self, selected_modules: List[str]) -> Dict[str, Any]:
-        """Assemble workout from specific list of module keys."""
+        """Assemble workout from specific list of module keys.
+
+        Ensures workout structure follows: warmup -> main -> cooldown
+        If last module is not cooldown, automatically adds one.
+        """
         logger.info(f"Assembling from plan: {selected_modules}")
 
         structure = []
         main_segments = []
+
+        # Validate last module is cooldown
+        last_module_key = selected_modules[-1] if selected_modules else None
+        if last_module_key and last_module_key not in self.cooldown_modules:
+            logger.warning(f"Last module '{last_module_key}' is not a cooldown. Adding cooldown.")
+            # Add a default cooldown (flush_and_fade is a proper cooldown with downward ramp)
+            selected_modules.append("flush_and_fade")
 
         for key in selected_modules:
             module = None
