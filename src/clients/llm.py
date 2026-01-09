@@ -120,7 +120,7 @@ class AnthropicClient(BaseLLMClient):
 
 
 class GeminiClient(BaseLLMClient):
-    """Google Gemini API client."""
+    """Google Gemini API client using google-genai SDK."""
 
     def __init__(self, api_key: str, model: str = "gemini-2.0-flash"):
         """Initialize Gemini client.
@@ -130,14 +130,14 @@ class GeminiClient(BaseLLMClient):
             model: Model to use (default: gemini-2.0-flash).
         """
         try:
-            import google.generativeai as genai
+            from google import genai
         except ImportError:
             raise ImportError(
-                "google-generativeai package is required. Install with: pip install google-generativeai"
+                "google-genai package is required. Install with: pip install google-genai"
             )
 
-        genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel(model)
+        self.client = genai.Client(api_key=api_key)
+        self.model = model
 
     def generate(self, system_prompt: str, user_prompt: str) -> str:
         """Generate a response using Gemini API.
@@ -154,17 +154,9 @@ class GeminiClient(BaseLLMClient):
         # Combine prompts for Gemini
         full_prompt = f"{system_prompt}\n\n{user_prompt}"
 
-        # Add timeout to prevent hanging
-        try:
-            # google-generativeai v0.3+ supports request_options
-            from google.generativeai.types import RequestOptions
-
-            response = self.model.generate_content(
-                full_prompt, request_options=RequestOptions(timeout=30)
-            )
-        except ImportError:
-            # Fallback for older versions or if RequestOptions not available
-            response = self.model.generate_content(full_prompt)
+        response = self.client.models.generate_content(
+            model=self.model, contents=full_prompt
+        )
 
         return response.text if response.text else ""
 
