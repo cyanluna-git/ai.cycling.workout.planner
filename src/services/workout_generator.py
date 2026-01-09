@@ -166,6 +166,26 @@ class WorkoutGenerator:
         """Use LLM to select module keys from inventory."""
         inventory_text = get_module_inventory_text(exclude_barcode=exclude_barcode)
 
+        # Get balance hints for variety enforcement
+        try:
+            from .module_usage_tracker import get_tracker
+            from .workout_modules import get_filtered_modules
+
+            tracker = get_tracker()
+            warmup, main, rest, cooldown = get_filtered_modules(exclude_barcode)
+
+            available_modules = {
+                "warmup": list(warmup.keys()),
+                "main": list(main.keys()),
+                "rest": list(rest.keys()),
+                "cooldown": list(cooldown.keys()),
+            }
+            balance_hints = tracker.get_balance_hints(available_modules, top_n=3)
+            logger.info(f"Generated balance hints for AI:\n{balance_hints}")
+        except Exception as e:
+            logger.warning(f"Failed to generate balance hints: {e}")
+            balance_hints = "  (No usage data available)"
+
         prompt = MODULE_SELECTOR_PROMPT.format(
             module_inventory=inventory_text,
             tsb=tsb,
@@ -174,6 +194,7 @@ class WorkoutGenerator:
             yesterday_load=yesterday_load,
             duration=duration,
             goal=goal,
+            balance_hints=balance_hints,
         )
 
         # No temperature arg in base client generate signature
@@ -251,7 +272,7 @@ class WorkoutGenerator:
         assembler = WorkoutAssembler(
             tsb=tsb,
             training_goal=self.profile.training_goal,
-            exclude_barcode=self.profile.exclude_barcode_workouts
+            exclude_barcode=self.profile.exclude_barcode_workouts,
         )
 
         # AI-Driven Selection with Fallback

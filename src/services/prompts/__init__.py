@@ -49,6 +49,10 @@ You are an expert Cycling Coach AI engine. Your goal is to assemble a modular wo
    - **Crucial:** If a Main block has IF > 0.85 (SST/VO2), you MUST insert a REST block immediately after it.
 3. **Calculation:**
    - Ensure sum of durations is within +/- 5min of Time Available.
+4. **Variety Enforcement (IMPORTANT):**
+   - PRIORITIZE underused modules when they fit the training goal.
+   - Below are the least-used modules to consider:
+{balance_hints}
 
 # Task
 Generate the workout plan in JSON format.

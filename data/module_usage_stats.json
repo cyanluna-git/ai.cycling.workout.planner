@@ -1,36 +1,46 @@
 {
-  "total_selections": 1,
+  "total_selections": 3,
   "modules": {
     "progressive_ramp_15min": {
-      "count": 1,
-      "last_used": "2026-01-10T00:04:39.916064"
+      "count": 3,
+      "last_used": "2026-01-10T00:05:38.488329"
     },
     "sst_10min": {
-      "count": 3,
-      "last_used": "2026-01-10T00:04:39.916064"
+      "count": 7,
+      "last_used": "2026-01-10T00:05:38.488329"
     },
     "rest_short": {
-      "count": 1,
-      "last_used": "2026-01-10T00:04:39.916064"
+      "count": 2,
+      "last_used": "2026-01-10T00:05:38.488329"
     },
     "fade_out_5min": {
       "count": 1,
       "last_used": "2026-01-10T00:04:39.916064"
+    },
+    "easy_rest_2min": {
+      "count": 1,
+      "last_used": "2026-01-10T00:05:12.221690"
+    },
+    "fade_out_10min": {
+      "count": 2,
+      "last_used": "2026-01-10T00:05:38.488329"
     }
   },
   "by_category": {
     "warmup": {
-      "progressive_ramp_15min": 1
+      "progressive_ramp_15min": 3
     },
     "main": {
-      "sst_10min": 3
+      "sst_10min": 7
     },
     "rest": {
-      "rest_short": 1
+      "rest_short": 2,
+      "easy_rest_2min": 1
     },
     "cooldown": {
-      "fade_out_5min": 1
+      "fade_out_5min": 1,
+      "fade_out_10min": 2
     }
   },
-  "last_updated": "2026-01-10T00:04:39.916202"
+  "last_updated": "2026-01-10T00:05:38.488386"
 }
