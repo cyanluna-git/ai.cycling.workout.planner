@@ -17,52 +17,73 @@ logger = logging.getLogger(__name__)
 # Training style descriptions for AI prompt
 TRAINING_STYLE_DESCRIPTIONS = {
     "auto": "Automatically balance based on TSB and training phase",
-    "polarized": "80/20 approach - 80% easy (Z1-Z2), 20% very hard (Z5-Z6), minimize middle zones",
-    "norwegian": "Threshold-focused with 4x8 or 5x5 minute intervals at FTP",
-    "sweetspot": "Sweet Spot emphasis - long intervals at 88-94% FTP for efficient gains",
-    "threshold": "FTP-focused training with sustained efforts at 95-105% FTP",
-    "endurance": "Base building with long Z2 rides, minimal intensity",
+    "polarized": "80/20 approach - 80% easy (Z1-Z2), 20% very hard (Z5-Z6). Minimal Zone 3-4. Focus on long Z2 rides and short VO2max intervals.",
+    "norwegian": "Double session threshold training. Morning: easy aerobic (30-45min Z2). Afternoon: Lactate threshold intervals (4x4, 3x8, 5x5 at 95-100% FTP). 3 threshold days per week.",
+    "sweetspot": "Sweet Spot emphasis - long intervals at 88-94% FTP (2x20, 3x15, 2x30). Efficient way to build FTP with lower recovery needs than threshold.",
+    "threshold": "FTP-focused training with sustained efforts at 95-105% FTP. 2x20, 3x15, or over/under workouts. High training stress.",
+    "endurance": "Base building with long Z2 rides, minimal intensity. Focus on aerobic development.",
 }
 
 # Day-of-week training templates (for AI guidance)
 WEEKLY_STRUCTURE_TEMPLATE = """
-Standard weekly structure based on training style:
+## Weekly Structure Guidelines by Training Style:
 
-POLARIZED (80/20):
-- Monday: Rest or Easy Spin (Recovery)
-- Tuesday: Zone 2 Endurance (60-90min)
-- Wednesday: HIGH INTENSITY - VO2max intervals
-- Thursday: Zone 2 Endurance (60-90min)
+### POLARIZED (80/20):
+- **Goal:** 80% low intensity (Z1-Z2), 20% high intensity (Z5-Z6). AVOID Zone 3-4!
+- **Key Workouts:** 1 VO2max session per week, 1 Hard group ride
+- Monday: Rest
+- Tuesday: Long Zone 2 Endurance (90min+)
+- Wednesday: Zone 2 Easy (60min)
+- Thursday: **VO2max Intervals** (4x4min at 115% FTP, full recovery)
+- Friday: Rest or Easy Spin (30min)
+- Saturday: Long Zone 2 (2-3hrs)
+- Sunday: Zone 2 Endurance (90min)
+
+### NORWEGIAN (Double Session Threshold):
+- **Goal:** High frequency threshold work with AM/PM split sessions
+- **Key Feature:** Morning easy aerobic + Afternoon threshold intervals
+- **Threshold Workouts:** 4x4min, 3x8min, 5x5min at 95-100% FTP (near lactate threshold)
+- Monday: Rest
+- Tuesday: **AM** Easy Z2 (30-45min) + **PM** Threshold 4x4min @95%
+- Wednesday: Zone 2 Recovery (45-60min)
+- Thursday: **AM** Easy Z2 (30-45min) + **PM** Threshold 3x8min @95%
 - Friday: Rest or Easy Spin
-- Saturday: HIGH INTENSITY + Long Ride
-- Sunday: Long Zone 2 Endurance
+- Saturday: **AM** Easy Z2 (45min) + **PM** Threshold 5x5min @95%
+- Sunday: Long Zone 2 Endurance (2hrs)
+⚠️ For Norwegian style: Generate TWO workouts per threshold day (AM session + PM session)
 
-NORWEGIAN / THRESHOLD:
-- Monday: Rest or Easy Spin
-- Tuesday: Threshold intervals (4x8 or 5x5)
-- Wednesday: Zone 2 Endurance
-- Thursday: Threshold intervals (3x10 or 2x20)
+### SWEETSPOT:
+- **Goal:** Maximize training effect at 88-94% FTP
+- **Key Workouts:** 2x20, 3x15, 2x30 at Sweet Spot
+- Monday: Rest
+- Tuesday: **Sweet Spot 2x20min** @90% FTP
+- Wednesday: Zone 2 Endurance (60-75min)
+- Thursday: **Sweet Spot 3x15min** with burst finishes
 - Friday: Rest or Easy Spin
-- Saturday: Mixed intensity long ride
-- Sunday: Long Zone 2 Endurance
+- Saturday: **Long Sweet Spot** 3x20min or 2x30min
+- Sunday: Long Zone 2 (2hrs)
 
-SWEETSPOT:
-- Monday: Rest or Easy Spin
-- Tuesday: Sweet Spot 2x20 or 3x15
-- Wednesday: Zone 2 Endurance
-- Thursday: Sweet Spot with bursts
+### THRESHOLD:
+- **Goal:** Build FTP with sustained threshold efforts
+- **Key Workouts:** 2x20, 3x15 at 95-100% FTP, Over/Unders
+- Monday: Rest
+- Tuesday: **Threshold 2x20min** @100% FTP
+- Wednesday: Zone 2 Recovery (45-60min)
+- Thursday: **Over/Under** intervals (105%/95% alternating)
 - Friday: Rest or Easy Spin
-- Saturday: Long Sweet Spot (3x20 or 2x30)
-- Sunday: Long Zone 2 Endurance
+- Saturday: **Threshold 3x15min** @100% FTP
+- Sunday: Long Zone 2 Endurance (2hrs)
 
-ENDURANCE:
+### ENDURANCE:
+- **Goal:** Aerobic base building
+- **Key Workouts:** Long Z2 rides, occasional Tempo
 - Monday: Rest
 - Tuesday: Zone 2 Endurance (60min)
 - Wednesday: Zone 2 Endurance (75min)
-- Thursday: Tempo (Zone 3) 30-45min
-- Friday: Rest or Easy Spin
-- Saturday: Long Zone 2 (2-3hrs)
-- Sunday: Long Zone 2 (2-3hrs)
+- Thursday: Tempo (Zone 3) 30-45min in middle
+- Friday: Rest
+- Saturday: Long Zone 2 (2.5-3hrs)
+- Sunday: Long Zone 2 (2hrs)
 """
 
 
@@ -71,8 +92,8 @@ You are an expert Cycling Coach creating a structured 7-day training plan.
 
 # Athlete Context
 - **Training Style:** {training_style} - {training_style_description}
+- **Training Focus:** {training_focus} ({focus_description})
 - **Preferred Duration:** {preferred_duration} minutes per workout
-- **Training Goal:** {training_goal}
 - **Current CTL (Fitness):** {ctl:.1f}
 - **Current ATL (Fatigue):** {atl:.1f}
 - **Current TSB (Form):** {tsb:.1f} ({form_status})
@@ -96,8 +117,9 @@ Below is the library of workout modules you can use:
    - If TSB > -10: Can include hard workouts
 4. **Progressive Load:** Build intensity mid-week, recover on weekends or vice versa.
 5. **Duration:** Each workout should be close to the preferred duration ({preferred_duration} min).
-6. **Variety:** Use different modules throughout the week.
-7. **TSS Calculation:** TSS = (duration_hours × IF²) × 100, where IF = average_intensity / FTP
+6. **Style Emphasis:** Strongly favor workouts that match the training style.
+7. **Norwegian Double Sessions:** For Norwegian style, generate TWO separate workout entries for the same day when there's AM + PM sessions. Use "session": "AM" or "session": "PM" to differentiate.
+8. **TSS Calculation:** TSS = (duration_hours × IF²) × 100, where IF = average_intensity / FTP
    - Recovery (50-60% FTP): 60min = ~25 TSS
    - Endurance (65-75% FTP): 60min = ~50 TSS
    - Tempo (80-90% FTP): 60min = ~70 TSS
@@ -108,7 +130,7 @@ Below is the library of workout modules you can use:
    - Long endurance rides: 120min at 70% = ~100 TSS, 180min = ~150 TSS
 
 # Output Format
-Generate a JSON array with exactly 7 daily plans:
+Generate a JSON array with daily plans. For Norwegian style with double sessions, you may have more than 7 entries:
 
 ```json
 [
@@ -116,6 +138,7 @@ Generate a JSON array with exactly 7 daily plans:
     "day_index": 0,
     "day_name": "Monday",
     "date": "2026-01-13",
+    "session": "AM|PM|null",
     "workout_type": "Recovery|Endurance|Tempo|SweetSpot|Threshold|VO2max|Rest",
     "workout_name": "Creative descriptive name",
     "duration_minutes": 60,
@@ -128,7 +151,7 @@ Generate a JSON array with exactly 7 daily plans:
 ]
 ```
 
-Generate the 7-day plan now.
+Generate the plan now.
 """
 
 
@@ -146,6 +169,7 @@ class DailyPlan:
     intensity: str
     selected_modules: List[str]
     rationale: str
+    session: Optional[str] = None  # "AM", "PM", or None for single session
 
 
 @dataclass
@@ -229,11 +253,19 @@ class WeeklyPlanGenerator:
         module_inventory = get_module_inventory_text(exclude_barcode=exclude_barcode)
 
         # Build prompt
+        focus_descriptions = {
+            "recovery": "Recovery week - reduce load and intensity",
+            "maintain": "Maintain current fitness level",
+            "build": "Build phase - progressively increase load",
+        }
+        focus_description = focus_descriptions.get(training_focus, "Maintain")
+
         prompt = WEEKLY_PLAN_PROMPT.format(
             training_style=training_style,
             training_style_description=training_style_desc,
+            training_focus=training_focus,
+            focus_description=focus_description,
             preferred_duration=self.profile.get("preferred_duration", 60),
-            training_goal=self.profile.get("training_goal", "General Fitness"),
             ctl=ctl,
             atl=atl,
             tsb=tsb,
@@ -350,8 +382,13 @@ class WeeklyPlanGenerator:
             "Sunday",
         ]
 
-        for i, plan_data in enumerate(plans_data[:7]):  # Limit to 7 days
-            workout_date = week_start + timedelta(days=i)
+        # For Norwegian style, we may have more than 7 entries (AM + PM sessions)
+        for plan_data in plans_data:
+            day_index = plan_data.get("day_index", 0)
+            if day_index >= 7:
+                continue  # Safety check
+
+            workout_date = week_start + timedelta(days=day_index)
             workout_type = plan_data.get("workout_type", "Endurance")
             duration_minutes = plan_data.get("duration_minutes", 60)
             llm_tss = plan_data.get("estimated_tss", 50)
@@ -363,16 +400,19 @@ class WeeklyPlanGenerator:
 
             daily_plans.append(
                 DailyPlan(
-                    day_index=i,
-                    day_name=day_names[i],
+                    day_index=day_index,
+                    day_name=day_names[day_index],
                     workout_date=workout_date,
                     workout_type=workout_type,
-                    workout_name=plan_data.get("workout_name", f"Day {i+1} Workout"),
+                    workout_name=plan_data.get(
+                        "workout_name", f"Day {day_index+1} Workout"
+                    ),
                     duration_minutes=duration_minutes,
                     estimated_tss=corrected_tss,
                     intensity=plan_data.get("intensity", "moderate"),
                     selected_modules=plan_data.get("selected_modules", []),
                     rationale=plan_data.get("rationale", ""),
+                    session=plan_data.get("session"),  # AM, PM, or None
                 )
             )
 
