@@ -962,12 +962,19 @@ async def register_weekly_plan_to_intervals(
                 ftp=ftp
             )
 
+            # Calculate moving time from modules
+            total_duration_minutes = workout.get("planned_duration", 60)
+            moving_time = total_duration_minutes * 60  # Convert to seconds
+
             # Register to Intervals.icu
             intervals.create_workout(
-                date=workout_date,
-                workout_data=intervals_json,
+                target_date=workout_date,
                 name=workout_name,
-                description=workout_description
+                description=workout_description,
+                moving_time=moving_time,
+                workout_type="Ride",
+                training_load=workout.get("planned_tss"),
+                steps=planned_steps,
             )
 
             registered_count += 1

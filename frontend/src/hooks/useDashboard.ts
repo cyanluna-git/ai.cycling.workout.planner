@@ -8,7 +8,7 @@
  * - Background refetching
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { queryKeys } from "@/lib/queryClient";
@@ -73,6 +73,14 @@ export function useDashboard(): UseDashboardReturn {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
 
+    // Helper function to get local date string (YYYY-MM-DD)
+    const getLocalDateString = useCallback((date: Date = new Date()): string => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }, []);
+
     // Helper function to calculate Monday of a week with offset
     const getWeekStartDate = useCallback((offset: number): string => {
         const today = new Date();
@@ -80,8 +88,8 @@ export function useDashboard(): UseDashboardReturn {
         const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
         const monday = new Date(today);
         monday.setDate(today.getDate() + daysToMonday + (offset * 7));
-        return monday.toISOString().split('T')[0];
-    }, []);
+        return getLocalDateString(monday);
+    }, [getLocalDateString]);
 
     // Check if API is configured (cached for 5 minutes)
     const { data: isApiConfigured = null } = useQuery({
@@ -126,14 +134,8 @@ export function useDashboard(): UseDashboardReturn {
     const { data: todayWorkoutData } = useQuery({
         queryKey: queryKeys.todayWorkout(),
         queryFn: () => fetchTodaysWorkout(session?.access_token || ''),
-        enabled: !!session?.access_token && isApiConfigured === true && !workout,
+        enabled: !!session?.access_token && isApiConfigured === true,
         staleTime: 1 * 60 * 60 * 1000, // 1 hour
-        onSuccess: (result) => {
-            if (result && result.success && result.workout) {
-                setWorkout(result.workout);
-                setSuccess("📅 오늘의 워크아웃을 불러왔습니다.");
-            }
-        },
     });
 
     // Mutations
@@ -232,6 +234,14 @@ export function useDashboard(): UseDashboardReturn {
         },
     });
 
+    // Handle today's workout data when it arrives (only if no workout is set)
+    useEffect(() => {
+        if (!workout && todayWorkoutData && todayWorkoutData.success && todayWorkoutData.workout) {
+            setWorkout(todayWorkoutData.workout);
+            setSuccess("📅 오늘의 워크아웃을 불러왔습니다.");
+        }
+    }, [todayWorkoutData, workout]);
+
     // Actions
     const handleOnboardingComplete = useCallback(() => {
         // Invalidate API configured check to refetch
@@ -258,7 +268,7 @@ export function useDashboard(): UseDashboardReturn {
         setError(null);
 
         try {
-            const today = new Date().toISOString().split("T")[0];
+            const today = getLocalDateString();
             await registerMutation.mutateAsync({
                 target_date: today,
                 name: workout.name,
@@ -273,7 +283,7 @@ export function useDashboard(): UseDashboardReturn {
         } finally {
             setIsRegistering(false);
         }
-    }, [workout, registerMutation]);
+    }, [workout, registerMutation, getLocalDateString]);
 
     const handleSelectDate = useCallback(async (date: string) => {
         setIsLoading(true);
