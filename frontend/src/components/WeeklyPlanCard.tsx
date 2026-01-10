@@ -283,8 +283,8 @@ export function WeeklyPlanCard({
                 </div>
             </CardHeader>
             <CardContent>
-                {/* Vertical list with scroll */}
-                <div className="space-y-2 max-h-[600px] overflow-y-auto mb-4">
+                {/* Vertical list - no scroll, full height for 7 days */}
+                <div className="space-y-2 mb-4">
                     {plan.daily_workouts.map((workout, index) => (
                         <DailyWorkoutRow
                             key={index}
