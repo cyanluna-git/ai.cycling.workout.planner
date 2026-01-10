@@ -53,6 +53,7 @@ function Dashboard() {
     workout,
     weeklyCalendar,
     weeklyPlan,
+    currentWeekOffset,
     isLoadingCalendar,
     isLoadingPlan,
     isGeneratingPlan,
@@ -66,6 +67,7 @@ function Dashboard() {
     handleOnboardingComplete,
     handleGenerateWeeklyPlan,
     handleDeleteWeeklyPlan,
+    handleWeekNavigation,
   } = useDashboard();
 
   // Show loading while checking API config
@@ -150,8 +152,10 @@ function Dashboard() {
               plan={weeklyPlan}
               isLoading={isLoadingPlan}
               isGenerating={isGeneratingPlan}
+              currentWeekOffset={currentWeekOffset}
               onGenerate={handleGenerateWeeklyPlan}
               onDelete={handleDeleteWeeklyPlan}
+              onWeekNavigation={handleWeekNavigation}
             />
 
             <WeeklyCalendarCard

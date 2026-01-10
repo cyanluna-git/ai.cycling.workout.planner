@@ -30,6 +30,7 @@ interface DashboardState {
     workout: GeneratedWorkout | null;
     weeklyCalendar: WeeklyCalendarData | null;
     weeklyPlan: WeeklyPlan | null;
+    currentWeekOffset: number; // -1 = previous week, 0 = current week, 1 = next week
     isLoadingCalendar: boolean;
     isLoadingPlan: boolean;
     isGeneratingPlan: boolean;
@@ -46,6 +47,7 @@ interface DashboardActions {
     handleOnboardingComplete: () => void;
     handleGenerateWeeklyPlan: () => Promise<void>;
     handleDeleteWeeklyPlan: (planId: string) => Promise<void>;
+    handleWeekNavigation: (direction: 'prev' | 'next') => Promise<void>;
     clearMessages: () => void;
 }
 
@@ -60,6 +62,7 @@ export function useDashboard(): UseDashboardReturn {
     const [workout, setWorkout] = useState<GeneratedWorkout | null>(null);
     const [weeklyCalendar, setWeeklyCalendar] = useState<WeeklyCalendarData | null>(null);
     const [weeklyPlan, setWeeklyPlan] = useState<WeeklyPlan | null>(null);
+    const [currentWeekOffset, setCurrentWeekOffset] = useState(0); // 0 = current week by default
     const [isLoadingCalendar, setIsLoadingCalendar] = useState(false);
     const [isLoadingPlan, setIsLoadingPlan] = useState(false);
     const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
@@ -67,6 +70,33 @@ export function useDashboard(): UseDashboardReturn {
     const [isRegistering, setIsRegistering] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+
+    // Helper function to calculate Monday of a week with offset
+    const getWeekStartDate = useCallback((offset: number): string => {
+        const today = new Date();
+        const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ...
+        const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // How many days until Monday
+        const monday = new Date(today);
+        monday.setDate(today.getDate() + daysToMonday + (offset * 7));
+        return monday.toISOString().split('T')[0];
+    }, []);
+
+    // Fetch weekly plan for current offset
+    const fetchWeeklyPlanForOffset = useCallback(async (offset: number) => {
+        if (!session?.access_token) return;
+
+        setIsLoadingPlan(true);
+        try {
+            const weekStartDate = getWeekStartDate(offset);
+            const plan = await fetchWeeklyPlan(session.access_token, weekStartDate);
+            setWeeklyPlan(plan);
+        } catch (e) {
+            console.error(e);
+            setWeeklyPlan(null);
+        } finally {
+            setIsLoadingPlan(false);
+        }
+    }, [session, getWeekStartDate]);
 
     // Check if API is configured
     useEffect(() => {
@@ -98,14 +128,10 @@ export function useDashboard(): UseDashboardReturn {
                 .catch(console.error)
                 .finally(() => setIsLoadingCalendar(false));
 
-            // Fetch weekly plan
-            setIsLoadingPlan(true);
-            fetchWeeklyPlan(session.access_token)
-                .then(setWeeklyPlan)
-                .catch(console.error)
-                .finally(() => setIsLoadingPlan(false));
+            // Fetch weekly plan for current offset
+            fetchWeeklyPlanForOffset(currentWeekOffset);
         }
-    }, [session, isApiConfigured]);
+    }, [session, isApiConfigured, currentWeekOffset, fetchWeeklyPlanForOffset]);
 
     // Actions
     const handleOnboardingComplete = useCallback(() => {
@@ -250,6 +276,11 @@ export function useDashboard(): UseDashboardReturn {
         }
     }, [session]);
 
+    const handleWeekNavigation = useCallback(async (direction: 'prev' | 'next') => {
+        const newOffset = direction === 'next' ? currentWeekOffset + 1 : currentWeekOffset - 1;
+        setCurrentWeekOffset(newOffset);
+    }, [currentWeekOffset]);
+
     return {
         // State
         isApiConfigured,
@@ -257,6 +288,7 @@ export function useDashboard(): UseDashboardReturn {
         workout,
         weeklyCalendar,
         weeklyPlan,
+        currentWeekOffset,
         isLoadingCalendar,
         isLoadingPlan,
         isGeneratingPlan,
@@ -271,6 +303,7 @@ export function useDashboard(): UseDashboardReturn {
         handleOnboardingComplete,
         handleGenerateWeeklyPlan,
         handleDeleteWeeklyPlan,
+        handleWeekNavigation,
         clearMessages,
     };
 }
