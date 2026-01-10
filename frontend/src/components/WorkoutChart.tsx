@@ -197,8 +197,8 @@ export function WorkoutChart({ workoutText, zwoContent, steps }: WorkoutChartPro
     }
 
     return (
-        <div className="w-full h-32">
-            <ResponsiveContainer width="100%" height="100%">
+        <div className="w-full h-32" style={{ minHeight: 128, minWidth: 100 }}>
+            <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={128}>
                 <BarChart
                     data={barData}
                     margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
