@@ -194,7 +194,12 @@ async def create_workout(
         )
 
         # Clear cache for this user (calendar will have new workout)
-        clear_user_cache(user["id"], keys=["calendar", "fitness"])
+        clear_user_cache(user["id"], keys=[
+            "calendar",
+            "fitness:complete",
+            "fitness:training",
+            "fitness:wellness"
+        ])
 
         # Log successful creation on Intervals.icu (No local DB save!)
         await log_audit_event(

@@ -48,7 +48,8 @@ async def get_fitness(
         refresh: If True, bypass cache and fetch fresh data.
     """
     user_id = user["id"]
-    cache_key = CACHE_KEYS["fitness"]
+    # Use granular cache key for complete fitness data
+    cache_key = "fitness:complete"
 
     # Check cache first (unless refresh is requested)
     if not refresh:
@@ -90,47 +91,58 @@ async def get_fitness(
         # Calculate W/kg if both FTP and weight are available
         w_per_kg = round(ftp / weight, 2) if ftp and weight else None
 
-        response = FitnessResponse(
-            training=TrainingMetrics(
-                ctl=training.ctl,
-                atl=training.atl,
-                tsb=training.tsb,
-                form_status=training.form_status,
-            ),
-            wellness=WellnessMetrics(
-                readiness=wellness.readiness,
-                hrv=wellness.hrv,
-                hrv_sdnn=wellness.hrv_sdnn,
-                rhr=wellness.rhr,
-                sleep_hours=wellness.sleep_hours,
-                sleep_score=wellness.sleep_score,
-                sleep_quality=wellness.sleep_quality,
-                weight=wellness.weight,
-                body_fat=wellness.body_fat,
-                vo2max=wellness.vo2max or vo2max_estimate,  # Fallback to mmp_model
-                soreness=wellness.soreness,
-                fatigue=wellness.fatigue,
-                stress=wellness.stress,
-                mood=wellness.mood,
-                motivation=wellness.motivation,
-                spo2=wellness.spo2,
-                systolic=wellness.systolic,
-                diastolic=wellness.diastolic,
-                respiration=wellness.respiration,
-                readiness_score=wellness.readiness_score,
-            ),
-            profile=AthleteProfile(
-                ftp=ftp,
-                max_hr=max_hr,
-                lthr=lthr,
-                weight=weight,
-                w_per_kg=w_per_kg,
-                vo2max=vo2max_estimate,
-            ),
+        training_data = TrainingMetrics(
+            ctl=training.ctl,
+            atl=training.atl,
+            tsb=training.tsb,
+            form_status=training.form_status,
         )
 
-        # Cache the response
+        wellness_data = WellnessMetrics(
+            readiness=wellness.readiness,
+            hrv=wellness.hrv,
+            hrv_sdnn=wellness.hrv_sdnn,
+            rhr=wellness.rhr,
+            sleep_hours=wellness.sleep_hours,
+            sleep_score=wellness.sleep_score,
+            sleep_quality=wellness.sleep_quality,
+            weight=wellness.weight,
+            body_fat=wellness.body_fat,
+            vo2max=wellness.vo2max or vo2max_estimate,  # Fallback to mmp_model
+            soreness=wellness.soreness,
+            fatigue=wellness.fatigue,
+            stress=wellness.stress,
+            mood=wellness.mood,
+            motivation=wellness.motivation,
+            spo2=wellness.spo2,
+            systolic=wellness.systolic,
+            diastolic=wellness.diastolic,
+            respiration=wellness.respiration,
+            readiness_score=wellness.readiness_score,
+        )
+
+        profile_data = AthleteProfile(
+            ftp=ftp,
+            max_hr=max_hr,
+            lthr=lthr,
+            weight=weight,
+            w_per_kg=w_per_kg,
+            vo2max=vo2max_estimate,
+        )
+
+        response = FitnessResponse(
+            training=training_data,
+            wellness=wellness_data,
+            profile=profile_data,
+        )
+
+        # Cache the complete response
         set_cached(user_id, cache_key, response)
+
+        # Also cache individual components with their own TTLs
+        set_cached(user_id, "fitness:training", training_data)
+        set_cached(user_id, "fitness:wellness", wellness_data)
+        set_cached(user_id, "fitness:profile", profile_data)
 
         return response
     except UserApiServiceError as e:

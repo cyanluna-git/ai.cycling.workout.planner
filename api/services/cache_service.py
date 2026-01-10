@@ -1,6 +1,7 @@
 """Cache service for TTL-based caching of Intervals.icu API data.
 
-Provides a 6-hour TTL cache to reduce API calls to Intervals.icu.
+Provides optimized TTL caching to reduce API calls to Intervals.icu.
+Different data types have different TTL values based on update frequency.
 Cache can be invalidated manually after workout sync or via refresh parameter.
 """
 
@@ -12,15 +13,27 @@ from functools import wraps
 
 logger = logging.getLogger(__name__)
 
-# Default TTL: 6 hours in seconds
-DEFAULT_TTL = 6 * 60 * 60  # 21,600 seconds
+# Optimized TTL values based on data update frequency
+TTL_SETTINGS = {
+    "wellness": 1 * 60 * 60,      # 1 hour - wellness data changes daily
+    "fitness": 2 * 60 * 60,        # 2 hours - training metrics update with new activities
+    "activities": 3 * 60 * 60,     # 3 hours - recent activities
+    "calendar": 2 * 60 * 60,       # 2 hours - weekly calendar/planned workouts
+    "profile": 6 * 60 * 60,        # 6 hours - user profile/settings (rarely change)
+    "sport_settings": 6 * 60 * 60, # 6 hours - FTP, zones (rarely change)
+}
+
+# Default TTL for backward compatibility
+DEFAULT_TTL = 2 * 60 * 60  # 2 hours (reduced from 6 hours)
 
 # Cache key prefixes
 CACHE_KEYS = {
     "fitness": "fitness",
+    "wellness": "wellness",
     "activities": "activities",
     "profile": "profile",
     "calendar": "calendar",
+    "sport_settings": "sport_settings",
 }
 
 # User-specific caches: user_id -> TTLCache
@@ -60,6 +73,8 @@ def get_cached(user_id: str, cache_key: str) -> Optional[Any]:
     value = cache.get(cache_key)
     if value is not None:
         logger.debug(f"Cache HIT for user {user_id[:8]}... key={cache_key}")
+    else:
+        logger.debug(f"Cache MISS for user {user_id[:8]}... key={cache_key}")
     return value
 
 
@@ -112,10 +127,15 @@ def get_cache_stats(user_id: str) -> dict:
         user_id: The user's unique identifier.
 
     Returns:
-        Dictionary with cache statistics.
+        Dictionary with cache statistics including TTL settings.
     """
     if user_id not in _user_caches:
-        return {"exists": False, "size": 0, "keys": []}
+        return {
+            "exists": False,
+            "size": 0,
+            "keys": [],
+            "ttl_settings": TTL_SETTINGS,
+        }
 
     cache = _user_caches[user_id]
     return {
@@ -124,4 +144,5 @@ def get_cache_stats(user_id: str) -> dict:
         "maxsize": cache.maxsize,
         "ttl": cache.ttl,
         "keys": list(cache.keys()),
+        "ttl_settings": TTL_SETTINGS,
     }
