@@ -7,8 +7,7 @@ import { OnboardingPage } from "@/pages/OnboardingPage";
 import { LandingPage } from "@/pages/LandingPage";
 import { AdminPage } from "@/pages/AdminPage";
 import { FitnessCard } from "@/components/FitnessCard";
-import { WorkoutForm } from "@/components/WorkoutForm";
-import { WorkoutPreview } from "@/components/WorkoutPreview";
+import { TodayWorkoutCard } from "@/components/TodayWorkoutCard";
 import { WeeklyCalendarCard } from "@/components/WeeklyCalendarCard";
 import { WeeklyPlanCard } from "@/components/WeeklyPlanCard";
 import { Button } from "@/components/ui/button";
@@ -142,7 +141,6 @@ function Dashboard() {
             {fitness && (
               <FitnessCard training={fitness.training} wellness={fitness.wellness} profile={fitness.profile} />
             )}
-            <WorkoutForm onGenerate={handleGenerate} isLoading={isLoading} />
 
             <WeeklyCalendarCard
               calendar={weeklyCalendar}
@@ -150,36 +148,17 @@ function Dashboard() {
               onSelectDate={handleSelectDate}
             />
 
-            {error && (
-              <div className="bg-destructive/10 text-destructive p-4 rounded-lg">
-                ❌ {error}
-              </div>
-            )}
-
-            {success && (
-              <div className="bg-green-500/10 text-green-600 p-4 rounded-lg">
-                {success}
-              </div>
-            )}
-
-            {workout && (
-              <WorkoutPreview
-                workout={workout}
-                onRegister={handleRegister}
-                isRegistering={isRegistering}
-                isRegistered={!!success && success.includes("등록 완료")}
-                ftp={fitness?.profile?.ftp ?? 250}
-              />
-            )}
-
-            {!workout && !error && !success && (
-              <div className="border-2 border-dashed rounded-lg p-8 text-center text-muted-foreground">
-                <p className="text-lg">🎯 워크아웃을 생성해보세요!</p>
-                <p className="text-sm mt-2">
-                  왼쪽 폼에서 옵션을 선택 후 생성 버튼을 클릭하세요
-                </p>
-              </div>
-            )}
+            <TodayWorkoutCard
+              workout={workout}
+              onGenerate={handleGenerate}
+              onRegister={handleRegister}
+              isLoading={isLoading}
+              isRegistering={isRegistering}
+              isRegistered={!!success && success.includes("등록 완료")}
+              ftp={fitness?.profile?.ftp ?? 250}
+              error={error}
+              success={success}
+            />
           </div>
 
           {/* Right Column - Weekly Plan */}
