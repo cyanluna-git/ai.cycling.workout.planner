@@ -137,7 +137,7 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                     <div className="p-3 rounded bg-muted text-center">{message}</div>
                 )}
 
-                {/* Training Goal Settings */}
+                {/* Training Settings */}
                 <Card>
                     <CardHeader>
                         <CardTitle>🎯 훈련 설정</CardTitle>
@@ -146,16 +146,6 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                         <p className="text-sm text-muted-foreground">
                             FTP, 최대 심박수, 역치 심박수는 Intervals.icu에서 자동으로 가져옵니다.
                         </p>
-                        <div className="space-y-2">
-                            <Label>훈련 목표</Label>
-                            <Input
-                                value={settings.training_goal}
-                                onChange={(e) =>
-                                    setSettings({ ...settings, training_goal: e.target.value })
-                                }
-                                placeholder="예: 지구력 강화, 스프린트 파워 향상"
-                            />
-                        </div>
 
                         {/* Training Style - for Weekly Plan */}
                         <div className="space-y-2">
