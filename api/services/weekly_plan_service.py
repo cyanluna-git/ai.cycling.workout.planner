@@ -30,14 +30,15 @@ WEEKLY_STRUCTURE_TEMPLATE = """
 
 ### POLARIZED (80/20):
 - **Goal:** 80% low intensity (Z1-Z2), 20% high intensity (Z5-Z6). AVOID Zone 3-4!
-- **Key Workouts:** 1 VO2max session per week, 1 Hard group ride
+- **Key Workouts:** 1-2 VO2max sessions per week, 1-2 Long Z2 rides (2hrs+)
+- **CRITICAL:** Include at least ONE 2-hour Zone 2 ride, preferably TWO per week (weekend rides)
 - Monday: Rest
-- Tuesday: Long Zone 2 Endurance (90min+)
-- Wednesday: Zone 2 Easy (60min)
-- Thursday: **VO2max Intervals** (4x4min at 115% FTP, full recovery)
+- Tuesday: Zone 2 Endurance (60-90min)
+- Wednesday: **VO2max Intervals** (4x4min at 115% FTP, full recovery) - 60min total
+- Thursday: Zone 2 Easy (45-60min)
 - Friday: Rest or Easy Spin (30min)
-- Saturday: Long Zone 2 (2-3hrs)
-- Sunday: Zone 2 Endurance (90min)
+- Saturday: **LONG Zone 2** (120-180min) - ESSENTIAL for polarized training
+- Sunday: **Long Zone 2** (120min minimum) - ESSENTIAL for polarized training
 
 ### NORWEGIAN (Double Session Threshold):
 - **Goal:** High frequency threshold work with AM/PM split sessions
@@ -54,36 +55,37 @@ WEEKLY_STRUCTURE_TEMPLATE = """
 
 ### SWEETSPOT:
 - **Goal:** Maximize training effect at 88-94% FTP
-- **Key Workouts:** 2x20, 3x15, 2x30 at Sweet Spot
+- **Key Workouts:** 2x20, 3x15, 2x30 at Sweet Spot, plus long Z2 rides
 - Monday: Rest
-- Tuesday: **Sweet Spot 2x20min** @90% FTP
+- Tuesday: **Sweet Spot 2x20min** @90% FTP - 60-75min total
 - Wednesday: Zone 2 Endurance (60-75min)
-- Thursday: **Sweet Spot 3x15min** with burst finishes
-- Friday: Rest or Easy Spin
-- Saturday: **Long Sweet Spot** 3x20min or 2x30min
-- Sunday: Long Zone 2 (2hrs)
+- Thursday: **Sweet Spot 3x15min** with burst finishes - 60-75min total
+- Friday: Rest or Easy Spin (30-45min)
+- Saturday: **Long Sweet Spot** 3x20min or 2x30min - 90-120min total
+- Sunday: **Long Zone 2** (120min) - Essential for aerobic base
 
 ### THRESHOLD:
 - **Goal:** Build FTP with sustained threshold efforts
-- **Key Workouts:** 2x20, 3x15 at 95-100% FTP, Over/Unders
+- **Key Workouts:** 2x20, 3x15 at 95-100% FTP, Over/Unders, long Z2 rides
 - Monday: Rest
-- Tuesday: **Threshold 2x20min** @100% FTP
+- Tuesday: **Threshold 2x20min** @100% FTP - 60-75min total
 - Wednesday: Zone 2 Recovery (45-60min)
-- Thursday: **Over/Under** intervals (105%/95% alternating)
-- Friday: Rest or Easy Spin
-- Saturday: **Threshold 3x15min** @100% FTP
-- Sunday: Long Zone 2 Endurance (2hrs)
+- Thursday: **Over/Under** intervals (105%/95% alternating) - 60-75min total
+- Friday: Rest or Easy Spin (30-45min)
+- Saturday: **Threshold 3x15min** @100% FTP - 60-75min total
+- Sunday: **Long Zone 2** (120min) - Essential for recovery and aerobic base
 
 ### ENDURANCE:
-- **Goal:** Aerobic base building
-- **Key Workouts:** Long Z2 rides, occasional Tempo
+- **Goal:** Aerobic base building through high volume low intensity
+- **Key Workouts:** Multiple long Z2 rides (2hrs+), occasional Tempo
+- **CRITICAL:** Both weekend days should be long rides (120-180min)
 - Monday: Rest
-- Tuesday: Zone 2 Endurance (60min)
-- Wednesday: Zone 2 Endurance (75min)
-- Thursday: Tempo (Zone 3) 30-45min in middle
-- Friday: Rest
-- Saturday: Long Zone 2 (2.5-3hrs)
-- Sunday: Long Zone 2 (2hrs)
+- Tuesday: Zone 2 Endurance (60-75min)
+- Wednesday: Zone 2 Endurance (75-90min)
+- Thursday: Tempo (Zone 3) 30-45min in middle - 60-75min total
+- Friday: Rest or Easy Spin (30-45min)
+- Saturday: **Long Zone 2** (150-180min) - Essential for base building
+- Sunday: **Long Zone 2** (120-150min) - Essential for base building
 """
 
 
@@ -118,7 +120,11 @@ If a module you want doesn't exist, choose the closest alternative from this lis
    - If TSB -10 to -20: Moderate volume, limit high intensity
    - If TSB > -10: Can include hard workouts
 4. **Progressive Load:** Build intensity mid-week, recover on weekends or vice versa.
-5. **Duration:** Each workout should be close to the preferred duration ({preferred_duration} min).
+5. **Duration Guidelines:**
+   - Weekday workouts: 45-90min (default: {preferred_duration} min)
+   - Weekend long rides: 120-180min for Polarized, Endurance, Threshold styles
+   - **CRITICAL for Polarized:** Must include at least ONE 2-hour Zone 2 ride, preferably TWO (Saturday + Sunday)
+   - High-intensity workouts (VO2max, Threshold): 60-75min total (including warmup/cooldown)
 6. **Style Emphasis:** Strongly favor workouts that match the training style.
 7. **Norwegian Double Sessions:** For Norwegian style, generate TWO separate workout entries for the same day when there's AM + PM sessions. Use "session": "AM" or "session": "PM" to differentiate.
 8. **TSS Calculation:** TSS = (duration_hours × IF²) × 100, where IF = average_intensity / FTP
