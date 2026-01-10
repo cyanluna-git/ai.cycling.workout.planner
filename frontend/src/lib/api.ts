@@ -270,6 +270,7 @@ export interface DailyWorkout {
     actual_name?: string;
     actual_type?: string;
     status: string;
+    session?: string;  // "AM", "PM", or null for single session (Norwegian style)
 }
 
 export interface WeeklyPlan {
