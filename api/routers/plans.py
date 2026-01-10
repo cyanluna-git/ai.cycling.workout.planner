@@ -37,7 +37,7 @@ class DailyWorkoutResponse(BaseModel):
     planned_tss: Optional[int] = None
     planned_rationale: Optional[str] = None
     planned_modules: Optional[List[str]] = None  # Module keys for power profile
-    planned_steps: Optional[List[dict]] = None   # WorkoutStep[] for chart rendering
+    planned_steps: Optional[List[dict]] = None  # WorkoutStep[] for chart rendering
     actual_name: Optional[str] = None
     actual_type: Optional[str] = None
     status: str = "planned"
@@ -113,7 +113,12 @@ def convert_structure_to_steps(module_keys: List[str], ftp: int) -> List[dict]:
     Returns:
         List of workout step dictionaries compatible with frontend WorkoutStep type
     """
-    from src.services.workout_modules import WARMUP_MODULES, MAIN_SEGMENTS, REST_SEGMENTS, COOLDOWN_MODULES
+    from src.services.workout_modules import (
+        WARMUP_MODULES,
+        MAIN_SEGMENTS,
+        REST_SEGMENTS,
+        COOLDOWN_MODULES,
+    )
 
     # Combine all module dictionaries
     all_modules = {
@@ -137,76 +142,78 @@ def convert_structure_to_steps(module_keys: List[str], ftp: int) -> List[dict]:
 
             if block_type == "warmup_ramp":
                 # Ramp from start_power to end_power
-                steps.append({
-                    "duration": block["duration_minutes"] * 60,
-                    "power": {
-                        "start": block["start_power"],
-                        "end": block["end_power"],
-                        "units": "%ftp"
-                    },
-                    "ramp": True,
-                    "warmup": True
-                })
+                steps.append(
+                    {
+                        "duration": block["duration_minutes"] * 60,
+                        "power": {
+                            "start": block["start_power"],
+                            "end": block["end_power"],
+                            "units": "%ftp",
+                        },
+                        "ramp": True,
+                        "warmup": True,
+                    }
+                )
 
             elif block_type == "cooldown_ramp":
                 # Cooldown ramp
-                steps.append({
-                    "duration": block["duration_minutes"] * 60,
-                    "power": {
-                        "start": block["start_power"],
-                        "end": block["end_power"],
-                        "units": "%ftp"
-                    },
-                    "ramp": True,
-                    "cooldown": True
-                })
+                steps.append(
+                    {
+                        "duration": block["duration_minutes"] * 60,
+                        "power": {
+                            "start": block["start_power"],
+                            "end": block["end_power"],
+                            "units": "%ftp",
+                        },
+                        "ramp": True,
+                        "cooldown": True,
+                    }
+                )
 
             elif block_type == "steady":
                 # Steady state power
-                steps.append({
-                    "duration": block["duration_minutes"] * 60,
-                    "power": {
-                        "value": block["power"],
-                        "units": "%ftp"
+                steps.append(
+                    {
+                        "duration": block["duration_minutes"] * 60,
+                        "power": {"value": block["power"], "units": "%ftp"},
                     }
-                })
+                )
 
             elif block_type == "main_set_classic":
                 # Interval block: work + rest repeated
                 interval_steps = []
                 for _ in range(block["repetitions"]):
                     # Work interval
-                    interval_steps.append({
-                        "duration": block["work_duration_seconds"],
-                        "power": {
-                            "value": block["work_power"],
-                            "units": "%ftp"
+                    interval_steps.append(
+                        {
+                            "duration": block["work_duration_seconds"],
+                            "power": {"value": block["work_power"], "units": "%ftp"},
                         }
-                    })
+                    )
                     # Rest interval
-                    interval_steps.append({
-                        "duration": block["rest_duration_seconds"],
-                        "power": {
-                            "value": block["rest_power"],
-                            "units": "%ftp"
+                    interval_steps.append(
+                        {
+                            "duration": block["rest_duration_seconds"],
+                            "power": {"value": block["rest_power"], "units": "%ftp"},
                         }
-                    })
+                    )
 
-                steps.append({
-                    "duration": 0,  # Duration handled by nested steps
-                    "repeat": block["repetitions"],
-                    "steps": interval_steps
-                })
+                steps.append(
+                    {
+                        "duration": 0,  # Duration handled by nested steps
+                        "repeat": block["repetitions"],
+                        "steps": interval_steps,
+                    }
+                )
 
             elif block_type == "rest":
                 # Simple rest block
-                steps.append({
-                    "duration": block.get("duration_minutes", 1) * 60,
-                    "power": {
-                        "value": block.get("power", 50),
-                        "units": "%ftp"
+                steps.append(
+                    {
+                        "duration": block.get("duration_minutes", 1) * 60,
+                        "power": {"value": block.get("power", 50), "units": "%ftp"},
                     }
-                })
+                )
 
             else:
                 logger.warning(f"Unknown block type: {block_type}")
@@ -219,8 +226,7 @@ def convert_structure_to_steps(module_keys: List[str], ftp: int) -> List[dict]:
 
 @router.get("/plans/weekly", response_model=Optional[WeeklyPlanResponse])
 async def get_current_weekly_plan(
-    user: dict = Depends(get_current_user),
-    week_start_date: Optional[str] = None
+    user: dict = Depends(get_current_user), week_start_date: Optional[str] = None
 ):
     """Get the current week's plan (or specific week if week_start_date provided)."""
     supabase = get_supabase_admin_client()
@@ -268,6 +274,7 @@ async def get_current_weekly_plan(
 
     # Get user profile for FTP (needed for power calculations)
     from api.services.user_api_service import get_user_profile
+
     try:
         user_profile = await get_user_profile(user["id"])
         ftp = user_profile.ftp
@@ -286,7 +293,9 @@ async def get_current_weekly_plan(
             try:
                 planned_steps = convert_structure_to_steps(planned_modules, ftp)
             except Exception as e:
-                logger.error(f"Failed to convert modules to steps for {workout['id']}: {e}")
+                logger.error(
+                    f"Failed to convert modules to steps for {workout['id']}: {e}"
+                )
                 # Gracefully handle errors - workout will show without chart
 
         daily_workouts.append(
@@ -385,6 +394,13 @@ async def generate_weekly_plan(
     supabase.table("weekly_plans").delete().eq("user_id", user["id"]).eq(
         "week_start", week_start.isoformat()
     ).execute()
+
+    # Delete existing daily_workouts for this week's date range
+    for i in range(7):
+        workout_date = (week_start + timedelta(days=i)).isoformat()
+        supabase.table("daily_workouts").delete().eq("user_id", user["id"]).eq(
+            "workout_date", workout_date
+        ).execute()
 
     # Save weekly plan to DB
     plan_result = (
