@@ -130,11 +130,26 @@ def convert_structure_to_steps(module_keys: List[str], ftp: int) -> List[dict]:
 
     steps = []
 
+    # Fallback mapping for common LLM-invented module names
+    fallback_modules = {
+        "progressive_warmup_20min": "progressive_warmup_15min",
+        "progressive_warmup_10min": "stepped_warmup_10min",
+        "standard_warmup": "ramp_standard",
+        "basic_cooldown": "flush_and_fade",
+        "easy_cooldown": "flush_and_fade",
+    }
+
     for module_key in module_keys:
         module = all_modules.get(module_key)
         if not module:
-            logger.warning(f"Module not found: {module_key}")
-            continue
+            # Try fallback mapping
+            fallback_key = fallback_modules.get(module_key)
+            if fallback_key:
+                module = all_modules.get(fallback_key)
+                logger.info(f"Module not found: {module_key}, using fallback: {fallback_key}")
+            else:
+                logger.warning(f"Module not found: {module_key}, no fallback available. Skipping.")
+                continue
 
         # Convert each block in module structure to WorkoutStep
         for block in module.get("structure", []):
