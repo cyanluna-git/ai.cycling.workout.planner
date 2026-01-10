@@ -17,6 +17,7 @@ sys.path.insert(
 
 from src.clients.supabase_client import get_supabase_admin_client
 from .auth import get_current_user
+from ..services.cache_service import clear_user_cache
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -103,6 +104,89 @@ def get_next_week_dates() -> tuple:
     return week_start, week_end
 
 
+def _smart_fallback_for_unknown_block(block_type: str, block: dict) -> Optional[dict]:
+    """Smart fallback for unknown block types based on naming patterns.
+
+    Args:
+        block_type: The unknown block type string
+        block: The block data dictionary
+
+    Returns:
+        A WorkoutStep dict if fallback is found, None otherwise
+    """
+    # Pattern matching for common variations
+    type_lower = block_type.lower()
+
+    # Warmup patterns
+    if any(keyword in type_lower for keyword in ["warmup", "warm_up", "warm-up", "ramp_up"]):
+        return {
+            "duration": block.get("duration_minutes", 10) * 60,
+            "power": {
+                "start": block.get("start_power", 45),
+                "end": block.get("end_power", 75),
+                "units": "%ftp",
+            },
+            "ramp": True,
+            "warmup": True,
+        }
+
+    # Cooldown patterns
+    if any(keyword in type_lower for keyword in ["cooldown", "cool_down", "cool-down", "ramp_down"]):
+        return {
+            "duration": block.get("duration_minutes", 10) * 60,
+            "power": {
+                "start": block.get("start_power", 70),
+                "end": block.get("end_power", 40),
+                "units": "%ftp",
+            },
+            "ramp": True,
+            "cooldown": True,
+        }
+
+    # Interval patterns
+    if any(keyword in type_lower for keyword in ["interval", "repeat", "set"]):
+        # Try to extract work/rest pattern
+        work_power = block.get("work_power") or block.get("power", 95)
+        rest_power = block.get("rest_power", 50)
+        reps = block.get("repetitions") or block.get("reps", 1)
+        work_duration = block.get("work_duration_seconds") or block.get("work_duration", 300)
+        rest_duration = block.get("rest_duration_seconds") or block.get("rest_duration", 120)
+
+        interval_steps = []
+        for _ in range(reps):
+            interval_steps.append({
+                "duration": work_duration,
+                "power": {"value": work_power, "units": "%ftp"},
+            })
+            interval_steps.append({
+                "duration": rest_duration,
+                "power": {"value": rest_power, "units": "%ftp"},
+            })
+
+        return {
+            "duration": 0,
+            "repeat": reps,
+            "steps": interval_steps,
+        }
+
+    # Rest patterns
+    if any(keyword in type_lower for keyword in ["rest", "recovery", "easy"]):
+        return {
+            "duration": block.get("duration_minutes", 1) * 60,
+            "power": {"value": block.get("power", 50), "units": "%ftp"},
+        }
+
+    # Steady state patterns (default fallback)
+    if "duration_minutes" in block and "power" in block:
+        return {
+            "duration": block["duration_minutes"] * 60,
+            "power": {"value": block["power"], "units": "%ftp"},
+        }
+
+    # No fallback found
+    return None
+
+
 def convert_structure_to_steps(module_keys: List[str], ftp: int) -> List[dict]:
     """Convert workout module keys to WorkoutStep[] format for frontend chart rendering.
 
@@ -141,23 +225,28 @@ def convert_structure_to_steps(module_keys: List[str], ftp: int) -> List[dict]:
 
     # CRITICAL: Validate warmup/cooldown order before processing
     # Warmup modules must come first, cooldown modules must come last
+    logger.info(f"🔍 Validating module order for: {module_keys}")
+
     warmup_indices = []
     cooldown_indices = []
 
     for idx, module_key in enumerate(module_keys):
         if module_key in WARMUP_MODULES:
             warmup_indices.append(idx)
+            logger.debug(f"  Found WARMUP module '{module_key}' at position {idx}")
         elif module_key in COOLDOWN_MODULES:
             cooldown_indices.append(idx)
+            logger.debug(f"  Found COOLDOWN module '{module_key}' at position {idx}")
 
     # Check if warmup modules are at the beginning
     if warmup_indices and warmup_indices[0] != 0:
-        logger.error(f"INVALID STRUCTURE: Warmup module '{module_keys[warmup_indices[0]]}' found at position {warmup_indices[0]}, should be at position 0")
+        logger.error(f"❌ INVALID STRUCTURE: Warmup module '{module_keys[warmup_indices[0]]}' found at position {warmup_indices[0]}, should be at position 0")
+        logger.error(f"   Original order: {module_keys}")
         # Auto-fix: Move warmup modules to the beginning
         warmup_modules = [module_keys[i] for i in warmup_indices]
         other_modules = [module_keys[i] for i in range(len(module_keys)) if i not in warmup_indices]
         module_keys = warmup_modules + other_modules
-        logger.info(f"AUTO-FIX: Reordered modules to: {module_keys}")
+        logger.warning(f"🔧 AUTO-FIX: Reordered modules to: {module_keys}")
         # Recalculate indices after reordering
         cooldown_indices = [i for i, k in enumerate(module_keys) if k in COOLDOWN_MODULES]
 
@@ -165,12 +254,15 @@ def convert_structure_to_steps(module_keys: List[str], ftp: int) -> List[dict]:
     if cooldown_indices:
         expected_start = len(module_keys) - len(cooldown_indices)
         if cooldown_indices[0] != expected_start:
-            logger.error(f"INVALID STRUCTURE: Cooldown module '{module_keys[cooldown_indices[0]]}' found at position {cooldown_indices[0]}, should be at position {expected_start}")
+            logger.error(f"❌ INVALID STRUCTURE: Cooldown module '{module_keys[cooldown_indices[0]]}' found at position {cooldown_indices[0]}, should be at position {expected_start}")
+            logger.error(f"   Original order: {module_keys}")
             # Auto-fix: Move cooldown modules to the end
             cooldown_modules = [module_keys[i] for i in cooldown_indices]
             other_modules = [module_keys[i] for i in range(len(module_keys)) if i not in cooldown_indices]
             module_keys = other_modules + cooldown_modules
-            logger.info(f"AUTO-FIX: Reordered modules to: {module_keys}")
+            logger.warning(f"🔧 AUTO-FIX: Reordered modules to: {module_keys}")
+
+    logger.info(f"✅ Final validated order: {module_keys}")
 
     for module_key in module_keys:
         module = all_modules.get(module_key)
@@ -263,8 +355,49 @@ def convert_structure_to_steps(module_keys: List[str], ftp: int) -> List[dict]:
                     }
                 )
 
+            elif block_type == "over_under":
+                # Over/Under intervals: alternating above/below threshold
+                # Format: over_power/under_power alternating for N reps
+                interval_steps = []
+                for _ in range(block.get("repetitions", 1)):
+                    # Over interval (above threshold)
+                    interval_steps.append(
+                        {
+                            "duration": block.get("over_duration_seconds", 120),
+                            "power": {
+                                "value": block.get("over_power", 105),
+                                "units": "%ftp",
+                            },
+                        }
+                    )
+                    # Under interval (below threshold)
+                    interval_steps.append(
+                        {
+                            "duration": block.get("under_duration_seconds", 120),
+                            "power": {
+                                "value": block.get("under_power", 95),
+                                "units": "%ftp",
+                            },
+                        }
+                    )
+
+                steps.append(
+                    {
+                        "duration": 0,  # Duration handled by nested steps
+                        "repeat": block.get("repetitions", 1),
+                        "steps": interval_steps,
+                    }
+                )
+
             else:
-                logger.warning(f"Unknown block type: {block_type}")
+                # Unknown block type - try smart fallback based on type name
+                logger.warning(f"Unknown block type: {block_type}, attempting smart fallback")
+                fallback_step = _smart_fallback_for_unknown_block(block_type, block)
+                if fallback_step:
+                    steps.append(fallback_step)
+                    logger.info(f"Applied smart fallback for '{block_type}': {fallback_step}")
+                else:
+                    logger.error(f"No fallback available for block type: {block_type}")
 
     return steps
 
@@ -490,6 +623,16 @@ async def generate_weekly_plan(
 
     logger.info(f"Generated weekly plan {plan_id} for user {user['id']}")
 
+    # Clear cache to ensure fresh data on next request
+    # Clear both granular and complete fitness cache keys
+    clear_user_cache(user["id"], keys=[
+        "calendar",
+        "fitness:complete",
+        "fitness:training",
+        "fitness:wellness"
+    ])
+    logger.info(f"Cleared cache for user {user['id'][:8]}... after plan generation")
+
     # Return the created plan - pass the week_start we just generated
     return await get_current_weekly_plan(user, week_start_date=week_start.isoformat())
 
@@ -688,6 +831,15 @@ async def regenerate_today_workout(
 
     logger.info(f"Regenerated workout {workout_id} for user {user['id']}")
 
+    # Clear cache to ensure fresh data on next request
+    clear_user_cache(user["id"], keys=[
+        "calendar",
+        "fitness:complete",
+        "fitness:training",
+        "fitness:wellness"
+    ])
+    logger.info(f"Cleared cache for user {user['id'][:8]}... after workout regeneration")
+
     return {
         "success": True,
         "workout": {
@@ -826,6 +978,16 @@ async def register_weekly_plan_to_intervals(
             error_msg = f"{workout.get('workout_date')}: {str(e)}"
             errors.append(error_msg)
             logger.error(f"Failed to register workout {workout.get('id')}: {e}")
+
+    # Clear cache after registering workouts to Intervals.icu
+    if registered_count > 0:
+        clear_user_cache(user["id"], keys=[
+            "calendar",
+            "fitness:complete",
+            "fitness:training",
+            "fitness:wellness"
+        ])
+        logger.info(f"Cleared cache for user {user['id'][:8]}... after registering {registered_count} workouts")
 
     return {
         "success": True,
