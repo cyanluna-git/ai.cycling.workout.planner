@@ -55,6 +55,9 @@ function DailyWorkoutRow({
     const emoji = typeEmoji[workoutType] || "🚴";
     const isRest = workoutType === "Rest";
 
+    // Session label for Norwegian-style double sessions
+    const sessionLabel = workout.session === "AM" ? "🌅 " : workout.session === "PM" ? "🌆 " : "";
+
     return (
         <div
             className={`flex items-center gap-4 p-4 rounded-lg ${colorClass} transition-all hover:scale-[1.01] cursor-pointer`}
@@ -63,7 +66,12 @@ function DailyWorkoutRow({
         >
             {/* Left: Day info */}
             <div className="flex-shrink-0 w-24">
-                <div className="text-xs font-medium opacity-70">{workout.day_name}</div>
+                <div className="text-xs font-medium opacity-70">
+                    {workout.day_name}
+                    {workout.session && (
+                        <span className="ml-1 font-bold">{workout.session}</span>
+                    )}
+                </div>
                 <div className="text-lg font-bold">
                     {new Date(workout.workout_date).getDate()}
                 </div>
@@ -72,7 +80,7 @@ function DailyWorkoutRow({
             {/* Middle: Workout info */}
             <div className="flex-grow min-w-0">
                 <div className="font-semibold text-sm truncate">
-                    {emoji} {workout.planned_name || (isRest ? "Rest Day" : "Workout")}
+                    {sessionLabel}{emoji} {workout.planned_name || (isRest ? "Rest Day" : "Workout")}
                 </div>
                 {!isRest && (
                     <div className="text-xs mt-1 opacity-80">
@@ -283,15 +291,51 @@ export function WeeklyPlanCard({
                 </div>
             </CardHeader>
             <CardContent>
-                {/* Vertical list - no scroll, full height for 7 days */}
+                {/* Vertical list - group by date for double sessions */}
                 <div className="space-y-2 mb-4">
-                    {plan.daily_workouts.map((workout, index) => (
-                        <DailyWorkoutRow
-                            key={index}
-                            workout={workout}
-                            onClick={() => handleWorkoutClick(workout)}
-                        />
-                    ))}
+                    {(() => {
+                        // Group workouts by date for Norwegian double sessions
+                        const groupedByDate = new Map<string, DailyWorkout[]>();
+                        plan.daily_workouts.forEach(workout => {
+                            const date = workout.workout_date;
+                            if (!groupedByDate.has(date)) {
+                                groupedByDate.set(date, []);
+                            }
+                            groupedByDate.get(date)!.push(workout);
+                        });
+
+                        // Sort workouts within each group (AM before PM)
+                        groupedByDate.forEach(workouts => {
+                            workouts.sort((a, b) => {
+                                if (a.session === "AM") return -1;
+                                if (b.session === "AM") return 1;
+                                return 0;
+                            });
+                        });
+
+                        return Array.from(groupedByDate.entries()).map(([date, workouts]) => (
+                            <div key={date}>
+                                {workouts.length > 1 ? (
+                                    // Double session (Norwegian style) - group with border
+                                    <div className="border-l-4 border-purple-400 pl-2 space-y-1">
+                                        {workouts.map((workout, idx) => (
+                                            <DailyWorkoutRow
+                                                key={`${date}-${idx}`}
+                                                workout={workout}
+                                                onClick={() => handleWorkoutClick(workout)}
+                                            />
+                                        ))}
+                                    </div>
+                                ) : (
+                                    // Single session
+                                    <DailyWorkoutRow
+                                        workout={workouts[0]}
+                                        onClick={() => handleWorkoutClick(workouts[0])}
+                                    />
+                                )}
+                            </div>
+                        ));
+                    })()}
                 </div>
 
                 {/* Actions */}
