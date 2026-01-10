@@ -139,6 +139,39 @@ def convert_structure_to_steps(module_keys: List[str], ftp: int) -> List[dict]:
         "easy_cooldown": "flush_and_fade",
     }
 
+    # CRITICAL: Validate warmup/cooldown order before processing
+    # Warmup modules must come first, cooldown modules must come last
+    warmup_indices = []
+    cooldown_indices = []
+
+    for idx, module_key in enumerate(module_keys):
+        if module_key in WARMUP_MODULES:
+            warmup_indices.append(idx)
+        elif module_key in COOLDOWN_MODULES:
+            cooldown_indices.append(idx)
+
+    # Check if warmup modules are at the beginning
+    if warmup_indices and warmup_indices[0] != 0:
+        logger.error(f"INVALID STRUCTURE: Warmup module '{module_keys[warmup_indices[0]]}' found at position {warmup_indices[0]}, should be at position 0")
+        # Auto-fix: Move warmup modules to the beginning
+        warmup_modules = [module_keys[i] for i in warmup_indices]
+        other_modules = [module_keys[i] for i in range(len(module_keys)) if i not in warmup_indices]
+        module_keys = warmup_modules + other_modules
+        logger.info(f"AUTO-FIX: Reordered modules to: {module_keys}")
+        # Recalculate indices after reordering
+        cooldown_indices = [i for i, k in enumerate(module_keys) if k in COOLDOWN_MODULES]
+
+    # Check if cooldown modules are at the end
+    if cooldown_indices:
+        expected_start = len(module_keys) - len(cooldown_indices)
+        if cooldown_indices[0] != expected_start:
+            logger.error(f"INVALID STRUCTURE: Cooldown module '{module_keys[cooldown_indices[0]]}' found at position {cooldown_indices[0]}, should be at position {expected_start}")
+            # Auto-fix: Move cooldown modules to the end
+            cooldown_modules = [module_keys[i] for i in cooldown_indices]
+            other_modules = [module_keys[i] for i in range(len(module_keys)) if i not in cooldown_indices]
+            module_keys = other_modules + cooldown_modules
+            logger.info(f"AUTO-FIX: Reordered modules to: {module_keys}")
+
     for module_key in module_keys:
         module = all_modules.get(module_key)
         if not module:

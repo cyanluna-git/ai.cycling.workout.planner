@@ -127,7 +127,13 @@ For 2-hour+ Zone 2/FatMax rides, use LONG/VERYLONG modules or combine multiple m
 {module_inventory}
 
 # Rules
-1. **Structure:** Always include warmup → main → cooldown for each workout day.
+1. **Structure - CRITICAL MODULE ORDER:**
+   - **ALWAYS** follow this order: WARMUP modules → MAIN modules → COOLDOWN modules
+   - **WARMUP modules MUST be FIRST** (e.g., ramp_standard, progressive_ramp_15min)
+   - **COOLDOWN modules MUST be LAST** (e.g., flush_and_fade, cooldown_extended)
+   - **NEVER** place cooldown modules at the beginning or warmup modules at the end
+   - Example CORRECT order: ["ramp_standard", "endurance_60min", "flush_and_fade"]
+   - Example WRONG order: ["flush_and_fade", "endurance_60min", "ramp_standard"] ❌
 2. **Rest Days:** Include 1-2 complete rest days per week. For rest days, set type to "Rest" and modules to empty array.
 3. **TSB Management:**
    - If TSB < -20: Prioritize recovery, reduce intensity
@@ -169,11 +175,19 @@ Generate a JSON array with daily plans. For Norwegian style with double sessions
     "selected_modules": ["warmup_key", "main_key", "rest_key", "main_key", "cooldown_key"],
     "rationale": "Brief explanation of why this workout on this day"
 
-    **IMPORTANT for selected_modules:**
+    **CRITICAL for selected_modules - ORDER MATTERS:**
+    - **FIRST:** Always start with WARMUP module (ramp_standard, progressive_ramp_15min, etc.)
+    - **MIDDLE:** Main workout modules (intervals, endurance blocks, etc.)
+    - **LAST:** Always end with COOLDOWN module (flush_and_fade, cooldown_extended, etc.)
     - Use ONLY module keys from the inventory above
     - DO NOT invent or modify module names
-    - Example CORRECT: ["ramp_standard", "sst_2x20", "rest_5min", "sst_2x20", "flush_and_fade"]
-    - Example WRONG: ["progressive_warmup_20min", "custom_interval"] (these don't exist)
+
+    **Examples:**
+    ✅ CORRECT: ["ramp_standard", "sst_2x20", "rest_5min", "sst_2x20", "flush_and_fade"]
+    ✅ CORRECT: ["progressive_ramp_15min", "endurance_60min", "endurance_45min", "flush_and_fade"]
+    ❌ WRONG: ["flush_and_fade", "endurance_60min", "ramp_standard"] (cooldown at start!)
+    ❌ WRONG: ["endurance_60min", "cooldown_extended", "ramp_standard"] (warmup at end!)
+    ❌ WRONG: ["progressive_warmup_20min", "custom_interval"] (modules don't exist)
   }},
   ...
 ]
