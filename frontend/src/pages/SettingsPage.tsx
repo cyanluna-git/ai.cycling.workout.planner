@@ -13,6 +13,8 @@ interface Settings {
     lthr: number
     training_goal: string
     exclude_barcode_workouts?: boolean
+    training_style?: string
+    preferred_duration?: number
 }
 
 interface ApiKeysCheck {
@@ -27,6 +29,8 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
         lthr: 170,
         training_goal: '지구력 강화',
         exclude_barcode_workouts: false,
+        training_style: 'auto',
+        preferred_duration: 60,
     })
     const [apiKeys, setApiKeys] = useState({
         intervals_api_key: '',
@@ -136,7 +140,7 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                 {/* Training Goal Settings */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>🎯 훈련 목표</CardTitle>
+                        <CardTitle>🎯 훈련 설정</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <p className="text-sm text-muted-foreground">
@@ -152,6 +156,29 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                                 placeholder="예: 지구력 강화, 스프린트 파워 향상"
                             />
                         </div>
+
+                        {/* Training Style - for Weekly Plan */}
+                        <div className="space-y-2">
+                            <Label>훈련 스타일 (주간 계획용)</Label>
+                            <select
+                                value={settings.training_style || 'auto'}
+                                onChange={(e) =>
+                                    setSettings({ ...settings, training_style: e.target.value })
+                                }
+                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            >
+                                <option value="auto">자동 (TSB 기반)</option>
+                                <option value="polarized">양극화 (80/20)</option>
+                                <option value="norwegian">노르웨이식 (역치)</option>
+                                <option value="sweetspot">스윗스팟</option>
+                                <option value="threshold">역치 중심</option>
+                                <option value="endurance">지구력</option>
+                            </select>
+                            <p className="text-xs text-muted-foreground">
+                                주간 워크아웃 계획 생성 시 사용됩니다
+                            </p>
+                        </div>
+
                         <div className="flex items-center space-x-2">
                             <input
                                 type="checkbox"
@@ -172,7 +199,7 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                             </div>
                         </div>
                         <Button onClick={saveSettings} disabled={saving}>
-                            {saving ? '저장 중...' : '목표 저장'}
+                            {saving ? '저장 중...' : '설정 저장'}
                         </Button>
                     </CardContent>
                 </Card>
