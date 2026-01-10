@@ -247,10 +247,12 @@ class WeeklyPlanGenerator:
         multiplier = focus_multipliers.get(training_focus, 1.0)
         weekly_tss_target = int(base_tss * multiplier)
 
-        # Get module inventory
+        # Get module inventory with style-aware recommendations
         from src.services.workout_modules import get_module_inventory_text
 
-        module_inventory = get_module_inventory_text(exclude_barcode=exclude_barcode)
+        module_inventory = get_module_inventory_text(
+            exclude_barcode=exclude_barcode, training_style=training_style
+        )
 
         # Build prompt
         focus_descriptions = {
