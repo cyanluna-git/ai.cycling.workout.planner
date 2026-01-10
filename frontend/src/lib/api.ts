@@ -265,6 +265,8 @@ export interface DailyWorkout {
     planned_duration?: number;
     planned_tss?: number;
     planned_rationale?: string;
+    planned_modules?: string[];          // Module keys for power profile
+    planned_steps?: WorkoutStep[];       // WorkoutStep[] for chart rendering
     actual_name?: string;
     actual_type?: string;
     status: string;
