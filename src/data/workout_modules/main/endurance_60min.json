@@ -1,0 +1,13 @@
+{
+    "name": "Endurance 60min",
+    "duration_minutes": 60,
+    "type": "Endurance",
+    "description": "Full 60-minute block of Zone 2 endurance at 70% FTP. Core aerobic foundation building for long rides.",
+    "structure": [
+        {
+            "type": "steady",
+            "power": 70,
+            "duration_minutes": 60
+        }
+    ]
+}

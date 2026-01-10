@@ -110,6 +110,20 @@ Below is the COMPLETE library of workout modules you MUST use.
 **CRITICAL:** You can ONLY use module keys from this list. Do NOT create, invent, or modify module names.
 If a module you want doesn't exist, choose the closest alternative from this list.
 
+## Module Length Categories:
+- **SHORT** (<15min): Quick intervals, short blocks
+- **MID** (15-45min): Standard interval sessions
+- **LONG** (45-75min): Extended steady-state or long interval sets
+- **VERYLONG** (75min+): Long endurance blocks (FatMax, Zone 2, Tempo)
+
+## Building Long Workouts (120min+):
+For 2-hour+ Zone 2/FatMax rides, use LONG/VERYLONG modules or combine multiple modules:
+- Example 120min Z2: [ramp_standard, endurance_60min, endurance_45min, flush_and_fade]
+- Example 150min Z2: [progressive_ramp_15min, endurance_60min, endurance_60min, flush_and_fade]
+- Example 180min Z2: [ramp_standard, endurance_60min, endurance_60min, endurance_60min, flush_and_fade]
+- Example 180min FatMax: [ramp_standard, fatmax_90min, fatmax_90min, flush_and_fade]
+- Example 120min Tempo: [progressive_ramp_15min, tempo_60min, tempo_long_40min, flush_and_fade]
+
 {module_inventory}
 
 # Rules
