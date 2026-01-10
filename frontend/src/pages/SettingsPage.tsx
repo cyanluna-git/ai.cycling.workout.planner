@@ -205,51 +205,72 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                         )}
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {/* Guide Section */}
-                        <div className="p-4 rounded-lg bg-muted/50 border border-border">
-                            <h4 className="font-medium mb-2">📌 API 키 발급 방법</h4>
-                            <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                                <li>
-                                    <a
-                                        href="https://intervals.icu/settings"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-primary hover:underline"
-                                    >
-                                        Intervals.icu Settings
-                                    </a>
-                                    {' '}페이지로 이동
-                                </li>
-                                <li>"Developer" 탭 클릭</li>
-                                <li>"API Key" 섹션에서 키 복사</li>
-                                <li>페이지 상단의 Athlete ID도 함께 확인 (예: i123456)</li>
-                            </ol>
-                        </div>
+                        {apiKeysCheck?.intervals_configured ? (
+                            /* Connected state - simple message */
+                            <div className="text-center py-4">
+                                <div className="text-4xl mb-2">🎉</div>
+                                <p className="text-sm text-muted-foreground">
+                                    Intervals.icu에 정상적으로 연결되어 있습니다.
+                                </p>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="mt-4"
+                                    onClick={() => setApiKeysCheck({ intervals_configured: false })}
+                                >
+                                    API 키 재설정
+                                </Button>
+                            </div>
+                        ) : (
+                            /* Not connected - show setup form */
+                            <>
+                                {/* Guide Section */}
+                                <div className="p-4 rounded-lg bg-muted/50 border border-border">
+                                    <h4 className="font-medium mb-2">📌 API 키 발급 방법</h4>
+                                    <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                                        <li>
+                                            <a
+                                                href="https://intervals.icu/settings"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-primary hover:underline"
+                                            >
+                                                Intervals.icu Settings
+                                            </a>
+                                            {' '}페이지로 이동
+                                        </li>
+                                        <li>"Developer" 탭 클릭</li>
+                                        <li>"API Key" 섹션에서 키 복사</li>
+                                        <li>페이지 상단의 Athlete ID도 함께 확인 (예: i123456)</li>
+                                    </ol>
+                                </div>
 
-                        <div className="space-y-2">
-                            <Label>Intervals.icu API Key</Label>
-                            <Input
-                                type="password"
-                                placeholder={apiKeysCheck?.intervals_configured ? '••••••••' : 'API 키 입력'}
-                                value={apiKeys.intervals_api_key}
-                                onChange={(e) =>
-                                    setApiKeys({ ...apiKeys, intervals_api_key: e.target.value })
-                                }
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Athlete ID</Label>
-                            <Input
-                                placeholder="예: i123456"
-                                value={apiKeys.athlete_id}
-                                onChange={(e) =>
-                                    setApiKeys({ ...apiKeys, athlete_id: e.target.value })
-                                }
-                            />
-                        </div>
-                        <Button onClick={saveApiKeys} disabled={saving}>
-                            {saving ? '저장 중...' : 'API 키 저장'}
-                        </Button>
+                                <div className="space-y-2">
+                                    <Label>Intervals.icu API Key</Label>
+                                    <Input
+                                        type="password"
+                                        placeholder="API 키 입력"
+                                        value={apiKeys.intervals_api_key}
+                                        onChange={(e) =>
+                                            setApiKeys({ ...apiKeys, intervals_api_key: e.target.value })
+                                        }
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Athlete ID</Label>
+                                    <Input
+                                        placeholder="예: i123456"
+                                        value={apiKeys.athlete_id}
+                                        onChange={(e) =>
+                                            setApiKeys({ ...apiKeys, athlete_id: e.target.value })
+                                        }
+                                    />
+                                </div>
+                                <Button onClick={saveApiKeys} disabled={saving}>
+                                    {saving ? '저장 중...' : 'API 키 저장'}
+                                </Button>
+                            </>
+                        )}
                     </CardContent>
                 </Card>
             </div>
