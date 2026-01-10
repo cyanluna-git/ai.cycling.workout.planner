@@ -104,7 +104,9 @@ You are an expert Cycling Coach creating a structured 7-day training plan.
 {weekly_structure}
 
 # Available Workout Modules
-Below is the library of workout modules you can use:
+Below is the COMPLETE library of workout modules you MUST use.
+**CRITICAL:** You can ONLY use module keys from this list. Do NOT create, invent, or modify module names.
+If a module you want doesn't exist, choose the closest alternative from this list.
 
 {module_inventory}
 
@@ -146,6 +148,12 @@ Generate a JSON array with daily plans. For Norwegian style with double sessions
     "intensity": "easy|moderate|hard|rest",
     "selected_modules": ["warmup_key", "main_key", "rest_key", "main_key", "cooldown_key"],
     "rationale": "Brief explanation of why this workout on this day"
+
+    **IMPORTANT for selected_modules:**
+    - Use ONLY module keys from the inventory above
+    - DO NOT invent or modify module names
+    - Example CORRECT: ["ramp_standard", "sst_2x20", "rest_5min", "sst_2x20", "flush_and_fade"]
+    - Example WRONG: ["progressive_warmup_20min", "custom_interval"] (these don't exist)
   }},
   ...
 ]

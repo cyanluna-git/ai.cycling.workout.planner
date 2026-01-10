@@ -99,9 +99,9 @@ function DailyWorkoutRow({
             </div>
 
             {/* Right: Chart thumbnail */}
-            <div className="flex-shrink-0 w-48 h-20">
+            <div className="flex-shrink-0 w-48 h-14">
                 {!isRest && workout.planned_steps && workout.planned_steps.length > 0 ? (
-                    <WorkoutThumbnailChart steps={workout.planned_steps} height={70} />
+                    <WorkoutThumbnailChart steps={workout.planned_steps} height={50} />
                 ) : (
                     <div className="flex items-center justify-center h-full text-xs text-gray-400">
                         {isRest ? "😴 Rest" : "No chart"}
