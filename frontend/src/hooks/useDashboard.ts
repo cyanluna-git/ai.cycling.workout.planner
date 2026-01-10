@@ -209,6 +209,11 @@ export function useDashboard(): UseDashboardReturn {
             return;
         }
 
+        // Prevent double-clicks/rapid requests
+        if (isGeneratingPlan) {
+            return;
+        }
+
         setIsGeneratingPlan(true);
         setError(null);
         setSuccess(null);
@@ -218,11 +223,17 @@ export function useDashboard(): UseDashboardReturn {
             setWeeklyPlan(plan);
             setSuccess("✅ 주간 워크아웃 계획이 생성되었습니다!");
         } catch (e) {
-            setError(`주간 계획 생성 실패: ${e instanceof Error ? e.message : String(e)}`);
+            const errorMsg = e instanceof Error ? e.message : String(e);
+            // Check for rate limit errors
+            if (errorMsg.includes('rate_limit') || errorMsg.includes('429')) {
+                setError(`⏱️ API 사용량 한도 도달. 잠시 후 다시 시도해주세요.`);
+            } else {
+                setError(`주간 계획 생성 실패: ${errorMsg}`);
+            }
         } finally {
             setIsGeneratingPlan(false);
         }
-    }, [session]);
+    }, [session, isGeneratingPlan]);
 
     const handleDeleteWeeklyPlan = useCallback(async (planId: string) => {
         if (!session?.access_token) {
