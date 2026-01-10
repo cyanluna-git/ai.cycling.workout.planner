@@ -207,9 +207,22 @@ def get_module_inventory_text(
             return " ⭐"  # Star for recommended
         return ""
 
+    def _get_length_category(duration_minutes: int) -> str:
+        """Categorize module by length."""
+        if duration_minutes < 15:
+            return "SHORT"
+        elif duration_minutes < 45:
+            return "MID"
+        elif duration_minutes < 75:
+            return "LONG"
+        else:
+            return "VERYLONG"
+
     def _fmt(key, data, training_style=None):
-        # Format: [key] Dur: 10m | TSS: 12 | IF: 0.85 | Type: Threshold | Styles: [list] | Desc: Name
-        dur = f"{data['duration_minutes']}m"
+        # Format: [key] Dur: 10m (SHORT) | TSS: 12 | IF: 0.85 | Type: Threshold | Styles: [list] | Desc: Name
+        dur_min = data['duration_minutes']
+        dur = f"{dur_min}m"
+        length_cat = _get_length_category(dur_min)
         tss = data.get("estimated_tss", "?")
         if_val = data.get("estimated_if", "?")
         m_type = data.get("type", "?")
@@ -217,14 +230,16 @@ def get_module_inventory_text(
         name = data["name"]
         star = _style_indicator(data, training_style)
 
-        return f"- [{key}]{star} Dur: {dur} | TSS: {tss} | IF: {if_val} | Type: {m_type} | For: {','.join(styles)} | {name}"
+        return f"- [{key}]{star} {length_cat} {dur} | TSS: {tss} | IF: {if_val} | Type: {m_type} | For: {','.join(styles)} | {name}"
 
     inventory.append("--- WARMUP MODULES ---")
     for key, data in sorted(warmup.items()):
         inventory.append(_fmt(key, data, training_style))
 
     # Group main segments by type for better organization
-    inventory.append("\n--- MAIN SEGMENTS (organized by type) ---")
+    inventory.append("\n--- MAIN SEGMENTS (organized by type and length) ---")
+    inventory.append("Length categories: SHORT (<15min) | MID (15-45min) | LONG (45-75min) | VERYLONG (75min+)")
+    inventory.append("For workouts 120min+, combine multiple LONG/VERYLONG Endurance modules\n")
 
     # Group by type
     types_order = ["Endurance", "Tempo", "SweetSpot", "Threshold", "VO2max", "Mixed"]

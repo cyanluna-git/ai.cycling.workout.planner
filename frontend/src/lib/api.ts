@@ -368,3 +368,15 @@ export async function deleteWeeklyPlan(
     if (!res.ok) throw new Error('Failed to delete plan');
     return res.json();
 }
+
+export async function registerWeeklyPlanToIntervals(
+    token: string,
+    planId: string
+): Promise<{ success: boolean; registered: number; failed: number; message: string }> {
+    const res = await fetch(`${API_BASE}/api/plans/weekly/${planId}/register-all`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to register plan to Intervals.icu');
+    return res.json();
+}

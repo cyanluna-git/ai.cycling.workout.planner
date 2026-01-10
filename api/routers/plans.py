@@ -695,6 +695,114 @@ async def skip_workout(workout_id: str, user: dict = Depends(get_current_user)):
     return {"success": True, "message": "Workout marked as skipped"}
 
 
+@router.post("/plans/weekly/{plan_id}/register-all")
+async def register_weekly_plan_to_intervals(
+    plan_id: str, user: dict = Depends(get_current_user)
+):
+    """Register all workouts in a weekly plan to Intervals.icu."""
+    from api.services.user_api_service import get_user_intervals_client
+    from src.services.protocol_builder import build_intervals_icu_json
+
+    supabase = get_supabase_admin_client()
+
+    # Get the weekly plan
+    plan_result = (
+        supabase.table("weekly_plans")
+        .select("*")
+        .eq("id", plan_id)
+        .eq("user_id", user["id"])
+        .maybe_single()
+        .execute()
+    )
+
+    if not plan_result or not plan_result.data:
+        raise HTTPException(status_code=404, detail="Plan not found")
+
+    # Get all daily workouts for this plan
+    workouts_result = (
+        supabase.table("daily_workouts")
+        .select("*")
+        .eq("plan_id", plan_id)
+        .order("workout_date")
+        .execute()
+    )
+
+    if not workouts_result or not workouts_result.data:
+        raise HTTPException(status_code=404, detail="No workouts found in plan")
+
+    # Get user's Intervals.icu client
+    intervals = await get_user_intervals_client(user["id"])
+
+    # Get user profile for FTP
+    from api.services.user_api_service import get_user_profile
+    try:
+        user_profile = await get_user_profile(user["id"])
+        ftp = user_profile.ftp
+    except Exception as e:
+        logger.error(f"Failed to get user profile: {e}")
+        ftp = 200
+
+    registered_count = 0
+    failed_count = 0
+    errors = []
+
+    for workout in workouts_result.data:
+        # Skip rest days
+        if workout.get("planned_type") == "Rest":
+            continue
+
+        # Skip if no modules (can't build workout)
+        planned_modules = workout.get("planned_modules", [])
+        if not planned_modules or len(planned_modules) == 0:
+            logger.warning(f"Skipping workout {workout['id']}: no modules")
+            continue
+
+        try:
+            # Convert modules to steps
+            planned_steps = convert_structure_to_steps(planned_modules, ftp)
+
+            if not planned_steps or len(planned_steps) == 0:
+                logger.warning(f"Skipping workout {workout['id']}: no steps generated")
+                continue
+
+            # Build Intervals.icu JSON
+            workout_name = workout.get("planned_name", "Workout")
+            workout_description = workout.get("planned_rationale", "")
+            workout_date = workout.get("workout_date")
+
+            intervals_json = build_intervals_icu_json(
+                steps=planned_steps,
+                workout_name=workout_name,
+                description=workout_description,
+                ftp=ftp
+            )
+
+            # Register to Intervals.icu
+            intervals.create_workout(
+                date=workout_date,
+                workout_data=intervals_json,
+                name=workout_name,
+                description=workout_description
+            )
+
+            registered_count += 1
+            logger.info(f"Registered workout {workout_name} for {workout_date}")
+
+        except Exception as e:
+            failed_count += 1
+            error_msg = f"{workout.get('workout_date')}: {str(e)}"
+            errors.append(error_msg)
+            logger.error(f"Failed to register workout {workout.get('id')}: {e}")
+
+    return {
+        "success": True,
+        "registered": registered_count,
+        "failed": failed_count,
+        "errors": errors if errors else None,
+        "message": f"Successfully registered {registered_count} workouts to Intervals.icu"
+    }
+
+
 @router.delete("/plans/weekly/{plan_id}")
 async def delete_weekly_plan(plan_id: str, user: dict = Depends(get_current_user)):
     """Delete a weekly plan and its workouts."""

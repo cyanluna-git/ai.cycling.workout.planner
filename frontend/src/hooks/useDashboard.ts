@@ -17,6 +17,7 @@ import {
     fetchWeeklyPlan,
     generateWeeklyPlan,
     deleteWeeklyPlan,
+    registerWeeklyPlanToIntervals,
     type FitnessData,
     type GeneratedWorkout,
     type WorkoutGenerateRequest,
@@ -34,6 +35,7 @@ interface DashboardState {
     isLoadingCalendar: boolean;
     isLoadingPlan: boolean;
     isGeneratingPlan: boolean;
+    isRegisteringPlanAll: boolean;
     isLoading: boolean;
     isRegistering: boolean;
     error: string | null;
@@ -47,6 +49,7 @@ interface DashboardActions {
     handleOnboardingComplete: () => void;
     handleGenerateWeeklyPlan: () => Promise<void>;
     handleDeleteWeeklyPlan: (planId: string) => Promise<void>;
+    handleRegisterWeeklyPlanAll: (planId: string) => Promise<void>;
     handleWeekNavigation: (direction: 'prev' | 'next') => Promise<void>;
     clearMessages: () => void;
 }
@@ -66,6 +69,7 @@ export function useDashboard(): UseDashboardReturn {
     const [isLoadingCalendar, setIsLoadingCalendar] = useState(false);
     const [isLoadingPlan, setIsLoadingPlan] = useState(false);
     const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
+    const [isRegisteringPlanAll, setIsRegisteringPlanAll] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isRegistering, setIsRegistering] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -276,6 +280,30 @@ export function useDashboard(): UseDashboardReturn {
         }
     }, [session]);
 
+    const handleRegisterWeeklyPlanAll = useCallback(async (planId: string) => {
+        if (!session?.access_token) {
+            setError("인증 토큰이 없습니다.");
+            return;
+        }
+
+        setIsRegisteringPlanAll(true);
+        setError(null);
+        setSuccess(null);
+
+        try {
+            const result = await registerWeeklyPlanToIntervals(session.access_token, planId);
+            setSuccess(`${result.registered}개의 워크아웃이 Intervals.icu에 등록되었습니다.`);
+
+            if (result.failed > 0) {
+                setError(`${result.failed}개의 워크아웃 등록 실패`);
+            }
+        } catch (e) {
+            setError(`등록 실패: ${e instanceof Error ? e.message : String(e)}`);
+        } finally {
+            setIsRegisteringPlanAll(false);
+        }
+    }, [session]);
+
     const handleWeekNavigation = useCallback(async (direction: 'prev' | 'next') => {
         const newOffset = direction === 'next' ? currentWeekOffset + 1 : currentWeekOffset - 1;
         setCurrentWeekOffset(newOffset);
@@ -292,6 +320,7 @@ export function useDashboard(): UseDashboardReturn {
         isLoadingCalendar,
         isLoadingPlan,
         isGeneratingPlan,
+        isRegisteringPlanAll,
         isLoading,
         isRegistering,
         error,
@@ -303,6 +332,7 @@ export function useDashboard(): UseDashboardReturn {
         handleOnboardingComplete,
         handleGenerateWeeklyPlan,
         handleDeleteWeeklyPlan,
+        handleRegisterWeeklyPlanAll,
         handleWeekNavigation,
         clearMessages,
     };
