@@ -1,5 +1,5 @@
 {
-  "total_selections": 7,
+  "total_selections": 8,
   "modules": {
     "progressive_ramp_15min": {
       "count": 3,
@@ -68,6 +68,26 @@
     "stepped_cooldown_10min": {
       "count": 1,
       "last_used": "2026-01-10T22:38:34.095204"
+    },
+    "progressive_warmup_15min": {
+      "count": 1,
+      "last_used": "2026-01-11T07:55:37.970411"
+    },
+    "endurance_30min": {
+      "count": 1,
+      "last_used": "2026-01-11T07:55:37.970411"
+    },
+    "rest_active": {
+      "count": 1,
+      "last_used": "2026-01-11T07:55:37.970411"
+    },
+    "tempo_steady_20min": {
+      "count": 1,
+      "last_used": "2026-01-11T07:55:37.970411"
+    },
+    "fade_out_12min": {
+      "count": 1,
+      "last_used": "2026-01-11T07:55:37.970411"
     }
   },
   "by_category": {
@@ -75,27 +95,32 @@
       "progressive_ramp_15min": 3,
       "progressive_ramp_5min": 1,
       "ramp_standard": 2,
-      "stepped_warmup_15min": 1
+      "stepped_warmup_15min": 1,
+      "progressive_warmup_15min": 1
     },
     "main": {
       "sst_10min": 12,
       "sst_extended_1x40min": 1,
       "tempo_15min": 1,
-      "tempo_build_2x15min": 1
+      "tempo_build_2x15min": 1,
+      "endurance_30min": 1,
+      "tempo_steady_20min": 1
     },
     "rest": {
       "rest_short": 4,
       "easy_rest_2min": 1,
       "very_easy_rest_5min": 1,
       "active_recovery_3min": 1,
-      "short_rest_60s": 1
+      "short_rest_60s": 1,
+      "rest_active": 1
     },
     "cooldown": {
       "fade_out_5min": 2,
       "fade_out_10min": 2,
       "flush_and_fade": 2,
-      "stepped_cooldown_10min": 1
+      "stepped_cooldown_10min": 1,
+      "fade_out_12min": 1
     }
   },
-  "last_updated": "2026-01-10T22:39:00.502854"
+  "last_updated": "2026-01-11T07:55:37.970486"
 }
