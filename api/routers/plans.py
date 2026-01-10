@@ -36,6 +36,8 @@ class DailyWorkoutResponse(BaseModel):
     planned_duration: Optional[int] = None
     planned_tss: Optional[int] = None
     planned_rationale: Optional[str] = None
+    planned_modules: Optional[List[str]] = None  # Module keys for power profile
+    planned_steps: Optional[List[dict]] = None   # WorkoutStep[] for chart rendering
     actual_name: Optional[str] = None
     actual_type: Optional[str] = None
     status: str = "planned"
@@ -101,6 +103,117 @@ def get_next_week_dates() -> tuple:
     return week_start, week_end
 
 
+def convert_structure_to_steps(module_keys: List[str], ftp: int) -> List[dict]:
+    """Convert workout module keys to WorkoutStep[] format for frontend chart rendering.
+
+    Args:
+        module_keys: List of module keys like ["warmup_ramp", "sst_10min", "flush_and_fade"]
+        ftp: User's FTP for power calculations
+
+    Returns:
+        List of workout step dictionaries compatible with frontend WorkoutStep type
+    """
+    from src.services.workout_modules import WARMUP_MODULES, MAIN_SEGMENTS, REST_SEGMENTS, COOLDOWN_MODULES
+
+    # Combine all module dictionaries
+    all_modules = {
+        **WARMUP_MODULES,
+        **MAIN_SEGMENTS,
+        **REST_SEGMENTS,
+        **COOLDOWN_MODULES,
+    }
+
+    steps = []
+
+    for module_key in module_keys:
+        module = all_modules.get(module_key)
+        if not module:
+            logger.warning(f"Module not found: {module_key}")
+            continue
+
+        # Convert each block in module structure to WorkoutStep
+        for block in module.get("structure", []):
+            block_type = block.get("type")
+
+            if block_type == "warmup_ramp":
+                # Ramp from start_power to end_power
+                steps.append({
+                    "duration": block["duration_minutes"] * 60,
+                    "power": {
+                        "start": block["start_power"],
+                        "end": block["end_power"],
+                        "units": "%ftp"
+                    },
+                    "ramp": True,
+                    "warmup": True
+                })
+
+            elif block_type == "cooldown_ramp":
+                # Cooldown ramp
+                steps.append({
+                    "duration": block["duration_minutes"] * 60,
+                    "power": {
+                        "start": block["start_power"],
+                        "end": block["end_power"],
+                        "units": "%ftp"
+                    },
+                    "ramp": True,
+                    "cooldown": True
+                })
+
+            elif block_type == "steady":
+                # Steady state power
+                steps.append({
+                    "duration": block["duration_minutes"] * 60,
+                    "power": {
+                        "value": block["power"],
+                        "units": "%ftp"
+                    }
+                })
+
+            elif block_type == "main_set_classic":
+                # Interval block: work + rest repeated
+                interval_steps = []
+                for _ in range(block["repetitions"]):
+                    # Work interval
+                    interval_steps.append({
+                        "duration": block["work_duration_seconds"],
+                        "power": {
+                            "value": block["work_power"],
+                            "units": "%ftp"
+                        }
+                    })
+                    # Rest interval
+                    interval_steps.append({
+                        "duration": block["rest_duration_seconds"],
+                        "power": {
+                            "value": block["rest_power"],
+                            "units": "%ftp"
+                        }
+                    })
+
+                steps.append({
+                    "duration": 0,  # Duration handled by nested steps
+                    "repeat": block["repetitions"],
+                    "steps": interval_steps
+                })
+
+            elif block_type == "rest":
+                # Simple rest block
+                steps.append({
+                    "duration": block.get("duration_minutes", 1) * 60,
+                    "power": {
+                        "value": block.get("power", 50),
+                        "units": "%ftp"
+                    }
+                })
+
+            else:
+                logger.warning(f"Unknown block type: {block_type}")
+
+    return steps
+
+
 # --- Endpoints ---
 
 
@@ -153,9 +266,28 @@ async def get_current_weekly_plan(
     ]
     daily_workouts = []
 
+    # Get user profile for FTP (needed for power calculations)
+    from api.services.user_api_service import get_user_profile
+    try:
+        user_profile = await get_user_profile(user["id"])
+        ftp = user_profile.ftp
+    except Exception as e:
+        logger.error(f"Failed to get user profile: {e}")
+        ftp = 200  # Default FTP if profile fetch fails
+
     for workout in workouts_result.data:
         workout_date = datetime.strptime(workout["workout_date"], "%Y-%m-%d").date()
         day_index = (workout_date - week_start).days
+
+        # Convert planned_modules to planned_steps for chart rendering
+        planned_modules = workout.get("planned_modules", [])
+        planned_steps = None
+        if planned_modules and len(planned_modules) > 0:
+            try:
+                planned_steps = convert_structure_to_steps(planned_modules, ftp)
+            except Exception as e:
+                logger.error(f"Failed to convert modules to steps for {workout['id']}: {e}")
+                # Gracefully handle errors - workout will show without chart
 
         daily_workouts.append(
             DailyWorkoutResponse(
@@ -167,6 +299,8 @@ async def get_current_weekly_plan(
                 planned_duration=workout.get("planned_duration"),
                 planned_tss=workout.get("planned_tss"),
                 planned_rationale=workout.get("planned_rationale"),
+                planned_modules=planned_modules if planned_modules else None,
+                planned_steps=planned_steps,
                 actual_name=workout.get("actual_name"),
                 actual_type=workout.get("actual_type"),
                 status=workout.get("status", "planned"),

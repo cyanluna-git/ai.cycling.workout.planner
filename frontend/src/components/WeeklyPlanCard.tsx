@@ -1,12 +1,14 @@
 /**
  * Weekly Plan Card Component
- * 
- * Displays weekly workout plan with 7-day view and actions
+ *
+ * Displays weekly workout plan with vertical list and power profile charts
  */
 
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { WorkoutThumbnailChart } from "@/components/WorkoutThumbnailChart";
+import { WorkoutDetailModal } from "@/components/WorkoutDetailModal";
 import type { WeeklyPlan, DailyWorkout } from "@/lib/api";
 
 interface WeeklyPlanCardProps {
@@ -41,7 +43,13 @@ const typeEmoji: Record<string, string> = {
     VO2max: "⚡",
 };
 
-function DailyWorkoutCard({ workout }: { workout: DailyWorkout }) {
+function DailyWorkoutRow({
+    workout,
+    onClick,
+}: {
+    workout: DailyWorkout;
+    onClick: () => void;
+}) {
     const workoutType = workout.planned_type || "Endurance";
     const colorClass = typeColors[workoutType] || typeColors.Endurance;
     const emoji = typeEmoji[workoutType] || "🚴";
@@ -49,27 +57,49 @@ function DailyWorkoutCard({ workout }: { workout: DailyWorkout }) {
 
     return (
         <div
-            className={`rounded-lg p-3 ${colorClass} transition-all hover:scale-[1.02]`}
+            className={`flex items-center gap-4 p-4 rounded-lg ${colorClass} transition-all hover:scale-[1.01] cursor-pointer`}
+            onClick={onClick}
             title={workout.planned_rationale}
         >
-            <div className="text-xs font-medium opacity-70">{workout.day_name}</div>
-            <div className="font-semibold text-sm mt-1 truncate">
-                {emoji} {workout.planned_name || (isRest ? "Rest Day" : "Workout")}
-            </div>
-            {!isRest && (
-                <div className="text-xs mt-1 opacity-80">
-                    {workout.planned_duration}분 • TSS {workout.planned_tss || 0}
+            {/* Left: Day info */}
+            <div className="flex-shrink-0 w-24">
+                <div className="text-xs font-medium opacity-70">{workout.day_name}</div>
+                <div className="text-lg font-bold">
+                    {new Date(workout.workout_date).getDate()}
                 </div>
-            )}
-            {workout.status === "completed" && (
-                <div className="text-xs mt-1 text-green-600 font-medium">✅ 완료</div>
-            )}
-            {workout.status === "skipped" && (
-                <div className="text-xs mt-1 text-gray-500 font-medium">⏭️ 건너뜀</div>
-            )}
-            {workout.status === "regenerated" && (
-                <div className="text-xs mt-1 text-blue-600 font-medium">🔄 재생성됨</div>
-            )}
+            </div>
+
+            {/* Middle: Workout info */}
+            <div className="flex-grow min-w-0">
+                <div className="font-semibold text-sm truncate">
+                    {emoji} {workout.planned_name || (isRest ? "Rest Day" : "Workout")}
+                </div>
+                {!isRest && (
+                    <div className="text-xs mt-1 opacity-80">
+                        {workout.planned_duration}분 • TSS {workout.planned_tss || 0}
+                    </div>
+                )}
+                {workout.status === "completed" && (
+                    <div className="text-xs mt-1 text-green-600 font-medium">✅ 완료</div>
+                )}
+                {workout.status === "skipped" && (
+                    <div className="text-xs mt-1 text-gray-500 font-medium">⏭️ 건너뜀</div>
+                )}
+                {workout.status === "regenerated" && (
+                    <div className="text-xs mt-1 text-blue-600 font-medium">🔄 재생성됨</div>
+                )}
+            </div>
+
+            {/* Right: Chart thumbnail */}
+            <div className="flex-shrink-0 w-48 h-20">
+                {!isRest && workout.planned_steps && workout.planned_steps.length > 0 ? (
+                    <WorkoutThumbnailChart steps={workout.planned_steps} height={70} />
+                ) : (
+                    <div className="flex items-center justify-center h-full text-xs text-gray-400">
+                        {isRest ? "😴 Rest" : "No chart"}
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
@@ -84,6 +114,16 @@ export function WeeklyPlanCard({
     onWeekNavigation,
 }: WeeklyPlanCardProps) {
     const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+    const [selectedWorkout, setSelectedWorkout] = useState<DailyWorkout | null>(null);
+    const [modalOpen, setModalOpen] = useState(false);
+
+    // Handle workout click to open modal
+    const handleWorkoutClick = (workout: DailyWorkout) => {
+        if (workout.planned_steps && workout.planned_steps.length > 0) {
+            setSelectedWorkout(workout);
+            setModalOpen(true);
+        }
+    };
 
     // Get week label based on offset
     const getWeekLabel = () => {
@@ -243,15 +283,19 @@ export function WeeklyPlanCard({
                 </div>
             </CardHeader>
             <CardContent>
-                {/* 7-day grid */}
-                <div className="grid grid-cols-7 gap-2 mb-4">
+                {/* Vertical list with scroll */}
+                <div className="space-y-2 max-h-[600px] overflow-y-auto mb-4">
                     {plan.daily_workouts.map((workout, index) => (
-                        <DailyWorkoutCard key={index} workout={workout} />
+                        <DailyWorkoutRow
+                            key={index}
+                            workout={workout}
+                            onClick={() => handleWorkoutClick(workout)}
+                        />
                     ))}
                 </div>
 
                 {/* Actions */}
-                <div className="flex flex-wrap gap-2 justify-end pt-2 border-t">
+                <div className="flex flex-wrap gap-2 justify-end pt-4 mt-4 border-t">
                     <Button
                         variant="outline"
                         size="sm"
@@ -295,6 +339,13 @@ export function WeeklyPlanCard({
                     )}
                 </div>
             </CardContent>
+
+            {/* Modal for workout details */}
+            <WorkoutDetailModal
+                workout={selectedWorkout}
+                open={modalOpen}
+                onOpenChange={setModalOpen}
+            />
         </Card>
     );
 }
