@@ -80,11 +80,29 @@ def load_config(env_file: Optional[str] = None) -> Config:
             load_dotenv()  # Try default locations
 
     # Validate required environment variables
-    required_vars = ["INTERVALS_API_KEY", "ATHLETE_ID", "LLM_API_KEY"]
+    required_vars = ["INTERVALS_API_KEY", "ATHLETE_ID"]
     missing = [var for var in required_vars if not os.getenv(var)]
     if missing:
         raise ValueError(
             f"Missing required environment variables: {', '.join(missing)}"
+        )
+
+    # For LLM, check for provider-specific keys
+    llm_provider = os.getenv("LLM_PROVIDER", "gemini")
+    llm_api_key = os.getenv("LLM_API_KEY")
+
+    # Fallback to provider-specific keys if LLM_API_KEY not set
+    if not llm_api_key:
+        if llm_provider == "gemini":
+            llm_api_key = os.getenv("GEMINI_API_KEY", "")
+        elif llm_provider == "openai":
+            llm_api_key = os.getenv("OPENAI_API_KEY", "")
+        elif llm_provider == "groq":
+            llm_api_key = os.getenv("GROQ_API_KEY", "")
+
+    if not llm_api_key:
+        raise ValueError(
+            f"No LLM API key found. Set LLM_API_KEY or {llm_provider.upper()}_API_KEY"
         )
 
     return Config(
@@ -94,9 +112,9 @@ def load_config(env_file: Optional[str] = None) -> Config:
             base_url=os.getenv("INTERVALS_BASE_URL", "https://intervals.icu/api/v1"),
         ),
         llm=LLMConfig(
-            provider=os.getenv("LLM_PROVIDER", "openai"),
-            api_key=os.getenv("LLM_API_KEY", ""),
-            model=os.getenv("LLM_MODEL", "gpt-4o"),
+            provider=llm_provider,
+            api_key=llm_api_key,
+            model=os.getenv("LLM_MODEL") or os.getenv(f"{llm_provider.upper()}_MODEL", "gpt-4o"),
         ),
         user_profile=UserProfile(
             ftp=int(os.getenv("USER_FTP", "250")),

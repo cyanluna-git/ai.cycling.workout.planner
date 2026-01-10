@@ -1,6 +1,12 @@
 # Weekly Plan Generation - Bug Report for Jules
 
-## 현재 상태
+## ✅ Status: FIXED (2026-01-10)
+
+All critical bugs have been resolved. See [BUG_FIXES_APPLIED.md](BUG_FIXES_APPLIED.md) for details.
+
+---
+
+## 이전 상태 (Historical - Before Fix)
 
 주간 워크아웃 계획 생성 기능 구현 중 백엔드 API에서 에러 발생.
 
@@ -32,16 +38,10 @@ fastapi.exceptions.ResponseValidationError: 1 validation error:
 - 결과적으로 방금 생성한 계획을 찾지 못해 `None` 반환
 - `response_model=WeeklyPlanResponse`는 `None`을 허용하지 않아 에러 발생
 
-**수정 방안:**
-```python
-# plans.py line ~282
-# 현재 코드
-return await get_current_weekly_plan(user)
-
-# 수정 필요 - week_start를 파라미터로 전달하거나 직접 조회
-# 옵션 1: get_current_weekly_plan에 week_start 파라미터 추가
-# 옵션 2: generate 함수 내에서 직접 응답 생성
-```
+**✅ 수정 완료:**
+- Added `week_start_date` parameter to `get_current_weekly_plan()`
+- Changed return statement to: `return await get_current_weekly_plan(user, week_start_date=week_start.isoformat())`
+- Now correctly queries the week that was just generated
 
 ### 2. Groq Quota Exceeded
 
@@ -64,16 +64,21 @@ Please switch to the `google.genai` package.
 
 ---
 
-## 📋 수정해야 할 사항
+## 📋 수정 사항
 
-### 필수 수정 (Critical)
+### ✅ 필수 수정 완료 (Critical - FIXED)
 
-1. **`api/routers/plans.py` - generate_weekly_plan 함수**
-   - 생성 후 조회 시 올바른 week_start 사용
-   - `get_current_weekly_plan(user)` → 방금 생성한 주의 계획 조회
+1. **`api/routers/plans.py` - generate_weekly_plan 함수** ✅
+   - ✅ 생성 후 조회 시 올바른 week_start 사용
+   - ✅ `get_current_weekly_plan(user)` → 방금 생성한 주의 계획 조회
 
-2. **`api/routers/plans.py` - get_current_weekly_plan 함수**
-   - `week_start` 파라미터 추가하여 특정 주 조회 가능하게
+2. **`api/routers/plans.py` - get_current_weekly_plan 함수** ✅
+   - ✅ `week_start_date` 파라미터 추가하여 특정 주 조회 가능하게
+
+3. **`src/config.py` - LLM API Key Loading** ✅
+   - ✅ Removed `LLM_API_KEY` from required environment variables
+   - ✅ Added fallback to provider-specific keys (GEMINI_API_KEY, etc.)
+   - ✅ Added `LLM_PROVIDER` env var for configuration
 
 ### 권장 수정 (Recommended)
 
