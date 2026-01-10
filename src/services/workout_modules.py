@@ -57,11 +57,7 @@ def filter_barcode_modules(modules: dict, exclude_barcode: bool) -> dict:
     if not exclude_barcode:
         return modules
 
-    return {
-        key: data
-        for key, data in modules.items()
-        if not is_barcode_module(data)
-    }
+    return {key: data for key, data in modules.items() if not is_barcode_module(data)}
 
 
 def _enrich_metadata(data: dict, category: str):
@@ -117,7 +113,9 @@ def _enrich_metadata(data: dict, category: str):
         data["fatigue_impact"] = fatigue
 
 
-def _load_modules(category: str, exclude_barcode: bool = False) -> Dict[str, Dict[str, Any]]:
+def _load_modules(
+    category: str, exclude_barcode: bool = False
+) -> Dict[str, Dict[str, Any]]:
     """Load JSON modules from a category directory."""
     modules = {}
     category_dir = BASE_DIR / category
@@ -163,42 +161,97 @@ def get_filtered_modules(exclude_barcode: bool = False) -> tuple:
     return warmup, main, rest, cooldown
 
 
-def get_module_inventory_text(exclude_barcode: bool = False) -> str:
-    """Format all modules into a text inventory for LLM prompts."""
+# Mapping of workout types to suitable training styles
+TYPE_TO_STYLES = {
+    "VO2max": ["polarized"],  # Only for polarized high-intensity days
+    "Threshold": ["norwegian", "threshold"],  # Threshold-focused plans
+    "SweetSpot": ["sweetspot", "auto"],  # Sweet spot specific
+    "Tempo": ["endurance", "auto"],  # Tempo for base building
+    "Endurance": ["endurance", "polarized", "norwegian", "auto"],  # Versatile
+    "Recovery": [
+        "endurance",
+        "polarized",
+        "norwegian",
+        "sweetspot",
+        "threshold",
+        "auto",
+    ],
+    "Mixed": ["auto"],  # Flexible
+}
+
+
+def get_module_inventory_text(
+    exclude_barcode: bool = False, training_style: str = None
+) -> str:
+    """Format all modules into a text inventory for LLM prompts.
+
+    Args:
+        exclude_barcode: If True, exclude barcode-style workouts
+        training_style: If provided, highlight suitable modules for this style
+    """
     warmup, main, rest, cooldown = get_filtered_modules(exclude_barcode)
 
     inventory = []
 
-    def _fmt(key, data):
-        # Format: [key] Dur: 10m | TSS: 12 | IF: 0.85 | Fatigue: Med | Desc: Name - Description
+    def _get_styles(data):
+        """Get suitable styles for a module based on its type."""
+        m_type = data.get("type", "Mixed")
+        return TYPE_TO_STYLES.get(m_type, ["auto"])
+
+    def _style_indicator(data, training_style):
+        """Return indicator if module is suitable for current training style."""
+        if not training_style or training_style == "auto":
+            return ""
+        suitable = _get_styles(data)
+        if training_style in suitable:
+            return " ⭐"  # Star for recommended
+        return ""
+
+    def _fmt(key, data, training_style=None):
+        # Format: [key] Dur: 10m | TSS: 12 | IF: 0.85 | Type: Threshold | Styles: [list] | Desc: Name
         dur = f"{data['duration_minutes']}m"
         tss = data.get("estimated_tss", "?")
         if_val = data.get("estimated_if", "?")
-        fatigue = data.get("fatigue_impact", "?")
+        m_type = data.get("type", "?")
+        styles = _get_styles(data)
         name = data["name"]
-        desc = data.get("description", "")
-        if desc:
-            return f"- [{key}] Dur: {dur} | TSS: {tss} | IF: {if_val} | Fatigue: {fatigue} | Desc: {name} - {desc}"
-        return f"- [{key}] Dur: {dur} | TSS: {tss} | IF: {if_val} | Fatigue: {fatigue} | Desc: {name}"
+        star = _style_indicator(data, training_style)
+
+        return f"- [{key}]{star} Dur: {dur} | TSS: {tss} | IF: {if_val} | Type: {m_type} | For: {','.join(styles)} | {name}"
 
     inventory.append("--- WARMUP MODULES ---")
     for key, data in sorted(warmup.items()):
-        inventory.append(_fmt(key, data))
+        inventory.append(_fmt(key, data, training_style))
 
-    inventory.append("\n--- MAIN SEGMENTS ---")
+    # Group main segments by type for better organization
+    inventory.append("\n--- MAIN SEGMENTS (organized by type) ---")
+
+    # Group by type
+    types_order = ["Endurance", "Tempo", "SweetSpot", "Threshold", "VO2max", "Mixed"]
+    type_groups = {t: [] for t in types_order}
+
     for key, data in sorted(main.items()):
-        # Group by Intensity for better AI readability? Or just sorted name.
-        # Sorted by key is fine.
-        inventory.append(_fmt(key, data))
+        m_type = data.get("type", "Mixed")
+        if m_type in type_groups:
+            type_groups[m_type].append((key, data))
+        else:
+            type_groups["Mixed"].append((key, data))
+
+    for m_type in types_order:
+        if type_groups[m_type]:
+            styles_for_type = TYPE_TO_STYLES.get(m_type, ["auto"])
+            inventory.append(
+                f"\n## {m_type} modules (suitable for: {', '.join(styles_for_type)})"
+            )
+            for key, data in type_groups[m_type]:
+                inventory.append(_fmt(key, data, training_style))
 
     inventory.append("\n--- REST SEGMENTS ---")
     for key, data in sorted(rest.items()):
-        inventory.append(
-            f"- [{key}] Dur: {data['duration_minutes']}m | Fatigue: Recovery | Desc: {data['name']}"
-        )
+        inventory.append(f"- [{key}] Dur: {data['duration_minutes']}m | Recovery")
 
     inventory.append("\n--- COOLDOWN MODULES ---")
     for key, data in sorted(cooldown.items()):
-        inventory.append(_fmt(key, data))
+        inventory.append(_fmt(key, data, training_style))
 
     return "\n".join(inventory)
