@@ -127,8 +127,9 @@ export interface SportSettings {
 
 // --- API Functions ---
 
-export async function fetchFitness(token: string): Promise<FitnessData> {
-    const res = await fetch(`${API_BASE}/api/fitness`, {
+export async function fetchFitness(token: string, refresh: boolean = false): Promise<FitnessData> {
+    const url = refresh ? `${API_BASE}/api/fitness?refresh=true` : `${API_BASE}/api/fitness`;
+    const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) throw new Error('Failed to fetch fitness data');

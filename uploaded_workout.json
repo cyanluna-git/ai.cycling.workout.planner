@@ -1,11 +1,11 @@
 {
   "start_date_local": "2026-01-10T00:00:00",
   "category": "WORKOUT",
-  "name": "[AICoach] Sustained Sweet Spot Surge",
-  "description": "Warmup\n- 10m 45% -> 75%\n\nMain Set\n- 10m 88%\n- 2m 50%\n- 10m 88%\n- 8m 60%\n\nCooldown\n- 7m 60% -> 40%",
+  "name": "[AICoach] Endurance Boost",
+  "description": "Warmup\n- 10m 45% -> 70%\n\nMain Set\n- 5m 80%\n- 30m 65%\n- 5m 55%\n- 20m 80%\n\nCooldown\n- 12m 65% -> 45%",
   "type": "Ride",
-  "moving_time": 2820,
-  "icu_training_load": 35,
+  "moving_time": 4920,
+  "icu_training_load": 61,
   "filename": "workout.zwo",
-  "file_contents_base64": "<768 chars>"
+  "file_contents_base64": "<756 chars>"
 }
