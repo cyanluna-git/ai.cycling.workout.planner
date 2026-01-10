@@ -10,6 +10,7 @@ import { FitnessCard } from "@/components/FitnessCard";
 import { TodayWorkoutCard } from "@/components/TodayWorkoutCard";
 import { WeeklyCalendarCard } from "@/components/WeeklyCalendarCard";
 import { WeeklyPlanCard } from "@/components/WeeklyPlanCard";
+import { UpdateAnnouncementModal } from "@/components/UpdateAnnouncementModal";
 import { Button } from "@/components/ui/button";
 import { useDashboard } from "@/hooks/useDashboard";
 
@@ -227,6 +228,7 @@ function App() {
   return (
     <AuthProvider>
       <AppContent />
+      <UpdateAnnouncementModal />
     </AuthProvider>
   );
 }
