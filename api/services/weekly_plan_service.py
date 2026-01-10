@@ -210,8 +210,18 @@ class WeeklyPlanGenerator:
             training_style, TRAINING_STYLE_DESCRIPTIONS["auto"]
         )
 
-        # Calculate weekly TSS target based on CTL
-        weekly_tss_target = int(ctl * 7)  # Rough estimate
+        # Calculate weekly TSS target based on CTL and training focus
+        base_tss = int(ctl * 7)  # Base estimate
+
+        # Apply training focus multiplier
+        training_focus = self.profile.get("training_focus", "maintain")
+        focus_multipliers = {
+            "recovery": 0.7,  # -30% for recovery week
+            "maintain": 1.0,  # Keep current load
+            "build": 1.1,  # +10% for building phase
+        }
+        multiplier = focus_multipliers.get(training_focus, 1.0)
+        weekly_tss_target = int(base_tss * multiplier)
 
         # Get module inventory
         from src.services.workout_modules import get_module_inventory_text
@@ -281,7 +291,7 @@ class WeeklyPlanGenerator:
         expected_if = if_ranges.get(workout_type, 0.70)
 
         # Calculate expected TSS
-        expected_tss = int(duration_hours * (expected_if ** 2) * 100)
+        expected_tss = int(duration_hours * (expected_if**2) * 100)
 
         # For VO2max, cap at reasonable values (short intervals, not continuous)
         if workout_type == "VO2max":

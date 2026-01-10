@@ -15,6 +15,7 @@ interface Settings {
     exclude_barcode_workouts?: boolean
     training_style?: string
     preferred_duration?: number
+    training_focus?: string  // recovery, maintain, build
 }
 
 interface ApiKeysCheck {
@@ -31,6 +32,7 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
         exclude_barcode_workouts: false,
         training_style: 'auto',
         preferred_duration: 60,
+        training_focus: 'maintain',
     })
     const [apiKeys, setApiKeys] = useState({
         intervals_api_key: '',
@@ -147,9 +149,49 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                             FTP, 최대 심박수, 역치 심박수는 Intervals.icu에서 자동으로 가져옵니다.
                         </p>
 
+                        {/* Training Focus - Simple 3 options */}
+                        <div className="space-y-2">
+                            <Label>주간 훈련 목표</Label>
+                            <div className="grid grid-cols-3 gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setSettings({ ...settings, training_focus: 'recovery' })}
+                                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${settings.training_focus === 'recovery'
+                                            ? 'bg-green-500 text-white'
+                                            : 'bg-muted hover:bg-muted/80'
+                                        }`}
+                                >
+                                    🌿 회복
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setSettings({ ...settings, training_focus: 'maintain' })}
+                                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${settings.training_focus === 'maintain'
+                                            ? 'bg-blue-500 text-white'
+                                            : 'bg-muted hover:bg-muted/80'
+                                        }`}
+                                >
+                                    ⚖️ 유지
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setSettings({ ...settings, training_focus: 'build' })}
+                                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${settings.training_focus === 'build'
+                                            ? 'bg-orange-500 text-white'
+                                            : 'bg-muted hover:bg-muted/80'
+                                        }`}
+                                >
+                                    💪 강화
+                                </button>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                회복: TSS -30% / 유지: 현재 유지 / 강화: TSS +10%
+                            </p>
+                        </div>
+
                         {/* Training Style - for Weekly Plan */}
                         <div className="space-y-2">
-                            <Label>훈련 스타일 (주간 계획용)</Label>
+                            <Label>훈련 스타일</Label>
                             <select
                                 value={settings.training_style || 'auto'}
                                 onChange={(e) =>
@@ -164,9 +206,6 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                                 <option value="threshold">역치 중심</option>
                                 <option value="endurance">지구력</option>
                             </select>
-                            <p className="text-xs text-muted-foreground">
-                                주간 워크아웃 계획 생성 시 사용됩니다
-                            </p>
                         </div>
 
                         <div className="flex items-center space-x-2">
