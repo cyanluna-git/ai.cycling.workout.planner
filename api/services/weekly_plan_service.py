@@ -90,13 +90,22 @@ Below is the library of workout modules you can use:
 # Rules
 1. **Structure:** Always include warmup → main → cooldown for each workout day.
 2. **Rest Days:** Include 1-2 complete rest days per week. For rest days, set type to "Rest" and modules to empty array.
-3. **TSB Management:** 
+3. **TSB Management:**
    - If TSB < -20: Prioritize recovery, reduce intensity
    - If TSB -10 to -20: Moderate volume, limit high intensity
    - If TSB > -10: Can include hard workouts
 4. **Progressive Load:** Build intensity mid-week, recover on weekends or vice versa.
 5. **Duration:** Each workout should be close to the preferred duration ({preferred_duration} min).
 6. **Variety:** Use different modules throughout the week.
+7. **TSS Calculation:** TSS = (duration_hours × IF²) × 100, where IF = average_intensity / FTP
+   - Recovery (50-60% FTP): 60min = ~25 TSS
+   - Endurance (65-75% FTP): 60min = ~50 TSS
+   - Tempo (80-90% FTP): 60min = ~70 TSS
+   - Sweet Spot (88-94% FTP): 60min = ~80 TSS
+   - Threshold (95-105% FTP): 60min = ~100 TSS
+   - VO2max (110-120% FTP): 30min intervals only = ~60-80 TSS total
+   - NEVER exceed TSS 100 for 60min workout unless it's pure threshold
+   - Long endurance rides: 120min at 70% = ~100 TSS, 180min = ~150 TSS
 
 # Output Format
 Generate a JSON array with exactly 7 daily plans:
@@ -247,6 +256,53 @@ class WeeklyPlanGenerator:
             daily_plans=daily_plans,
         )
 
+    def _validate_and_correct_tss(
+        self, workout_type: str, duration_minutes: int, estimated_tss: int
+    ) -> int:
+        """Validate and correct TSS based on workout type and duration.
+
+        TSS = (duration_hours × IF²) × 100
+        where IF = average_intensity / FTP
+        """
+        duration_hours = duration_minutes / 60.0
+
+        # Expected IF ranges for each workout type
+        if_ranges = {
+            "Rest": 0.0,
+            "Recovery": 0.55,  # 50-60% FTP
+            "Endurance": 0.70,  # 65-75% FTP
+            "Tempo": 0.85,  # 80-90% FTP
+            "SweetSpot": 0.91,  # 88-94% FTP
+            "Threshold": 1.0,  # 95-105% FTP
+            "VO2max": 1.15,  # 110-120% FTP (but short intervals)
+        }
+
+        # Get expected IF for workout type
+        expected_if = if_ranges.get(workout_type, 0.70)
+
+        # Calculate expected TSS
+        expected_tss = int(duration_hours * (expected_if ** 2) * 100)
+
+        # For VO2max, cap at reasonable values (short intervals, not continuous)
+        if workout_type == "VO2max":
+            # VO2max workouts are typically 30-40min of intervals, not full duration
+            max_tss = int(duration_hours * 80)  # Cap at ~80 TSS per hour
+            expected_tss = min(expected_tss, max_tss)
+
+        # Check if LLM-provided TSS is reasonable (within 30% of expected)
+        if estimated_tss == 0 and workout_type == "Rest":
+            return 0
+
+        tolerance = 0.3
+        if abs(estimated_tss - expected_tss) / max(expected_tss, 1) > tolerance:
+            logger.warning(
+                f"TSS mismatch for {workout_type} {duration_minutes}min: "
+                f"LLM={estimated_tss}, Expected={expected_tss}. Using corrected value."
+            )
+            return expected_tss
+
+        return estimated_tss
+
     def _parse_response(self, response: str, week_start: date) -> List[DailyPlan]:
         """Parse LLM response into DailyPlan objects.
 
@@ -286,16 +342,24 @@ class WeeklyPlanGenerator:
 
         for i, plan_data in enumerate(plans_data[:7]):  # Limit to 7 days
             workout_date = week_start + timedelta(days=i)
+            workout_type = plan_data.get("workout_type", "Endurance")
+            duration_minutes = plan_data.get("duration_minutes", 60)
+            llm_tss = plan_data.get("estimated_tss", 50)
+
+            # Validate and correct TSS if needed
+            corrected_tss = self._validate_and_correct_tss(
+                workout_type, duration_minutes, llm_tss
+            )
 
             daily_plans.append(
                 DailyPlan(
                     day_index=i,
                     day_name=day_names[i],
                     workout_date=workout_date,
-                    workout_type=plan_data.get("workout_type", "Endurance"),
+                    workout_type=workout_type,
                     workout_name=plan_data.get("workout_name", f"Day {i+1} Workout"),
-                    duration_minutes=plan_data.get("duration_minutes", 60),
-                    estimated_tss=plan_data.get("estimated_tss", 50),
+                    duration_minutes=duration_minutes,
+                    estimated_tss=corrected_tss,
                     intensity=plan_data.get("intensity", "moderate"),
                     selected_modules=plan_data.get("selected_modules", []),
                     rationale=plan_data.get("rationale", ""),
