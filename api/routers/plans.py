@@ -105,10 +105,18 @@ def get_next_week_dates() -> tuple:
 
 
 @router.get("/plans/weekly", response_model=Optional[WeeklyPlanResponse])
-async def get_current_weekly_plan(user: dict = Depends(get_current_user)):
-    """Get the current week's plan."""
+async def get_current_weekly_plan(
+    user: dict = Depends(get_current_user),
+    week_start_date: Optional[str] = None
+):
+    """Get the current week's plan (or specific week if week_start_date provided)."""
     supabase = get_supabase_admin_client()
-    week_start, week_end = get_week_dates()
+
+    if week_start_date:
+        week_start = datetime.strptime(week_start_date, "%Y-%m-%d").date()
+        week_end = week_start + timedelta(days=6)
+    else:
+        week_start, week_end = get_week_dates()
 
     # Get weekly plan
     plan_result = (
@@ -284,8 +292,8 @@ async def generate_weekly_plan(
 
     logger.info(f"Generated weekly plan {plan_id} for user {user['id']}")
 
-    # Return the created plan
-    return await get_current_weekly_plan(user)
+    # Return the created plan - pass the week_start we just generated
+    return await get_current_weekly_plan(user, week_start_date=week_start.isoformat())
 
 
 @router.get("/plans/today", response_model=TodayWorkoutResponse)
