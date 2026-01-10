@@ -13,8 +13,10 @@ interface WeeklyPlanCardProps {
     plan: WeeklyPlan | null;
     isLoading: boolean;
     isGenerating: boolean;
+    currentWeekOffset: number;
     onGenerate: () => void;
     onDelete?: (planId: string) => void;
+    onWeekNavigation?: (direction: 'prev' | 'next') => void;
 }
 
 // Workout type to color mapping
@@ -76,10 +78,21 @@ export function WeeklyPlanCard({
     plan,
     isLoading,
     isGenerating,
+    currentWeekOffset,
     onGenerate,
     onDelete,
+    onWeekNavigation,
 }: WeeklyPlanCardProps) {
     const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+
+    // Get week label based on offset
+    const getWeekLabel = () => {
+        if (currentWeekOffset === 0) return "이번 주";
+        if (currentWeekOffset === 1) return "다음 주";
+        if (currentWeekOffset === -1) return "지난 주";
+        if (currentWeekOffset > 1) return `${currentWeekOffset}주 후`;
+        return `${Math.abs(currentWeekOffset)}주 전`;
+    };
 
     // Get next week's date range for display
     const getNextWeekRange = () => {
@@ -114,9 +127,34 @@ export function WeeklyPlanCard({
         return (
             <Card>
                 <CardHeader>
+                    {/* Week Navigation */}
+                    {onWeekNavigation && (
+                        <div className="flex items-center justify-center gap-4 mb-3">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => onWeekNavigation('prev')}
+                                disabled={isLoading}
+                            >
+                                ← 지난 주
+                            </Button>
+                            <div className="text-sm font-medium px-4 py-2 bg-primary/10 rounded-md">
+                                {getWeekLabel()}
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => onWeekNavigation('next')}
+                                disabled={isLoading}
+                            >
+                                다음 주 →
+                            </Button>
+                        </div>
+                    )}
+
                     <CardTitle>📅 주간 워크아웃 계획</CardTitle>
                     <CardDescription>
-                        다음 주 ({getNextWeekRange()}) 워크아웃 계획을 생성하세요
+                        {getWeekLabel()} ({getNextWeekRange()}) 워크아웃 계획을 생성하세요
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -164,6 +202,31 @@ export function WeeklyPlanCard({
     return (
         <Card>
             <CardHeader className="pb-3">
+                {/* Week Navigation */}
+                {onWeekNavigation && (
+                    <div className="flex items-center justify-center gap-4 mb-3">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onWeekNavigation('prev')}
+                            disabled={isLoading}
+                        >
+                            ← 지난 주
+                        </Button>
+                        <div className="text-sm font-medium px-4 py-2 bg-primary/10 rounded-md">
+                            {getWeekLabel()}
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onWeekNavigation('next')}
+                            disabled={isLoading}
+                        >
+                            다음 주 →
+                        </Button>
+                    </div>
+                )}
+
                 <div className="flex items-center justify-between">
                     <div>
                         <CardTitle>📅 주간 워크아웃 계획</CardTitle>

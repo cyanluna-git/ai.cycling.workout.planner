@@ -287,8 +287,11 @@ export interface TodayWorkout {
     can_regenerate: boolean;
 }
 
-export async function fetchWeeklyPlan(token: string): Promise<WeeklyPlan | null> {
-    const res = await fetch(`${API_BASE}/api/plans/weekly`, {
+export async function fetchWeeklyPlan(token: string, weekStartDate?: string): Promise<WeeklyPlan | null> {
+    const url = weekStartDate
+        ? `${API_BASE}/api/plans/weekly?week_start_date=${weekStartDate}`
+        : `${API_BASE}/api/plans/weekly`;
+    const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) throw new Error('Failed to fetch weekly plan');
