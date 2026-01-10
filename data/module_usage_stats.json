@@ -1,17 +1,17 @@
 {
-  "total_selections": 5,
+  "total_selections": 7,
   "modules": {
     "progressive_ramp_15min": {
       "count": 3,
       "last_used": "2026-01-10T00:05:38.488329"
     },
     "sst_10min": {
-      "count": 9,
-      "last_used": "2026-01-10T00:18:49.117171"
+      "count": 12,
+      "last_used": "2026-01-10T22:39:00.502611"
     },
     "rest_short": {
-      "count": 3,
-      "last_used": "2026-01-10T00:18:49.117171"
+      "count": 4,
+      "last_used": "2026-01-10T22:39:00.502611"
     },
     "fade_out_5min": {
       "count": 2,
@@ -42,35 +42,60 @@
       "last_used": "2026-01-10T00:18:32.816419"
     },
     "ramp_standard": {
-      "count": 1,
-      "last_used": "2026-01-10T00:18:49.117171"
+      "count": 2,
+      "last_used": "2026-01-10T22:39:00.502611"
     },
     "flush_and_fade": {
+      "count": 2,
+      "last_used": "2026-01-10T22:39:00.502611"
+    },
+    "stepped_warmup_15min": {
       "count": 1,
-      "last_used": "2026-01-10T00:18:49.117171"
+      "last_used": "2026-01-10T22:38:34.095204"
+    },
+    "tempo_build_2x15min": {
+      "count": 1,
+      "last_used": "2026-01-10T22:38:34.095204"
+    },
+    "active_recovery_3min": {
+      "count": 1,
+      "last_used": "2026-01-10T22:38:34.095204"
+    },
+    "short_rest_60s": {
+      "count": 1,
+      "last_used": "2026-01-10T22:38:34.095204"
+    },
+    "stepped_cooldown_10min": {
+      "count": 1,
+      "last_used": "2026-01-10T22:38:34.095204"
     }
   },
   "by_category": {
     "warmup": {
       "progressive_ramp_15min": 3,
       "progressive_ramp_5min": 1,
-      "ramp_standard": 1
+      "ramp_standard": 2,
+      "stepped_warmup_15min": 1
     },
     "main": {
-      "sst_10min": 9,
+      "sst_10min": 12,
       "sst_extended_1x40min": 1,
-      "tempo_15min": 1
+      "tempo_15min": 1,
+      "tempo_build_2x15min": 1
     },
     "rest": {
-      "rest_short": 3,
+      "rest_short": 4,
       "easy_rest_2min": 1,
-      "very_easy_rest_5min": 1
+      "very_easy_rest_5min": 1,
+      "active_recovery_3min": 1,
+      "short_rest_60s": 1
     },
     "cooldown": {
       "fade_out_5min": 2,
       "fade_out_10min": 2,
-      "flush_and_fade": 1
+      "flush_and_fade": 2,
+      "stepped_cooldown_10min": 1
     }
   },
-  "last_updated": "2026-01-10T00:18:49.117235"
+  "last_updated": "2026-01-10T22:39:00.502854"
 }
