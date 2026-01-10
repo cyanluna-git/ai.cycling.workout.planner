@@ -87,15 +87,15 @@ export function WeeklyCalendarCard({ calendar, isLoading, onSelectDate }: Weekly
         const dateStr = d.toISOString().slice(0, 10);
         const dayEvents = calendar.events.filter(e => e.date === dateStr);
 
-        // Separate into actual and planned
-        const actualEvents = dayEvents.filter(e => e.is_actual);
+        // Separate into planned and actual
         const plannedEvents = dayEvents.filter(e => !e.is_actual);
+        const actualEvents = dayEvents.filter(e => e.is_actual);
 
-        // Show actual first, then planned
+        // Show planned first (top), then actual (bottom)
         days.push({
             date: dateStr,
             dayName: DAY_NAMES[i],
-            events: [...actualEvents, ...plannedEvents]
+            events: [...plannedEvents, ...actualEvents]
         });
     }
 
