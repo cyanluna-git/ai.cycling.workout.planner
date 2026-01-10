@@ -136,27 +136,13 @@ function Dashboard() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column */}
           <div className="space-y-6">
             {fitness && (
               <FitnessCard training={fitness.training} wellness={fitness.wellness} profile={fitness.profile} />
             )}
             <WorkoutForm onGenerate={handleGenerate} isLoading={isLoading} />
-          </div>
-
-          {/* Right Column */}
-          <div className="space-y-4">
-            {/* Weekly Plan Card - New Feature */}
-            <WeeklyPlanCard
-              plan={weeklyPlan}
-              isLoading={isLoadingPlan}
-              isGenerating={isGeneratingPlan}
-              currentWeekOffset={currentWeekOffset}
-              onGenerate={handleGenerateWeeklyPlan}
-              onDelete={handleDeleteWeeklyPlan}
-              onWeekNavigation={handleWeekNavigation}
-            />
 
             <WeeklyCalendarCard
               calendar={weeklyCalendar}
@@ -170,10 +156,6 @@ function Dashboard() {
               </div>
             )}
 
-            {/* Show success message only if NOT viewing the workout preview (which now has its own indicator) 
-                OR keep it for extra clarity? User said "removing button and showing Complete".
-                Let's keep the banner for now, it's consistent with other actions. 
-            */}
             {success && (
               <div className="bg-green-500/10 text-green-600 p-4 rounded-lg">
                 {success}
@@ -185,7 +167,7 @@ function Dashboard() {
                 workout={workout}
                 onRegister={handleRegister}
                 isRegistering={isRegistering}
-                isRegistered={!!success && success.includes("등록 완료")} // Pass registered state
+                isRegistered={!!success && success.includes("등록 완료")}
                 ftp={fitness?.profile?.ftp ?? 250}
               />
             )}
@@ -198,6 +180,19 @@ function Dashboard() {
                 </p>
               </div>
             )}
+          </div>
+
+          {/* Right Column - Weekly Plan */}
+          <div className="space-y-4">
+            <WeeklyPlanCard
+              plan={weeklyPlan}
+              isLoading={isLoadingPlan}
+              isGenerating={isGeneratingPlan}
+              currentWeekOffset={currentWeekOffset}
+              onGenerate={handleGenerateWeeklyPlan}
+              onDelete={handleDeleteWeeklyPlan}
+              onWeekNavigation={handleWeekNavigation}
+            />
           </div>
         </div>
       </main>
