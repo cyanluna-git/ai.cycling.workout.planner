@@ -1,11 +1,12 @@
 /**
- * Convert workout steps JSON to smooth chart data
+ * Convert workout steps JSON to chart data
  * 
- * Creates segment-based data points for smooth area chart rendering
- * instead of discrete 10-second bars
+ * Provides both legacy (fine-grained) and smooth (segment-based) data formats
  */
 
 import type { WorkoutStep, ChartDataPoint } from '@/types/workout';
+
+const RESOLUTION = 10; // 10-second resolution for legacy chart
 
 function getZoneColor(power: number): string {
     if (power <= 55) return '#10b981';      // Z1 - Recovery
@@ -16,75 +17,37 @@ function getZoneColor(power: number): string {
     return '#ef4444';                        // Z6/Z7 - Anaerobic
 }
 
-interface SmoothChartSegment {
-    startTime: number;    // in minutes
-    endTime: number;      // in minutes
-    startPower: number;   // %FTP
-    endPower: number;     // %FTP
-    color: string;
-}
-
 /**
- * Convert steps to smooth segment-based data for area chart
+ * Convert steps to fine-grained chart data (10-second resolution)
+ * Used by WorkoutChart for full-size display
  */
-export function stepsToSmoothSegments(steps: WorkoutStep[]): SmoothChartSegment[] {
-    const segments: SmoothChartSegment[] = [];
+export function stepsToChartData(steps: WorkoutStep[]): ChartDataPoint[] {
+    const chartData: ChartDataPoint[] = [];
     let currentTime = 0; // in seconds
 
     for (const step of steps) {
-        processStepToSegment(step, currentTime, segments);
-        currentTime += calculateStepDuration(step);
-    }
-
-    return segments;
-}
-
-/**
- * Convert segments to chart data points for smooth rendering
- * Uses minimal points: start and end of each segment
- */
-export function segmentsToChartData(segments: SmoothChartSegment[]): ChartDataPoint[] {
-    const chartData: ChartDataPoint[] = [];
-
-    for (let i = 0; i < segments.length; i++) {
-        const seg = segments[i];
-
-        // Add start point
-        chartData.push({
-            time: seg.startTime,
-            power: seg.startPower,
-            color: seg.color
-        });
-
-        // For ramps, add intermediate points for smooth curve
-        if (seg.startPower !== seg.endPower) {
-            const midTime = (seg.startTime + seg.endTime) / 2;
-            const midPower = (seg.startPower + seg.endPower) / 2;
-            chartData.push({
-                time: midTime,
-                power: midPower,
-                color: getZoneColor(midPower)
-            });
-        }
-
-        // Add end point (slightly before to create sharp transition)
-        chartData.push({
-            time: seg.endTime - 0.001,
-            power: seg.endPower,
-            color: seg.color
-        });
+        const stepDuration = calculateStepDuration(step);
+        processStep(step, currentTime, chartData);
+        currentTime += stepDuration;
     }
 
     return chartData;
 }
 
 /**
- * Legacy function for backward compatibility
- * Still used by some components
+ * Convert steps to smooth segment-based data for area chart
+ * Used by WorkoutThumbnailChart for compact display
  */
-export function stepsToChartData(steps: WorkoutStep[]): ChartDataPoint[] {
-    const segments = stepsToSmoothSegments(steps);
-    return segmentsToChartData(segments);
+export function stepsToSmoothData(steps: WorkoutStep[]): ChartDataPoint[] {
+    const chartData: ChartDataPoint[] = [];
+    let currentTime = 0; // in seconds
+
+    for (const step of steps) {
+        processStepSmooth(step, currentTime, chartData);
+        currentTime += calculateStepDuration(step);
+    }
+
+    return chartData;
 }
 
 function calculateStepDuration(step: WorkoutStep): number {
@@ -97,11 +60,10 @@ function calculateStepDuration(step: WorkoutStep): number {
     return step.duration || 0;
 }
 
-function processStepToSegment(
-    step: WorkoutStep,
-    startTime: number,
-    segments: SmoothChartSegment[]
-): void {
+/**
+ * Process step for fine-grained data (10-second blocks)
+ */
+function processStep(step: WorkoutStep, startTime: number, chartData: ChartDataPoint[]): void {
     const { duration, power, ramp, repeat, steps: nestedSteps } = step;
 
     // Handle repeat blocks
@@ -109,7 +71,80 @@ function processStepToSegment(
         let currentTime = startTime;
         for (let i = 0; i < repeat; i++) {
             for (const nestedStep of nestedSteps) {
-                processStepToSegment(nestedStep, currentTime, segments);
+                processStep(nestedStep, currentTime, chartData);
+                currentTime += nestedStep.duration || 0;
+            }
+        }
+        return;
+    }
+
+    if (!power) return;
+
+    // Handle ramp steps
+    if (ramp && power.start !== undefined && power.end !== undefined) {
+        const steps = Math.max(1, Math.floor(duration / RESOLUTION));
+        const powerDiff = power.end - power.start;
+
+        for (let i = 0; i < steps; i++) {
+            const progress = i / steps;
+            const powerValue = Math.round(power.start + powerDiff * progress);
+
+            chartData.push({
+                time: (startTime + i * RESOLUTION) / 60,
+                power: powerValue,
+                color: getZoneColor(powerValue)
+            });
+        }
+
+        // Handle remaining time
+        const remainingTime = duration % RESOLUTION;
+        if (remainingTime > 0.1) {
+            const progress = steps / (steps + 1);
+            const powerValue = Math.round(power.start + powerDiff * progress);
+            chartData.push({
+                time: (startTime + steps * RESOLUTION) / 60,
+                power: powerValue,
+                color: getZoneColor(powerValue)
+            });
+        }
+    }
+    // Handle steady state steps
+    else if (power.value !== undefined) {
+        const steps = Math.max(1, Math.floor(duration / RESOLUTION));
+        const powerValue = power.value;
+
+        for (let i = 0; i < steps; i++) {
+            chartData.push({
+                time: (startTime + i * RESOLUTION) / 60,
+                power: powerValue,
+                color: getZoneColor(powerValue)
+            });
+        }
+
+        // Handle remaining time
+        const remainingTime = duration % RESOLUTION;
+        if (remainingTime > 0.1) {
+            chartData.push({
+                time: (startTime + steps * RESOLUTION) / 60,
+                power: powerValue,
+                color: getZoneColor(powerValue)
+            });
+        }
+    }
+}
+
+/**
+ * Process step for smooth area chart (segment endpoints only)
+ */
+function processStepSmooth(step: WorkoutStep, startTime: number, chartData: ChartDataPoint[]): void {
+    const { duration, power, ramp, repeat, steps: nestedSteps } = step;
+
+    // Handle repeat blocks
+    if (repeat && nestedSteps) {
+        let currentTime = startTime;
+        for (let i = 0; i < repeat; i++) {
+            for (const nestedStep of nestedSteps) {
+                processStepSmooth(nestedStep, currentTime, chartData);
                 currentTime += nestedStep.duration || 0;
             }
         }
@@ -123,21 +158,27 @@ function processStepToSegment(
 
     // Handle ramp steps
     if (ramp && power.start !== undefined && power.end !== undefined) {
-        segments.push({
-            startTime: startTimeMin,
-            endTime: endTimeMin,
-            startPower: power.start,
-            endPower: power.end,
-            color: getZoneColor((power.start + power.end) / 2)
+        chartData.push({
+            time: startTimeMin,
+            power: power.start,
+            color: getZoneColor(power.start)
+        });
+        chartData.push({
+            time: endTimeMin - 0.001,
+            power: power.end,
+            color: getZoneColor(power.end)
         });
     }
     // Handle steady state steps
     else if (power.value !== undefined) {
-        segments.push({
-            startTime: startTimeMin,
-            endTime: endTimeMin,
-            startPower: power.value,
-            endPower: power.value,
+        chartData.push({
+            time: startTimeMin,
+            power: power.value,
+            color: getZoneColor(power.value)
+        });
+        chartData.push({
+            time: endTimeMin - 0.001,
+            power: power.value,
             color: getZoneColor(power.value)
         });
     }
