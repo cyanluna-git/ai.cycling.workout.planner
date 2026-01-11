@@ -146,6 +146,41 @@ MAIN_SEGMENTS = _load_modules("main")
 REST_SEGMENTS = _load_modules("rest")
 COOLDOWN_MODULES = _load_modules("cooldown")
 
+# Combined dictionary of all modules for easy lookup
+ALL_MODULES = {**WARMUP_MODULES, **MAIN_SEGMENTS, **REST_SEGMENTS, **COOLDOWN_MODULES}
+
+
+def get_module_category(module_key: str) -> str:
+    """Get the category of a module (Warmup, Main, Cooldown, Rest).
+
+    Uses the 'category' field if available, otherwise falls back to
+    checking which dictionary contains the module.
+
+    Args:
+        module_key: The module key (filename without extension)
+
+    Returns:
+        Category string: 'Warmup', 'Main', 'Cooldown', 'Rest', or 'Unknown'
+    """
+    module_data = ALL_MODULES.get(module_key)
+
+    if module_data:
+        # Use category field if available
+        if "category" in module_data:
+            return module_data["category"]
+
+        # Fallback: check which dictionary contains the module
+        if module_key in WARMUP_MODULES:
+            return "Warmup"
+        elif module_key in COOLDOWN_MODULES:
+            return "Cooldown"
+        elif module_key in REST_SEGMENTS:
+            return "Rest"
+        elif module_key in MAIN_SEGMENTS:
+            return "Main"
+
+    return "Unknown"
+
 
 def get_filtered_modules(exclude_barcode: bool = False) -> tuple:
     """Get all modules with optional barcode filtering.
@@ -220,7 +255,7 @@ def get_module_inventory_text(
 
     def _fmt(key, data, training_style=None):
         # Format: [key] Dur: 10m (SHORT) | TSS: 12 | IF: 0.85 | Type: Threshold | Styles: [list] | Desc: Name
-        dur_min = data['duration_minutes']
+        dur_min = data["duration_minutes"]
         dur = f"{dur_min}m"
         length_cat = _get_length_category(dur_min)
         tss = data.get("estimated_tss", "?")
@@ -238,8 +273,12 @@ def get_module_inventory_text(
 
     # Group main segments by type for better organization
     inventory.append("\n--- MAIN SEGMENTS (organized by type and length) ---")
-    inventory.append("Length categories: SHORT (<15min) | MID (15-45min) | LONG (45-75min) | VERYLONG (75min+)")
-    inventory.append("For workouts 120min+, combine multiple LONG/VERYLONG Endurance modules\n")
+    inventory.append(
+        "Length categories: SHORT (<15min) | MID (15-45min) | LONG (45-75min) | VERYLONG (75min+)"
+    )
+    inventory.append(
+        "For workouts 120min+, combine multiple LONG/VERYLONG Endurance modules\n"
+    )
 
     # Group by type
     types_order = ["Endurance", "Tempo", "SweetSpot", "Threshold", "VO2max", "Mixed"]

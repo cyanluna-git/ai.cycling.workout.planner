@@ -1,6 +1,7 @@
 {
   "name": "Ciabatta 3x9",
   "duration_minutes": 27,
+  "category": "Main",
   "type": "VO2max",
   "description": "3 sets of 9x40s @125% with 20s rest. Extended VO2max capacity work.",
   "structure": [

@@ -1,7 +1,9 @@
 {
   "name": "VO2 Strong 4x4min",
   "duration_minutes": 28,
+  "category": "Main",
   "type": "VO2max",
+  "description": "Main module: VO2 Strong 4x4min",
   "structure": [
     {
       "type": "steady",

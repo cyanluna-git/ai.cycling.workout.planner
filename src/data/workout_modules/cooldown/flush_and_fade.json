@@ -1,6 +1,8 @@
 {
   "name": "Flush and Fade",
   "duration_minutes": 15,
+  "category": "Cooldown",
+  "description": "Cooldown module: Flush and Fade",
   "structure": [
     {
       "type": "steady",

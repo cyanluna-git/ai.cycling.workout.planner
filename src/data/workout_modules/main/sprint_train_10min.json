@@ -1,67 +1,68 @@
 {
-    "name": "Sprint Power 10min",
-    "duration_minutes": 10,
-    "type": "Anaerobic",
-    "description": "5x Max Effort Sprints (15s) with long recovery. Focus on peak power production.",
-    "structure": [
-        {
-            "type": "steady",
-            "power": 55,
-            "duration_minutes": 1
-        },
-        {
-            "type": "steady",
-            "power": 200,
-            "duration_seconds": 15
-        },
-        {
-            "type": "steady",
-            "power": 50,
-            "duration_minutes": 1,
-            "duration_seconds": 45
-        },
-        {
-            "type": "steady",
-            "power": 200,
-            "duration_seconds": 15
-        },
-        {
-            "type": "steady",
-            "power": 50,
-            "duration_minutes": 1,
-            "duration_seconds": 45
-        },
-        {
-            "type": "steady",
-            "power": 200,
-            "duration_seconds": 15
-        },
-        {
-            "type": "steady",
-            "power": 50,
-            "duration_minutes": 1,
-            "duration_seconds": 45
-        },
-        {
-            "type": "steady",
-            "power": 200,
-            "duration_seconds": 15
-        },
-        {
-            "type": "steady",
-            "power": 50,
-            "duration_minutes": 1,
-            "duration_seconds": 45
-        },
-        {
-            "type": "steady",
-            "power": 200,
-            "duration_seconds": 15
-        },
-        {
-            "type": "steady",
-            "power": 50,
-            "duration_seconds": 45
-        }
-    ]
+  "name": "Sprint Power 10min",
+  "duration_minutes": 10,
+  "category": "Main",
+  "type": "Anaerobic",
+  "description": "5x Max Effort Sprints (15s) with long recovery. Focus on peak power production.",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 55,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 200,
+      "duration_seconds": 15
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 1,
+      "duration_seconds": 45
+    },
+    {
+      "type": "steady",
+      "power": 200,
+      "duration_seconds": 15
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 1,
+      "duration_seconds": 45
+    },
+    {
+      "type": "steady",
+      "power": 200,
+      "duration_seconds": 15
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 1,
+      "duration_seconds": 45
+    },
+    {
+      "type": "steady",
+      "power": 200,
+      "duration_seconds": 15
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 1,
+      "duration_seconds": 45
+    },
+    {
+      "type": "steady",
+      "power": 200,
+      "duration_seconds": 15
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_seconds": 45
+    }
+  ]
 }

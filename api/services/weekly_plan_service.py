@@ -440,10 +440,7 @@ class WeeklyPlanGenerator:
         Returns:
             Reordered list with warmup modules first, cooldown modules last
         """
-        from src.services.workout_modules import (
-            WARMUP_MODULES,
-            COOLDOWN_MODULES,
-        )
+        from src.services.workout_modules import get_module_category
 
         if not modules:
             return modules
@@ -453,9 +450,10 @@ class WeeklyPlanGenerator:
         cooldown_modules = []
 
         for module in modules:
-            if module in WARMUP_MODULES:
+            category = get_module_category(module)
+            if category == "Warmup":
                 warmup_modules.append(module)
-            elif module in COOLDOWN_MODULES:
+            elif category == "Cooldown":
                 cooldown_modules.append(module)
             else:
                 main_modules.append(module)

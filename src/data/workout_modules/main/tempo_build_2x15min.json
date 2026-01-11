@@ -1,7 +1,9 @@
 {
   "name": "Tempo Build 2x15min",
   "duration_minutes": 35,
+  "category": "Main",
   "type": "Tempo",
+  "description": "Main module: Tempo Build 2x15min",
   "structure": [
     {
       "type": "steady",

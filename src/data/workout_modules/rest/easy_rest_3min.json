@@ -1,6 +1,8 @@
 {
   "name": "Easy Rest 3min",
   "duration_minutes": 3,
+  "category": "Rest",
+  "description": "Rest module: Easy Rest 3min",
   "structure": [
     {
       "type": "steady",

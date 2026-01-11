@@ -1,7 +1,9 @@
 {
   "name": "SST Classic 3x10min",
   "duration_minutes": 40,
+  "category": "Main",
   "type": "SweetSpot",
+  "description": "Main module: SST Classic 3x10min",
   "structure": [
     {
       "type": "steady",

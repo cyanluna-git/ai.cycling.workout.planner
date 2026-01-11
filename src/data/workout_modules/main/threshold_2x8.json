@@ -1,7 +1,9 @@
 {
   "name": "2x8min Threshold",
   "duration_minutes": 20,
+  "category": "Main",
   "type": "Threshold",
+  "description": "Main module: 2x8min Threshold",
   "structure": [
     {
       "type": "main_set_classic",

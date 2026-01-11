@@ -1,6 +1,8 @@
 {
   "name": "Extended Flush 25min",
   "duration_minutes": 25,
+  "category": "Cooldown",
+  "description": "Cooldown module: Extended Flush 25min",
   "structure": [
     {
       "type": "steady",

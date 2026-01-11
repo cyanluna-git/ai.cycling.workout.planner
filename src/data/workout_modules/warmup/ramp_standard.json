@@ -1,6 +1,8 @@
 {
   "name": "Standard Ramp",
   "duration_minutes": 10,
+  "category": "Warmup",
+  "description": "Warmup module: Standard Ramp",
   "structure": [
     {
       "type": "warmup_ramp",

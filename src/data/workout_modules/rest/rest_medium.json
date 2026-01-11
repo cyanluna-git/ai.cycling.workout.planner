@@ -1,6 +1,8 @@
 {
   "name": "Medium Rest",
   "duration_minutes": 4,
+  "category": "Rest",
+  "description": "Rest module: Medium Rest",
   "structure": [
     {
       "type": "steady",

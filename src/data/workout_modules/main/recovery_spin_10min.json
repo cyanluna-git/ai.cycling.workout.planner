@@ -1,13 +1,14 @@
 {
-    "name": "Recovery Spin 10min",
-    "duration_minutes": 10,
-    "type": "Recovery",
-    "description": "Just spinning the legs at very low intensity (50-55%). Active recovery filler.",
-    "structure": [
-        {
-            "type": "steady",
-            "power": 55,
-            "duration_minutes": 10
-        }
-    ]
+  "name": "Recovery Spin 10min",
+  "duration_minutes": 10,
+  "category": "Main",
+  "type": "Recovery",
+  "description": "Just spinning the legs at very low intensity (50-55%). Active recovery filler.",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 55,
+      "duration_minutes": 10
+    }
+  ]
 }

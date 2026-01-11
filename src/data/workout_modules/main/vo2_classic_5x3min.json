@@ -1,7 +1,9 @@
 {
   "name": "VO2 Classic 5x3min",
   "duration_minutes": 27,
+  "category": "Main",
   "type": "VO2max",
+  "description": "Main module: VO2 Classic 5x3min",
   "structure": [
     {
       "type": "steady",

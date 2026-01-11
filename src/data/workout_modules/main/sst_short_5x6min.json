@@ -1,7 +1,9 @@
 {
   "name": "SST Short 5x6min",
   "duration_minutes": 42,
+  "category": "Main",
   "type": "SweetSpot",
+  "description": "Main module: SST Short 5x6min",
   "structure": [
     {
       "type": "steady",

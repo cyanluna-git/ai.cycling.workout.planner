@@ -1,7 +1,9 @@
 {
   "name": "3x3min VO2max",
   "duration_minutes": 15,
+  "category": "Main",
   "type": "VO2max",
+  "description": "Main module: 3x3min VO2max",
   "structure": [
     {
       "type": "main_set_classic",

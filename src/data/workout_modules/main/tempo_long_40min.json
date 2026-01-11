@@ -1,7 +1,9 @@
 {
   "name": "Tempo Long 40min",
   "duration_minutes": 40,
+  "category": "Main",
   "type": "Tempo",
+  "description": "Main module: Tempo Long 40min",
   "structure": [
     {
       "type": "steady",

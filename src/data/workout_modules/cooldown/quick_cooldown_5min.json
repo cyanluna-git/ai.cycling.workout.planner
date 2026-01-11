@@ -1,6 +1,8 @@
 {
   "name": "Quick Cooldown 5min",
   "duration_minutes": 5,
+  "category": "Cooldown",
+  "description": "Cooldown module: Quick Cooldown 5min",
   "structure": [
     {
       "type": "cooldown_ramp",

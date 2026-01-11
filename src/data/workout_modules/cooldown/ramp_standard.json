@@ -1,6 +1,8 @@
 {
   "name": "Standard Cooldown",
   "duration_minutes": 10,
+  "category": "Cooldown",
+  "description": "Cooldown module: Standard Cooldown",
   "structure": [
     {
       "type": "cooldown_ramp",

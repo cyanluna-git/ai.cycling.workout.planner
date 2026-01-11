@@ -1,19 +1,19 @@
 {
-    "name": "Progressive Warmup 15min",
-    "duration_minutes": 15,
-    "type": "Warmup",
-    "description": "Two-stage ramp warmup. 10min very gradual, followed by 5min tempo activation.",
-    "structure": [
-        {
-            "type": "warmup_ramp",
-            "start_power": 45,
-            "end_power": 70,
-            "duration_minutes": 10
-        },
-        {
-            "type": "steady",
-            "power": 80,
-            "duration_minutes": 5
-        }
-    ]
+  "name": "Progressive Warmup 15min",
+  "duration_minutes": 15,
+  "category": "Warmup",
+  "description": "Two-stage ramp warmup. 10min very gradual, followed by 5min tempo activation.",
+  "structure": [
+    {
+      "type": "warmup_ramp",
+      "start_power": 45,
+      "end_power": 70,
+      "duration_minutes": 10
+    },
+    {
+      "type": "steady",
+      "power": 80,
+      "duration_minutes": 5
+    }
+  ]
 }

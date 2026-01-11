@@ -1,6 +1,7 @@
 {
   "name": "Hour of Power",
   "duration_minutes": 30,
+  "category": "Main",
   "type": "Threshold",
   "description": "3 blocks of 13x 20s @120% with 2min @78-82% tempo. Tempo with VO2 spikes.",
   "structure": [

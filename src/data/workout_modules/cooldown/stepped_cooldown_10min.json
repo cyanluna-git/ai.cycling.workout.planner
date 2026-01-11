@@ -1,28 +1,28 @@
 {
-    "name": "Stepped Cooldown 10min",
-    "duration_minutes": 10,
-    "type": "Cooldown",
-    "description": "Decreasing intensity in steps (75% -> 60% -> 45% -> 35%).",
-    "structure": [
-        {
-            "type": "steady",
-            "power": 75,
-            "duration_minutes": 2
-        },
-        {
-            "type": "steady",
-            "power": 60,
-            "duration_minutes": 3
-        },
-        {
-            "type": "steady",
-            "power": 45,
-            "duration_minutes": 3
-        },
-        {
-            "type": "steady",
-            "power": 35,
-            "duration_minutes": 2
-        }
-    ]
+  "name": "Stepped Cooldown 10min",
+  "duration_minutes": 10,
+  "category": "Cooldown",
+  "description": "Decreasing intensity in steps (75% -> 60% -> 45% -> 35%).",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 75,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 45,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 35,
+      "duration_minutes": 2
+    }
+  ]
 }

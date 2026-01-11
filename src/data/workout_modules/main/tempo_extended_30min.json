@@ -1,7 +1,9 @@
 {
   "name": "Tempo Extended 30min",
   "duration_minutes": 30,
+  "category": "Main",
   "type": "Tempo",
+  "description": "Main module: Tempo Extended 30min",
   "structure": [
     {
       "type": "steady",

@@ -1,7 +1,9 @@
 {
   "name": "Threshold Sustained 5x6min",
   "duration_minutes": 46,
+  "category": "Main",
   "type": "Threshold",
+  "description": "Main module: Threshold Sustained 5x6min",
   "structure": [
     {
       "type": "steady",

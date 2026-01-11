@@ -1,13 +1,14 @@
 {
-    "name": "Endurance 45min",
-    "duration_minutes": 45,
-    "type": "Endurance",
-    "description": "45-minute block of steady Zone 2 aerobic work at 68% FTP. Long base building.",
-    "structure": [
-        {
-            "type": "steady",
-            "power": 68,
-            "duration_minutes": 45
-        }
-    ]
+  "name": "Endurance 45min",
+  "duration_minutes": 45,
+  "category": "Main",
+  "type": "Endurance",
+  "description": "45-minute block of steady Zone 2 aerobic work at 68% FTP. Long base building.",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 68,
+      "duration_minutes": 45
+    }
+  ]
 }

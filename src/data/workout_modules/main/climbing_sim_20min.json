@@ -1,14 +1,15 @@
 {
-    "name": "Climbing Sim 20min",
-    "duration_minutes": 20,
-    "type": "SweetSpot",
-    "description": "A steady, unrelenting climb simulation. Ramping slightly from 85% to 92%.",
-    "structure": [
-        {
-            "type": "ramp",
-            "start_power": 85,
-            "end_power": 92,
-            "duration_minutes": 20
-        }
-    ]
+  "name": "Climbing Sim 20min",
+  "duration_minutes": 20,
+  "category": "Main",
+  "type": "SweetSpot",
+  "description": "A steady, unrelenting climb simulation. Ramping slightly from 85% to 92%.",
+  "structure": [
+    {
+      "type": "ramp",
+      "start_power": 85,
+      "end_power": 92,
+      "duration_minutes": 20
+    }
+  ]
 }

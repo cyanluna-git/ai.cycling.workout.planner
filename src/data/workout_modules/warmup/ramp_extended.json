@@ -1,6 +1,8 @@
 {
   "name": "Extended Warmup",
   "duration_minutes": 15,
+  "category": "Warmup",
+  "description": "Warmup module: Extended Warmup",
   "structure": [
     {
       "type": "warmup_ramp",

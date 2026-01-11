@@ -1,7 +1,9 @@
 {
   "name": "SST Steady 5x8min",
   "duration_minutes": 56,
+  "category": "Main",
   "type": "SweetSpot",
+  "description": "Main module: SST Steady 5x8min",
   "structure": [
     {
       "type": "steady",

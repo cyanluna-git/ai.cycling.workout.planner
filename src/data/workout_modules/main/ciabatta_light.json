@@ -1,6 +1,7 @@
 {
   "name": "Ciabatta Light 40/20",
   "duration_minutes": 20,
+  "category": "Main",
   "type": "VO2max",
   "description": "2x10 bursts of 40s @125%/120% with 20s rest. High intensity microbursts.",
   "structure": [

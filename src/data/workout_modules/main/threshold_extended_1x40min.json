@@ -1,7 +1,9 @@
 {
   "name": "Threshold Extended 1x40min",
   "duration_minutes": 40,
+  "category": "Main",
   "type": "Threshold",
+  "description": "Main module: Threshold Extended 1x40min",
   "structure": [
     {
       "type": "steady",

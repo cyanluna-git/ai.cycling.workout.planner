@@ -1,6 +1,8 @@
 {
   "name": "Flush Rest 3min",
   "duration_minutes": 3,
+  "category": "Rest",
+  "description": "Rest module: Flush Rest 3min",
   "structure": [
     {
       "type": "steady",

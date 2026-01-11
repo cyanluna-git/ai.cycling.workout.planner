@@ -1,6 +1,8 @@
 {
   "name": "Stepped Warmup 20min",
   "duration_minutes": 20,
+  "category": "Warmup",
+  "description": "Warmup module: Stepped Warmup 20min",
   "structure": [
     {
       "type": "steady",

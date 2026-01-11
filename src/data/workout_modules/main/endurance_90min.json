@@ -1,13 +1,14 @@
 {
-    "name": "Endurance 90min",
-    "duration_minutes": 90,
-    "type": "Endurance",
-    "description": "Extended 90-minute Zone 2 block at 65-70% FTP. FatMax zone training for long polarized rides. Maximum fat oxidation development.",
-    "structure": [
-        {
-            "type": "steady",
-            "power": 68,
-            "duration_minutes": 90
-        }
-    ]
+  "name": "Endurance 90min",
+  "duration_minutes": 90,
+  "category": "Main",
+  "type": "Endurance",
+  "description": "Extended 90-minute Zone 2 block at 65-70% FTP. FatMax zone training for long polarized rides. Maximum fat oxidation development.",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 68,
+      "duration_minutes": 90
+    }
+  ]
 }

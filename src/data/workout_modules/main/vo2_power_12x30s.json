@@ -1,7 +1,9 @@
 {
   "name": "VO2 Power 12x30s",
   "duration_minutes": 12,
+  "category": "Main",
   "type": "VO2max",
+  "description": "Main module: VO2 Power 12x30s",
   "structure": [
     {
       "type": "steady",

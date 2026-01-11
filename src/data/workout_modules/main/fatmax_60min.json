@@ -1,13 +1,14 @@
 {
-    "name": "FatMax 60min",
-    "duration_minutes": 60,
-    "type": "Endurance",
-    "description": "60-minute FatMax zone training at 60% FTP. Optimizes fat oxidation capacity for long endurance rides. Perfect for polarized training long rides.",
-    "structure": [
-        {
-            "type": "steady",
-            "power": 60,
-            "duration_minutes": 60
-        }
-    ]
+  "name": "FatMax 60min",
+  "duration_minutes": 60,
+  "category": "Main",
+  "type": "Endurance",
+  "description": "60-minute FatMax zone training at 60% FTP. Optimizes fat oxidation capacity for long endurance rides. Perfect for polarized training long rides.",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_minutes": 60
+    }
+  ]
 }

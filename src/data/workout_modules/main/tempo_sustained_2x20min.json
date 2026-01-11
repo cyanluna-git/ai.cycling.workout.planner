@@ -1,7 +1,9 @@
 {
   "name": "Tempo Sustained 2x20min",
   "duration_minutes": 45,
+  "category": "Main",
   "type": "Tempo",
+  "description": "Main module: Tempo Sustained 2x20min",
   "structure": [
     {
       "type": "steady",

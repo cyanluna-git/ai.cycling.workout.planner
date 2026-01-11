@@ -1,7 +1,9 @@
 {
   "name": "Over Under 4x9min",
   "duration_minutes": 36,
+  "category": "Main",
   "type": "Mixed",
+  "description": "Main module: Over Under 4x9min",
   "structure": [
     {
       "type": "steady",

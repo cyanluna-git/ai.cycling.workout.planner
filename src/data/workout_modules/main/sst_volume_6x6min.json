@@ -1,7 +1,9 @@
 {
   "name": "SST Volume 6x6min",
   "duration_minutes": 51,
+  "category": "Main",
   "type": "SweetSpot",
+  "description": "Main module: SST Volume 6x6min",
   "structure": [
     {
       "type": "steady",

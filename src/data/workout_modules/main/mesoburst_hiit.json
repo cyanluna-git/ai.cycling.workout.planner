@@ -1,6 +1,7 @@
 {
   "name": "MesoBurst HIIT",
   "duration_minutes": 15,
+  "category": "Main",
   "type": "VO2max",
   "description": "Descending anaerobic bursts: 90s@150%, 60s@140%, 60s@130%, 60s@120%, 60s@110%. Maximum VO2 recruitment.",
   "structure": [

@@ -1,6 +1,8 @@
 {
   "name": "Race Prep Warmup 25min",
   "duration_minutes": 25,
+  "category": "Warmup",
+  "description": "Warmup module: Race Prep Warmup 25min",
   "structure": [
     {
       "type": "steady",

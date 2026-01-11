@@ -1,7 +1,9 @@
 {
   "name": "VO2 Extended 5x5min",
   "duration_minutes": 37,
+  "category": "Main",
   "type": "VO2max",
+  "description": "Main module: VO2 Extended 5x5min",
   "structure": [
     {
       "type": "steady",

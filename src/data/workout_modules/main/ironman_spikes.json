@@ -1,6 +1,7 @@
 {
   "name": "Ironman Spikes",
   "duration_minutes": 35,
+  "category": "Main",
   "type": "Endurance",
   "description": "Long Z2 blocks with 20s @120% micro-bursts. Ironman-style endurance training.",
   "structure": [

@@ -1,7 +1,9 @@
 {
   "name": "30/15 Micro Intervals",
   "duration_minutes": 10,
+  "category": "Main",
   "type": "VO2max",
+  "description": "Main module: 30/15 Micro Intervals",
   "structure": [
     {
       "type": "barcode",

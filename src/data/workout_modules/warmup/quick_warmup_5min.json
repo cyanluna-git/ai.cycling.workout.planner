@@ -1,6 +1,8 @@
 {
   "name": "Quick Warmup 5min",
   "duration_minutes": 5,
+  "category": "Warmup",
+  "description": "Warmup module: Quick Warmup 5min",
   "structure": [
     {
       "type": "warmup_ramp",
