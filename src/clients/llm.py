@@ -69,7 +69,7 @@ class OpenAIClient(BaseLLMClient):
                 {"role": "user", "content": user_prompt},
             ],
             temperature=0.7,
-            max_tokens=1000,
+            max_tokens=4000,
         )
 
         return response.choices[0].message.content or ""
@@ -209,7 +209,7 @@ class GroqClient(BaseLLMClient):
                 {"role": "user", "content": user_prompt},
             ],
             temperature=0.7,
-            max_tokens=1000,
+            max_tokens=4000,
         )
 
         return response.choices[0].message.content or ""
@@ -254,7 +254,7 @@ class HuggingFaceClient(BaseLLMClient):
         full_prompt = f"{system_prompt}\n\n{user_prompt}"
         payload = {
             "inputs": full_prompt,
-            "parameters": {"max_new_tokens": 1000, "temperature": 0.7},
+            "parameters": {"max_new_tokens": 4000, "temperature": 0.7},
         }
 
         response = requests.post(self.base_url, headers=headers, json=payload)
@@ -327,7 +327,7 @@ class VercelGatewayClient(BaseLLMClient):
                     {"role": "user", "content": user_prompt},
                 ],
                 temperature=0.7,
-                max_tokens=1000,
+                max_tokens=4000,
             )
             return response.choices[0].message.content or ""
         except Exception as e:
@@ -345,7 +345,7 @@ class VercelGatewayClient(BaseLLMClient):
                             {"role": "user", "content": user_prompt},
                         ],
                         temperature=0.7,
-                        max_tokens=1000,
+                        max_tokens=4000,
                     )
                     return response.choices[0].message.content or ""
                 except Exception as fallback_error:

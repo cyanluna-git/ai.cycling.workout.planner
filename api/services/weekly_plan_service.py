@@ -323,13 +323,28 @@ class WeeklyPlanGenerator:
 
         logger.info(f"Generating weekly plan for {week_start} to {week_end}")
 
-        # Generate with LLM
-        response = self.llm.generate(
-            system_prompt=prompt, user_prompt="Generate the 7-day workout plan now."
-        )
+        # Generate with LLM (with retry on parse failure)
+        max_retries = 2
+        for attempt in range(max_retries):
+            response = self.llm.generate(
+                system_prompt=prompt,
+                user_prompt="Generate the 7-day workout plan now. Output ONLY valid JSON array, no markdown or extra text.",
+            )
 
-        # Parse response
-        daily_plans = self._parse_response(response, week_start)
+            # Parse response
+            daily_plans = self._parse_response(response, week_start)
+
+            # Check if we got fallback plan (indicates parse failure)
+            if (
+                daily_plans
+                and daily_plans[0].rationale != "Fallback plan - AI generation failed"
+            ):
+                # Successfully parsed
+                break
+            elif attempt < max_retries - 1:
+                logger.warning(f"Parse failed on attempt {attempt + 1}, retrying...")
+            else:
+                logger.error(f"All {max_retries} attempts failed, using fallback plan")
 
         # Calculate total TSS
         total_tss = sum(dp.estimated_tss for dp in daily_plans)
@@ -389,6 +404,33 @@ class WeeklyPlanGenerator:
 
         return estimated_tss
 
+    def _clean_json_string(self, json_str: str) -> str:
+        """Clean common JSON formatting issues from LLM responses.
+
+        Args:
+            json_str: Raw JSON string that may have formatting issues
+
+        Returns:
+            Cleaned JSON string
+        """
+        # Remove trailing commas before closing brackets/braces (common LLM error)
+        # Pattern: comma followed by optional whitespace and closing bracket/brace
+        cleaned = re.sub(r",\s*(\]|\})", r"\1", json_str)
+
+        # Remove JavaScript-style comments (// and /* */)
+        cleaned = re.sub(r"//.*?(?=\n|$)", "", cleaned)
+        cleaned = re.sub(r"/\*.*?\*/", "", cleaned, flags=re.DOTALL)
+
+        # Fix unquoted keys (convert key: to "key":)
+        cleaned = re.sub(r"(?<=[{\[,])\s*(\w+)\s*:", r' "\1":', cleaned)
+
+        # Remove markdown code block markers if present
+        cleaned = re.sub(r"^```json\s*", "", cleaned)
+        cleaned = re.sub(r"^```\s*", "", cleaned)
+        cleaned = re.sub(r"\s*```$", "", cleaned)
+
+        return cleaned.strip()
+
     def _parse_response(self, response: str, week_start: date) -> List[DailyPlan]:
         """Parse LLM response into DailyPlan objects.
 
@@ -405,12 +447,22 @@ class WeeklyPlanGenerator:
             json_match = re.search(r"\[[\s\S]*\]", response)
             if json_match:
                 json_str = json_match.group(0)
-                plans_data = json.loads(json_str)
             else:
-                plans_data = json.loads(response)
+                json_str = response
+
+            # First attempt: parse as-is
+            try:
+                plans_data = json.loads(json_str)
+            except json.JSONDecodeError:
+                # Second attempt: clean JSON and retry
+                logger.warning("Initial JSON parse failed, attempting cleanup...")
+                cleaned_json = self._clean_json_string(json_str)
+                plans_data = json.loads(cleaned_json)
+                logger.info("JSON cleanup successful!")
+
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse weekly plan response: {e}")
-            logger.debug(f"Response was: {response[:500]}...")
+            logger.error(f"Response was: {response[:1000]}...")
             # Return default plan
             return self._generate_fallback_plan(week_start)
 
