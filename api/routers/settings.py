@@ -32,6 +32,7 @@ class UserSettings(BaseModel):
     training_style: str = (
         "auto"  # auto, polarized, norwegian, sweetspot, threshold, endurance
     )
+    training_focus: str = "maintain"  # recovery, maintain, build
     preferred_duration: int = 60  # Default workout duration in minutes
     weekly_plan_enabled: bool = False  # Opt-in for weekly plan auto-generation
     weekly_plan_day: int = 0  # Day to generate (0=Sunday)
@@ -87,6 +88,7 @@ async def get_settings(user: dict = Depends(get_current_user)):
             ),
             # New weekly planning fields
             training_style=settings_data.get("training_style", "auto"),
+            training_focus=settings_data.get("training_focus", "maintain"),
             preferred_duration=settings_data.get("preferred_duration", 60),
             weekly_plan_enabled=settings_data.get("weekly_plan_enabled", False),
             weekly_plan_day=settings_data.get("weekly_plan_day", 0),
@@ -115,6 +117,7 @@ async def update_settings(
                 "exclude_barcode_workouts": settings.exclude_barcode_workouts,
                 # New weekly planning fields
                 "training_style": settings.training_style,
+                "training_focus": settings.training_focus,
                 "preferred_duration": settings.preferred_duration,
                 "weekly_plan_enabled": settings.weekly_plan_enabled,
                 "weekly_plan_day": settings.weekly_plan_day,
@@ -124,6 +127,7 @@ async def update_settings(
 
         return {"message": "Settings updated successfully"}
     except Exception as e:
+        logger.exception(f"Failed to update settings for user {user['id']}: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
 
