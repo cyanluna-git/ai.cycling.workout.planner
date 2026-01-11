@@ -152,21 +152,20 @@ def _smart_fallback_for_unknown_block(block_type: str, block: dict) -> Optional[
         work_duration = block.get("work_duration_seconds") or block.get("work_duration", 300)
         rest_duration = block.get("rest_duration_seconds") or block.get("rest_duration", 120)
 
-        interval_steps = []
-        for _ in range(reps):
-            interval_steps.append({
-                "duration": work_duration,
-                "power": {"value": work_power, "units": "%ftp"},
-            })
-            interval_steps.append({
-                "duration": rest_duration,
-                "power": {"value": rest_power, "units": "%ftp"},
-            })
+        # Single work/rest pair - repetitions handled by repeat key
+        work_step = {
+            "duration": work_duration,
+            "power": {"value": work_power, "units": "%ftp"},
+        }
+        rest_step = {
+            "duration": rest_duration,
+            "power": {"value": rest_power, "units": "%ftp"},
+        }
 
         return {
             "duration": 0,
             "repeat": reps,
-            "steps": interval_steps,
+            "steps": [work_step, rest_step],  # Single pair, not expanded
         }
 
     # Rest patterns
@@ -320,29 +319,22 @@ def convert_structure_to_steps(module_keys: List[str], ftp: int) -> List[dict]:
                 )
 
             elif block_type == "main_set_classic":
-                # Interval block: work + rest repeated
-                interval_steps = []
-                for _ in range(block["repetitions"]):
-                    # Work interval
-                    interval_steps.append(
-                        {
-                            "duration": block["work_duration_seconds"],
-                            "power": {"value": block["work_power"], "units": "%ftp"},
-                        }
-                    )
-                    # Rest interval
-                    interval_steps.append(
-                        {
-                            "duration": block["rest_duration_seconds"],
-                            "power": {"value": block["rest_power"], "units": "%ftp"},
-                        }
-                    )
+                # Interval block: single work + rest pair, repetitions handled by repeat key
+                # Frontend stepsToChartData() and ZWO converter both use repeat to loop
+                work_step = {
+                    "duration": block["work_duration_seconds"],
+                    "power": {"value": block["work_power"], "units": "%ftp"},
+                }
+                rest_step = {
+                    "duration": block["rest_duration_seconds"],
+                    "power": {"value": block["rest_power"], "units": "%ftp"},
+                }
 
                 steps.append(
                     {
                         "duration": 0,  # Duration handled by nested steps
                         "repeat": block["repetitions"],
-                        "steps": interval_steps,
+                        "steps": [work_step, rest_step],  # Single pair, not expanded
                     }
                 )
 
@@ -356,36 +348,27 @@ def convert_structure_to_steps(module_keys: List[str], ftp: int) -> List[dict]:
                 )
 
             elif block_type == "over_under":
-                # Over/Under intervals: alternating above/below threshold
-                # Format: over_power/under_power alternating for N reps
-                interval_steps = []
-                for _ in range(block.get("repetitions", 1)):
-                    # Over interval (above threshold)
-                    interval_steps.append(
-                        {
-                            "duration": block.get("over_duration_seconds", 120),
-                            "power": {
-                                "value": block.get("over_power", 105),
-                                "units": "%ftp",
-                            },
-                        }
-                    )
-                    # Under interval (below threshold)
-                    interval_steps.append(
-                        {
-                            "duration": block.get("under_duration_seconds", 120),
-                            "power": {
-                                "value": block.get("under_power", 95),
-                                "units": "%ftp",
-                            },
-                        }
-                    )
+                # Over/Under intervals: single over + under pair, repetitions handled by repeat key
+                over_step = {
+                    "duration": block.get("over_duration_seconds", 120),
+                    "power": {
+                        "value": block.get("over_power", 105),
+                        "units": "%ftp",
+                    },
+                }
+                under_step = {
+                    "duration": block.get("under_duration_seconds", 120),
+                    "power": {
+                        "value": block.get("under_power", 95),
+                        "units": "%ftp",
+                    },
+                }
 
                 steps.append(
                     {
                         "duration": 0,  # Duration handled by nested steps
                         "repeat": block.get("repetitions", 1),
-                        "steps": interval_steps,
+                        "steps": [over_step, under_step],  # Single pair, not expanded
                     }
                 )
 

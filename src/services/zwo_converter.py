@@ -129,7 +129,8 @@ class ZWOConverter:
         ZWO IntervalsT format:
         <IntervalsT Repeat="N" OnDuration="X" OffDuration="Y" OnPower="A" OffPower="B"/>
         """
-        reps = step.get("reps", 1)
+        # Support both "reps" and "repeat" keys for compatibility
+        reps = step.get("reps") or step.get("repeat", 1)
         inner_steps = step.get("steps", [])
 
         if len(inner_steps) < 2:
