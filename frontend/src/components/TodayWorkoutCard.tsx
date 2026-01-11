@@ -199,6 +199,25 @@ export function TodayWorkoutCard({
                         )}
                     </div>
 
+                    {/* Intensity Selection for Re-generate */}
+                    <div className="space-y-2">
+                        <Label className="text-sm text-muted-foreground">다시 생성 할 때 강도 선택:</Label>
+                        <div className="grid grid-cols-4 gap-2">
+                            {INTENSITIES.map((i) => (
+                                <Button
+                                    key={i.value}
+                                    type="button"
+                                    variant={intensity === i.value ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => setIntensity(i.value)}
+                                    className="text-xs"
+                                >
+                                    {i.emoji} {i.label}
+                                </Button>
+                            ))}
+                        </div>
+                    </div>
+
                     {/* Actions */}
                     <div className="flex gap-2">
                         <Button
