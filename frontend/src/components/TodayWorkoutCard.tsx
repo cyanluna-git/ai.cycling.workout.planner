@@ -83,6 +83,14 @@ export function TodayWorkoutCard({
             ? formatWorkoutSections(workout.steps, ftp)
             : null;
 
+        // Debug logging
+        console.log('TodayWorkoutCard - workout data:', {
+            hasSteps: !!workout.steps,
+            stepsLength: workout.steps?.length,
+            hasZwoContent: !!workout.zwo_content,
+            workoutText: workout.workout_text?.substring(0, 100)
+        });
+
         return (
             <Card className="w-full">
                 <CardHeader className="pb-2">
@@ -116,11 +124,18 @@ export function TodayWorkoutCard({
                     )}
 
                     {/* Power Chart */}
-                    <WorkoutChart
-                        workoutText={workout.workout_text}
-                        zwoContent={workout.zwo_content}
-                        steps={workout.steps}
-                    />
+                    {(workout.steps || workout.zwo_content || workout.workout_text) ? (
+                        <WorkoutChart
+                            workoutText={workout.workout_text}
+                            zwoContent={workout.zwo_content}
+                            steps={workout.steps}
+                            ftp={ftp}
+                        />
+                    ) : (
+                        <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground text-center">
+                            차트 데이터를 불러올 수 없습니다.
+                        </div>
+                    )}
 
                     {/* Workout Steps */}
                     <div className="bg-muted/50 rounded-lg p-4 font-mono text-sm space-y-3 max-h-48 overflow-y-auto">
