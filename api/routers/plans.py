@@ -940,6 +940,13 @@ async def register_weekly_plan_to_intervals(
             total_duration_minutes = workout.get("planned_duration", 60)
             moving_time = total_duration_minutes * 60  # Convert to seconds
 
+            # Check if a workout already exists for this date and delete it
+            existing_workout = intervals.check_workout_exists(workout_date)
+            if existing_workout:
+                existing_id = existing_workout.get("id")
+                logger.info(f"Found existing workout on {workout_date} (event_id: {existing_id}), deleting before registration")
+                intervals.delete_event(existing_id)
+
             # Register to Intervals.icu
             result = intervals.create_workout(
                 target_date=workout_date,

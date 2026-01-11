@@ -74,8 +74,8 @@ class ZWOConverter:
             parent: Parent XML element to add step to.
             step: Step dictionary.
         """
-        # Check if this is a repetition block
-        if "reps" in step and "steps" in step:
+        # Check if this is a repetition block (support both "reps" and "repeat" keys)
+        if ("reps" in step or "repeat" in step) and "steps" in step:
             self._add_intervals(parent, step)
             return
 
