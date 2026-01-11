@@ -1,5 +1,5 @@
 {
-  "total_selections": 10,
+  "total_selections": 11,
   "modules": {
     "progressive_ramp_15min": {
       "count": 3,
@@ -82,8 +82,8 @@
       "last_used": "2026-01-11T07:55:37.970411"
     },
     "tempo_steady_20min": {
-      "count": 1,
-      "last_used": "2026-01-11T07:55:37.970411"
+      "count": 2,
+      "last_used": "2026-01-11T08:45:50.592322"
     },
     "fade_out_12min": {
       "count": 1,
@@ -102,12 +102,20 @@
       "last_used": "2026-01-11T08:41:11.961983"
     },
     "endurance_20min": {
-      "count": 1,
-      "last_used": "2026-01-11T08:41:11.961983"
+      "count": 2,
+      "last_used": "2026-01-11T08:45:50.592322"
     },
     "extended_fade_20min": {
       "count": 1,
       "last_used": "2026-01-11T08:41:11.961983"
+    },
+    "ramp_extended": {
+      "count": 1,
+      "last_used": "2026-01-11T08:45:50.592322"
+    },
+    "active_flush_12min": {
+      "count": 1,
+      "last_used": "2026-01-11T08:45:50.592322"
     }
   },
   "by_category": {
@@ -118,7 +126,8 @@
       "stepped_warmup_15min": 1,
       "progressive_warmup_15min": 1,
       "activation_spin_10min": 1,
-      "stepped_warmup_20min": 1
+      "stepped_warmup_20min": 1,
+      "ramp_extended": 1
     },
     "main": {
       "sst_10min": 12,
@@ -126,9 +135,9 @@
       "tempo_15min": 2,
       "tempo_build_2x15min": 1,
       "endurance_30min": 1,
-      "tempo_steady_20min": 1,
+      "tempo_steady_20min": 2,
       "fatmax_60min": 1,
-      "endurance_20min": 1
+      "endurance_20min": 2
     },
     "rest": {
       "rest_short": 4,
@@ -144,8 +153,9 @@
       "flush_and_fade": 2,
       "stepped_cooldown_10min": 1,
       "fade_out_12min": 1,
-      "extended_fade_20min": 1
+      "extended_fade_20min": 1,
+      "active_flush_12min": 1
     }
   },
-  "last_updated": "2026-01-11T08:41:11.962084"
+  "last_updated": "2026-01-11T08:45:50.592393"
 }

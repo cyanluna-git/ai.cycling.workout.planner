@@ -886,7 +886,6 @@ async def register_weekly_plan_to_intervals(
 ):
     """Register all workouts in a weekly plan to Intervals.icu."""
     from api.services.user_api_service import get_user_intervals_client
-    from src.services.protocol_builder import build_intervals_icu_json
 
     supabase = get_supabase_admin_client()
 
@@ -950,24 +949,16 @@ async def register_weekly_plan_to_intervals(
                 logger.warning(f"Skipping workout {workout['id']}: no steps generated")
                 continue
 
-            # Build Intervals.icu JSON
             workout_name = workout.get("planned_name", "Workout")
             workout_description = workout.get("planned_rationale", "")
             workout_date = workout.get("workout_date")
-
-            intervals_json = build_intervals_icu_json(
-                steps=planned_steps,
-                workout_name=workout_name,
-                description=workout_description,
-                ftp=ftp
-            )
 
             # Calculate moving time from modules
             total_duration_minutes = workout.get("planned_duration", 60)
             moving_time = total_duration_minutes * 60  # Convert to seconds
 
             # Register to Intervals.icu
-            intervals.create_workout(
+            result = intervals.create_workout(
                 target_date=workout_date,
                 name=workout_name,
                 description=workout_description,
@@ -977,14 +968,25 @@ async def register_weekly_plan_to_intervals(
                 steps=planned_steps,
             )
 
+            # Store event_id for sync tracking
+            event_id = result.get("id")
+            if event_id:
+                supabase.table("daily_workouts").update({
+                    "intervals_event_id": event_id,
+                    "status": "registered",
+                    "updated_at": datetime.now().isoformat()
+                }).eq("id", workout["id"]).execute()
+                logger.info(f"Registered workout {workout_name} for {workout_date} (event_id: {event_id})")
+            else:
+                logger.warning(f"Registered workout {workout_name} but no event_id returned")
+
             registered_count += 1
-            logger.info(f"Registered workout {workout_name} for {workout_date}")
 
         except Exception as e:
             failed_count += 1
             error_msg = f"{workout.get('workout_date')}: {str(e)}"
             errors.append(error_msg)
-            logger.error(f"Failed to register workout {workout.get('id')}: {e}")
+            logger.error(f"Failed to register workout {workout.get('id')}: {e}", exc_info=True)
 
     # Clear cache after registering workouts to Intervals.icu
     if registered_count > 0:
@@ -1027,3 +1029,147 @@ async def delete_weekly_plan(plan_id: str, user: dict = Depends(get_current_user
     supabase.table("weekly_plans").delete().eq("id", plan_id).execute()
 
     return {"success": True, "message": "Weekly plan deleted"}
+
+
+@router.post("/plans/weekly/{plan_id}/sync")
+async def sync_weekly_plan_with_intervals(
+    plan_id: str, user: dict = Depends(get_current_user)
+):
+    """Sync a weekly plan with Intervals.icu to detect changes.
+
+    Compares local daily_workouts with Intervals.icu events to detect:
+    - Deleted workouts (exist in DB but not in Intervals.icu)
+    - Moved workouts (date changed in Intervals.icu)
+    - Modified workouts (name/duration changed)
+    """
+    from api.services.user_api_service import get_user_intervals_client
+
+    supabase = get_supabase_admin_client()
+
+    # Get the weekly plan
+    plan_result = (
+        supabase.table("weekly_plans")
+        .select("*")
+        .eq("id", plan_id)
+        .eq("user_id", user["id"])
+        .maybe_single()
+        .execute()
+    )
+
+    if not plan_result or not plan_result.data:
+        raise HTTPException(status_code=404, detail="Plan not found")
+
+    plan = plan_result.data
+    week_start = plan["week_start"]
+    week_end = plan["week_end"]
+
+    # Get daily workouts with intervals_event_id
+    workouts_result = (
+        supabase.table("daily_workouts")
+        .select("*")
+        .eq("plan_id", plan_id)
+        .not_.is_("intervals_event_id", "null")
+        .execute()
+    )
+
+    workouts = workouts_result.data if workouts_result and workouts_result.data else []
+
+    if not workouts:
+        return {
+            "success": True,
+            "changes": {"deleted": [], "moved": [], "modified": []},
+            "synced": 0,
+            "message": "No registered workouts to sync"
+        }
+
+    # Get Intervals.icu client
+    intervals = get_user_intervals_client(user["id"])
+    if not intervals:
+        raise HTTPException(status_code=400, detail="Intervals.icu not configured")
+
+    # Fetch events from Intervals.icu for the week
+    try:
+        events = intervals.get_events(oldest=week_start, newest=week_end)
+    except Exception as e:
+        logger.error(f"Failed to fetch events from Intervals.icu: {e}")
+        raise HTTPException(status_code=502, detail=f"Failed to fetch from Intervals.icu: {str(e)}")
+
+    # Build event lookup by ID
+    events_by_id = {str(event.get("id")): event for event in events if event.get("id")}
+
+    # Detect changes
+    deleted = []
+    moved = []
+    modified = []
+    synced = 0
+
+    for workout in workouts:
+        event_id = str(workout.get("intervals_event_id"))
+        workout_date = workout.get("workout_date")
+        workout_name = workout.get("planned_name", "")
+
+        if event_id not in events_by_id:
+            # Workout was deleted from Intervals.icu
+            deleted.append({
+                "date": workout_date,
+                "name": workout_name,
+                "event_id": event_id
+            })
+            # Clear the event_id in DB
+            supabase.table("daily_workouts").update({
+                "intervals_event_id": None,
+                "status": "planned",  # Revert to planned status
+                "updated_at": datetime.now().isoformat()
+            }).eq("id", workout["id"]).execute()
+        else:
+            # Check if moved or modified
+            event = events_by_id[event_id]
+            event_date = event.get("start_date_local", "")[:10]  # Extract YYYY-MM-DD
+            event_name = event.get("name", "")
+
+            if event_date != workout_date:
+                # Workout was moved to a different date
+                moved.append({
+                    "from_date": workout_date,
+                    "to_date": event_date,
+                    "name": event_name,
+                    "event_id": event_id
+                })
+                # Note: We don't auto-update the date as it might conflict with another workout
+                # Just report the change for now
+
+            if event_name and event_name != workout_name:
+                # Workout name was modified
+                modified.append({
+                    "date": workout_date,
+                    "old_name": workout_name,
+                    "new_name": event_name,
+                    "event_id": event_id
+                })
+
+            synced += 1
+
+    # Build message
+    changes_count = len(deleted) + len(moved) + len(modified)
+    if changes_count == 0:
+        message = f"All {synced} workouts are in sync with Intervals.icu"
+    else:
+        parts = []
+        if deleted:
+            parts.append(f"{len(deleted)} deleted")
+        if moved:
+            parts.append(f"{len(moved)} moved")
+        if modified:
+            parts.append(f"{len(modified)} modified")
+        message = f"{changes_count} changes detected: {', '.join(parts)}"
+
+    return {
+        "success": True,
+        "changes": {
+            "deleted": deleted,
+            "moved": moved,
+            "modified": modified
+        },
+        "synced": synced,
+        "message": message
+    }

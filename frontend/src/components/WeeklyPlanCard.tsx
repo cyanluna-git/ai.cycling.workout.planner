@@ -16,11 +16,13 @@ interface WeeklyPlanCardProps {
     isLoading: boolean;
     isGenerating: boolean;
     isRegisteringAll?: boolean;
+    isSyncing?: boolean;
     currentWeekOffset: number;
     onGenerate: () => void;
     onDelete?: (planId: string) => void;
     onWeekNavigation?: (direction: 'prev' | 'next') => void;
     onRegisterAll?: (planId: string) => void;
+    onSync?: (planId: string) => void;
 }
 
 // Workout type to color mapping
@@ -119,11 +121,13 @@ export function WeeklyPlanCard({
     isLoading,
     isGenerating,
     isRegisteringAll,
+    isSyncing,
     currentWeekOffset,
     onGenerate,
     onDelete,
     onWeekNavigation,
     onRegisterAll,
+    onSync,
 }: WeeklyPlanCardProps) {
     const [showConfirmDelete, setShowConfirmDelete] = useState(false);
     const [selectedWorkout, setSelectedWorkout] = useState<DailyWorkout | null>(null);
@@ -352,6 +356,16 @@ export function WeeklyPlanCard({
                     >
                         {isGenerating ? "생성 중..." : "🔄 재생성"}
                     </Button>
+                    {onSync && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onSync(plan.id)}
+                            disabled={isSyncing}
+                        >
+                            {isSyncing ? "동기화 중..." : "🔃 Sync"}
+                        </Button>
+                    )}
                     {onRegisterAll && (
                         <Button
                             variant="default"

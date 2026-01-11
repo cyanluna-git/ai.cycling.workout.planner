@@ -58,6 +58,7 @@ function Dashboard() {
     isLoadingPlan,
     isGeneratingPlan,
     isRegisteringPlanAll,
+    isSyncingPlan,
     isLoading,
     isRegistering,
     error,
@@ -69,6 +70,7 @@ function Dashboard() {
     handleGenerateWeeklyPlan,
     handleDeleteWeeklyPlan,
     handleRegisterWeeklyPlanAll,
+    handleSyncWeeklyPlan,
     handleWeekNavigation,
   } = useDashboard();
 
@@ -171,10 +173,12 @@ function Dashboard() {
               isLoading={isLoadingPlan}
               isGenerating={isGeneratingPlan}
               isRegisteringAll={isRegisteringPlanAll}
+              isSyncing={isSyncingPlan}
               currentWeekOffset={currentWeekOffset}
               onGenerate={handleGenerateWeeklyPlan}
               onDelete={handleDeleteWeeklyPlan}
               onRegisterAll={handleRegisterWeeklyPlanAll}
+              onSync={handleSyncWeeklyPlan}
               onWeekNavigation={handleWeekNavigation}
             />
           </div>
