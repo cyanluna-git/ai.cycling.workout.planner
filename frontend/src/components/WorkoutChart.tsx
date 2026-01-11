@@ -3,7 +3,7 @@
  * Uses ComposedChart with areas for each segment, colored by power zone
  */
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import {
     ComposedChart,
     Area,
@@ -12,7 +12,7 @@ import {
     ResponsiveContainer,
     ReferenceLine
 } from 'recharts';
-import { parseZwoToChartData, getMaxTime, getMaxPower, type ChartDataPoint } from '@/lib/zwo-parser';
+import { parseZwoToChartData, type ChartDataPoint } from '@/lib/zwo-parser';
 import type { WorkoutStep } from '@/types/workout';
 
 interface WorkoutChartProps {
@@ -134,7 +134,7 @@ function chartDataToSegments(chartData: ChartDataPoint[]): Segment[] {
     return segments;
 }
 
-export function WorkoutChart({ workoutText, zwoContent, steps }: WorkoutChartProps) {
+export function WorkoutChart({ zwoContent, steps }: WorkoutChartProps) {
     // Convert to segments
     const segments = useMemo((): Segment[] => {
         if (steps && steps.length > 0) {
