@@ -431,6 +431,46 @@ class WeeklyPlanGenerator:
 
         return cleaned.strip()
 
+    def _fix_module_order(self, modules: List[str]) -> List[str]:
+        """Fix module order to ensure warmup first, cooldown last.
+
+        Args:
+            modules: List of module keys from LLM
+
+        Returns:
+            Reordered list with warmup modules first, cooldown modules last
+        """
+        from src.services.workout_modules import (
+            WARMUP_MODULES,
+            COOLDOWN_MODULES,
+        )
+
+        if not modules:
+            return modules
+
+        warmup_modules = []
+        main_modules = []
+        cooldown_modules = []
+
+        for module in modules:
+            if module in WARMUP_MODULES:
+                warmup_modules.append(module)
+            elif module in COOLDOWN_MODULES:
+                cooldown_modules.append(module)
+            else:
+                main_modules.append(module)
+
+        # Check if reordering is needed
+        original_order = modules
+        fixed_order = warmup_modules + main_modules + cooldown_modules
+
+        if original_order != fixed_order:
+            logger.warning(
+                f"🔧 AUTO-FIX module order: {original_order} → {fixed_order}"
+            )
+
+        return fixed_order
+
     def _parse_response(self, response: str, week_start: date) -> List[DailyPlan]:
         """Parse LLM response into DailyPlan objects.
 
@@ -494,6 +534,11 @@ class WeeklyPlanGenerator:
                 workout_type, duration_minutes, llm_tss
             )
 
+            # Validate and fix module order (warmup first, cooldown last)
+            selected_modules = plan_data.get("selected_modules", [])
+            if selected_modules:
+                selected_modules = self._fix_module_order(selected_modules)
+
             daily_plans.append(
                 DailyPlan(
                     day_index=day_index,
@@ -506,7 +551,7 @@ class WeeklyPlanGenerator:
                     duration_minutes=duration_minutes,
                     estimated_tss=corrected_tss,
                     intensity=plan_data.get("intensity", "moderate"),
-                    selected_modules=plan_data.get("selected_modules", []),
+                    selected_modules=selected_modules,
                     rationale=plan_data.get("rationale", ""),
                     session=plan_data.get("session"),  # AM, PM, or None
                 )
