@@ -954,7 +954,7 @@ async def register_weekly_plan_to_intervals(
                 logger.warning(f"Skipping workout {workout['id']}: no steps generated")
                 continue
 
-            workout_name = workout.get("planned_name", "Workout")
+            workout_name = f"[AICoach] {workout.get('planned_name', 'Workout')}"
             workout_description = workout.get("planned_rationale", "")
             workout_date = workout.get("workout_date")
 
