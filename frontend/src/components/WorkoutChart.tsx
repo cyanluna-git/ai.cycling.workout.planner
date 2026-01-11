@@ -156,8 +156,8 @@ export function WorkoutChart({ workoutText, zwoContent, steps }: WorkoutChartPro
         const maxTime = Math.max(...segments.map(s => s.endTime));
         const data: Record<string, number | string>[] = [];
 
-        // Create time points every 0.5 minutes for smooth rendering
-        const resolution = 0.5;
+        // Create time points every 10 seconds (0.167 minutes) for smooth rendering
+        const resolution = 10 / 60; // 10 seconds in minutes
         for (let t = 0; t <= maxTime; t += resolution) {
             const point: Record<string, number | string> = { time: t };
 
