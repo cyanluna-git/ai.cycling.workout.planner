@@ -1,129 +1,27 @@
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, ReferenceLine, Cell } from 'recharts';
+/**
+ * WorkoutChart - Full-size smooth zone-colored power profile
+ * Uses ComposedChart with areas for each segment, colored by power zone
+ */
+
+import React, { useMemo } from 'react';
+import {
+    ComposedChart,
+    Area,
+    XAxis,
+    YAxis,
+    ResponsiveContainer,
+    ReferenceLine
+} from 'recharts';
 import { parseZwoToChartData, getMaxTime, getMaxPower, type ChartDataPoint } from '@/lib/zwo-parser';
-import { stepsToChartData } from '@/lib/steps-to-chart';
 import type { WorkoutStep } from '@/types/workout';
-
-// Legacy type for text parsing fallback (deprecated)
-interface ParsedWorkoutStep {
-    time: number;      // Start time in minutes
-    duration: number;  // Duration of this step in minutes
-    power: number;     // Power as % FTP
-    label: string;     // Original text label
-}
-
-interface ChartSegment {
-    start: number;
-    end: number;
-    power: number;
-    color: string;
-}
 
 interface WorkoutChartProps {
     workoutText: string;
-    zwoContent?: string;  // ZWO XML content for accurate rendering
-    steps?: WorkoutStep[];  // Structured JSON steps from Intervals.icu (strongly typed)
+    zwoContent?: string;
+    steps?: WorkoutStep[];
     ftp?: number;
 }
 
-/**
- * Parse duration string to minutes
- */
-function parseDuration(val: string, unit: string): number {
-    const value = parseInt(val);
-    if (unit === 's') return value / 60;
-    return value;
-}
-
-/**
- * Parse workout text into chart data
- * @deprecated This is a fallback for when structured steps are not available.
- * With Intervals.icu as single source of truth, this should rarely be used.
- */
-export function parseWorkoutSteps(text: string): ParsedWorkoutStep[] {
-    const steps: ParsedWorkoutStep[] = [];
-    let currentTime = 0;
-
-    // Split by lines or commas
-    const lines = text.split(/[\n,]/).map(l => l.trim()).filter(l => l);
-
-    for (const line of lines) {
-        // Match ramp pattern: "10m 45% -> 75%" (warmup/cooldown ramps)
-        const rampMatch = line.match(/(\d+)([ms])\s+(\d+)%\s*->\s*(\d+)%/);
-
-        // Match patterns like "10m 50%", "30s 120%"
-        const simpleMatch = line.match(/(\d+)([ms])\s+(\d+)%/);
-
-        // Match interval pattern: "5x 3m 115% 3m 50%" or "13x 30s 120% 15s 50%"
-        const intervalMatch = line.match(/(\d+)x\s*\(?(\d+)([ms])\s+(\d+)%\s*[\/\s]+(\d+)([ms])\s+(\d+)%\)?/);
-
-        if (rampMatch) {
-            // Ramp: split into 10-second segments (1/6 min) for smooth visual
-            const duration = parseDuration(rampMatch[1], rampMatch[2]);
-            const startPower = parseInt(rampMatch[3]);
-            const endPower = parseInt(rampMatch[4]);
-
-            const SEGMENT_DURATION = 1 / 6;
-            const stepsCount = Math.floor(duration / SEGMENT_DURATION);
-            const powerStep = (endPower - startPower) / stepsCount;
-
-            for (let i = 0; i < stepsCount; i++) {
-                const power = Math.round(startPower + powerStep * i);
-                steps.push({
-                    time: currentTime,
-                    duration: SEGMENT_DURATION,
-                    power,
-                    label: `Ramp ${power}%`
-                });
-                currentTime += SEGMENT_DURATION;
-            }
-            // Add any remaining partial segment
-            if (duration % SEGMENT_DURATION > 0.001) {
-                currentTime += (duration % SEGMENT_DURATION);
-            }
-        } else if (intervalMatch) {
-            const reps = parseInt(intervalMatch[1]);
-            const workDuration = parseDuration(intervalMatch[2], intervalMatch[3]);
-            const workPower = parseInt(intervalMatch[4]);
-            const restDuration = parseDuration(intervalMatch[5], intervalMatch[6]);
-            const restPower = parseInt(intervalMatch[7]);
-
-            for (let i = 0; i < reps; i++) {
-                steps.push({
-                    time: currentTime,
-                    duration: workDuration,
-                    power: workPower,
-                    label: `${Math.round(workDuration * 60)}s ${workPower}%`
-                });
-                currentTime += workDuration;
-
-                steps.push({
-                    time: currentTime,
-                    duration: restDuration,
-                    power: restPower,
-                    label: `${Math.round(restDuration * 60)}s ${restPower}%`
-                });
-                currentTime += restDuration;
-            }
-        } else if (simpleMatch) {
-            const duration = parseDuration(simpleMatch[1], simpleMatch[2]);
-            const power = parseInt(simpleMatch[3]);
-
-            steps.push({
-                time: currentTime,
-                duration,
-                power,
-                label: `${Math.round(duration * 60)}s ${power}%`
-            });
-            currentTime += duration;
-        }
-    }
-
-    return steps;
-}
-
-/**
- * Get zone color based on power percentage
- */
 export function getZoneColor(power: number): string {
     if (power <= 55) return '#10b981';      // Z1 - Recovery (green)
     if (power <= 75) return '#3b82f6';      // Z2 - Endurance (blue)
@@ -133,76 +31,164 @@ export function getZoneColor(power: number): string {
     return '#ef4444';                        // Z6/Z7 - Anaerobic (red)
 }
 
-/**
- * Convert steps to bar chart data
- */
-function stepsToBarData(steps: ParsedWorkoutStep[]): ChartSegment[] {
-    return steps.map(step => ({
-        start: step.time,
-        end: step.time + step.duration,
-        power: step.power,
-        color: getZoneColor(step.power)
-    }));
+interface Segment {
+    startTime: number;  // minutes
+    endTime: number;    // minutes
+    power: number;      // %FTP
+    color: string;
 }
 
-export function WorkoutChart({ workoutText, zwoContent, steps }: WorkoutChartProps) {
-    // Priority: steps JSON > ZWO content > text parsing
-    let barData: ChartDataPoint[] = [];
-    let maxTime = 60;
-    let maxPower = 100;
+/**
+ * Convert steps to segments for chart rendering
+ */
+function stepsToSegments(steps: WorkoutStep[]): Segment[] {
+    const segments: Segment[] = [];
 
-    if (steps && steps.length > 0) {
-        // Use structured JSON steps from Intervals.icu (most accurate!)
-        barData = stepsToChartData(steps);
-        maxTime = getMaxTime(barData);
-        maxPower = getMaxPower(barData);
-    } else if (zwoContent) {
-        // Use ZWO parser for accurate rendering
-        barData = parseZwoToChartData(zwoContent);
-        maxTime = getMaxTime(barData);
-        maxPower = getMaxPower(barData);
-    } else {
-        // Fallback to text parsing (deprecated)
-        console.warn('⚠️ WorkoutChart: Falling back to text parsing. Structured steps not available.');
-        const workoutSteps = parseWorkoutSteps(workoutText);
-        const segments = stepsToBarData(workoutSteps);
+    function processStep(step: WorkoutStep, startTime: number): number {
+        const { duration = 0, power, ramp, repeat, steps: nested } = step;
 
-        if (segments.length === 0) {
-            return null;
+        if (repeat && nested) {
+            let time = startTime;
+            for (let i = 0; i < repeat; i++) {
+                for (const ns of nested) {
+                    time = processStep(ns, time);
+                }
+            }
+            return time;
         }
 
-        maxTime = segments[segments.length - 1]?.end || 60;
-        maxPower = Math.max(...segments.map(s => s.power), 100);
+        if (!power || !duration) return startTime;
 
-        // Create fine-grained data for better visualization (10-second resolution)
-        const RESOLUTION = 1 / 6; // 10 seconds in minutes
+        const startMin = startTime / 60;
+        const endMin = (startTime + duration) / 60;
 
-        for (let t = 0; t < maxTime; t += RESOLUTION) {
-            // Find segment covering this time point (t + half-resolution to check center)
-            const centerTime = t + (RESOLUTION / 2);
-            const segment = segments.find(s => centerTime >= s.start && centerTime < s.end);
+        if (ramp && power.start !== undefined && power.end !== undefined) {
+            const avgPower = (power.start + power.end) / 2;
+            segments.push({
+                startTime: startMin,
+                endTime: endMin,
+                power: avgPower,
+                color: getZoneColor(avgPower)
+            });
+        } else if (power.value !== undefined) {
+            segments.push({
+                startTime: startMin,
+                endTime: endMin,
+                power: power.value,
+                color: getZoneColor(power.value)
+            });
+        }
 
-            if (segment) {
-                barData.push({
-                    time: t,
-                    power: segment.power,
-                    color: segment.color
-                });
-            }
+        return startTime + duration;
+    }
+
+    let time = 0;
+    for (const step of steps) {
+        time = processStep(step, time);
+    }
+
+    return segments;
+}
+
+/**
+ * Convert ZWO chart data to segments
+ */
+function chartDataToSegments(chartData: ChartDataPoint[]): Segment[] {
+    if (chartData.length === 0) return [];
+
+    const segments: Segment[] = [];
+    let currentPower = chartData[0].power;
+    let startTime = chartData[0].time;
+
+    for (let i = 1; i < chartData.length; i++) {
+        const point = chartData[i];
+        if (point.power !== currentPower) {
+            segments.push({
+                startTime,
+                endTime: point.time,
+                power: currentPower,
+                color: getZoneColor(currentPower)
+            });
+            currentPower = point.power;
+            startTime = point.time;
         }
     }
 
-    if (barData.length === 0) {
+    // Add final segment
+    const lastPoint = chartData[chartData.length - 1];
+    segments.push({
+        startTime,
+        endTime: lastPoint.time + 0.5,
+        power: currentPower,
+        color: getZoneColor(currentPower)
+    });
+
+    return segments;
+}
+
+export function WorkoutChart({ workoutText, zwoContent, steps }: WorkoutChartProps) {
+    // Convert to segments
+    const segments = useMemo((): Segment[] => {
+        if (steps && steps.length > 0) {
+            return stepsToSegments(steps);
+        } else if (zwoContent) {
+            const chartData = parseZwoToChartData(zwoContent);
+            return chartDataToSegments(chartData);
+        }
+        return [];
+    }, [steps, zwoContent]);
+
+    // Group segments by zone color for rendering
+    const chartData = useMemo((): { data: Record<string, number | string>[]; colors: string[] } => {
+        if (segments.length === 0) {
+            return { data: [], colors: [] };
+        }
+
+        const colors = [...new Set(segments.map(s => s.color))];
+        const maxTime = Math.max(...segments.map(s => s.endTime));
+        const data: Record<string, number | string>[] = [];
+
+        // Create time points every 0.5 minutes for smooth rendering
+        const resolution = 0.5;
+        for (let t = 0; t <= maxTime; t += resolution) {
+            const point: Record<string, number | string> = { time: t };
+
+            const activeSegment = segments.find(s => t >= s.startTime && t < s.endTime);
+
+            for (const color of colors) {
+                point[color] = 0;
+            }
+
+            if (activeSegment) {
+                point[activeSegment.color] = activeSegment.power;
+            }
+
+            data.push(point);
+        }
+
+        return { data, colors };
+    }, [segments]);
+
+    const maxPower = useMemo(() => {
+        if (segments.length === 0) return 100;
+        return Math.max(...segments.map(s => s.power), 100);
+    }, [segments]);
+
+    const maxTime = useMemo(() => {
+        if (segments.length === 0) return 60;
+        return Math.max(...segments.map(s => s.endTime));
+    }, [segments]);
+
+    if (chartData.data.length === 0) {
         return null;
     }
 
     return (
         <div className="w-full h-32" style={{ minHeight: 128, minWidth: 100 }}>
             <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={128}>
-                <BarChart
-                    data={barData}
+                <ComposedChart
+                    data={chartData.data}
                     margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
-                    barCategoryGap={0}
                 >
                     <XAxis
                         dataKey="time"
@@ -226,14 +212,22 @@ export function WorkoutChart({ workoutText, zwoContent, steps }: WorkoutChartPro
                         stroke="#ef4444"
                         strokeDasharray="3 3"
                         strokeOpacity={0.7}
-                        label={{ value: 'FTP', position: 'right', fontSize: 10, fill: '#ef4444' }}
+                        label={{ value: 'F', position: 'right', fontSize: 10, fill: '#ef4444' }}
                     />
-                    <Bar dataKey="power" isAnimationActive={false}>
-                        {barData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} fillOpacity={0.85} />
-                        ))}
-                    </Bar>
-                </BarChart>
+                    {/* Render an Area for each zone color */}
+                    {chartData.colors.map((color: string) => (
+                        <Area
+                            key={color}
+                            type="stepAfter"
+                            dataKey={color}
+                            fill={color}
+                            fillOpacity={0.85}
+                            stroke="none"
+                            isAnimationActive={false}
+                            stackId="power"
+                        />
+                    ))}
+                </ComposedChart>
             </ResponsiveContainer>
         </div>
     );
