@@ -62,14 +62,21 @@ function stepsToSegments(steps: WorkoutStep[]): Segment[] {
         const endMin = (startTime + duration) / 60;
 
         if (ramp && power.start !== undefined && power.end !== undefined) {
-            // For ramps, use average power for color
-            const avgPower = (power.start + power.end) / 2;
-            segments.push({
-                startTime: startMin,
-                endTime: endMin,
-                power: avgPower,
-                color: getZoneColor(avgPower)
-            });
+            // Split ramp into multiple segments for gradient visualization
+            const RAMP_RESOLUTION = 10; // 10 seconds per segment for smooth gradient
+            const numSegments = Math.max(1, Math.floor(duration / RAMP_RESOLUTION));
+            const segmentDuration = (endMin - startMin) / numSegments;
+            const powerStep = (power.end - power.start) / numSegments;
+
+            for (let i = 0; i < numSegments; i++) {
+                const segPower = power.start + powerStep * (i + 0.5);
+                segments.push({
+                    startTime: startMin + segmentDuration * i,
+                    endTime: startMin + segmentDuration * (i + 1),
+                    power: segPower,
+                    color: getZoneColor(segPower)
+                });
+            }
         } else if (power.value !== undefined) {
             segments.push({
                 startTime: startMin,
