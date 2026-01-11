@@ -1,7 +1,9 @@
 {
   "name": "Threshold Continuous 1x30min",
   "duration_minutes": 30,
+  "category": "Main",
   "type": "Threshold",
+  "description": "Main module: Threshold Continuous 1x30min",
   "structure": [
     {
       "type": "steady",

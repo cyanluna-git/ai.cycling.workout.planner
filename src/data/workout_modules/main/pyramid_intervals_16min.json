@@ -1,48 +1,49 @@
 {
-    "name": "Pyramid Intervals 16min",
-    "duration_minutes": 16,
-    "type": "VO2max",
-    "description": "1m-2m-3m-2m-1m intervals @ 110-105%. Hard middle section.",
-    "structure": [
-        {
-            "type": "steady",
-            "power": 110,
-            "duration_minutes": 1
-        },
-        {
-            "type": "steady",
-            "power": 50,
-            "duration_minutes": 1
-        },
-        {
-            "type": "steady",
-            "power": 108,
-            "duration_minutes": 2
-        },
-        {
-            "type": "steady",
-            "power": 50,
-            "duration_minutes": 2
-        },
-        {
-            "type": "steady",
-            "power": 105,
-            "duration_minutes": 3
-        },
-        {
-            "type": "steady",
-            "power": 50,
-            "duration_minutes": 3
-        },
-        {
-            "type": "steady",
-            "power": 108,
-            "duration_minutes": 2
-        },
-        {
-            "type": "steady",
-            "power": 50,
-            "duration_minutes": 2
-        }
-    ]
+  "name": "Pyramid Intervals 16min",
+  "duration_minutes": 16,
+  "category": "Main",
+  "type": "VO2max",
+  "description": "1m-2m-3m-2m-1m intervals @ 110-105%. Hard middle section.",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 110,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 108,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 105,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 108,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 2
+    }
+  ]
 }

@@ -1,7 +1,9 @@
 {
   "name": "SST Build 4x8min",
   "duration_minutes": 44,
+  "category": "Main",
   "type": "SweetSpot",
+  "description": "Main module: SST Build 4x8min",
   "structure": [
     {
       "type": "steady",

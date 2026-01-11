@@ -1,7 +1,9 @@
 {
   "name": "VO2 Hard 6x3min",
   "duration_minutes": 33,
+  "category": "Main",
   "type": "VO2max",
+  "description": "Main module: VO2 Hard 6x3min",
   "structure": [
     {
       "type": "steady",

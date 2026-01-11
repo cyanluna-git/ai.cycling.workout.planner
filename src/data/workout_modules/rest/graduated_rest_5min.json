@@ -1,6 +1,8 @@
 {
   "name": "Graduated Rest 5min",
   "duration_minutes": 5,
+  "category": "Rest",
+  "description": "Rest module: Graduated Rest 5min",
   "structure": [
     {
       "type": "steady",

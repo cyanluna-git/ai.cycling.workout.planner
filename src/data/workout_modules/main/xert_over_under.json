@@ -1,6 +1,7 @@
 {
   "name": "Xert Over/Under",
   "duration_minutes": 12,
+  "category": "Main",
   "type": "Threshold",
   "description": "3 reps of smooth 4min wave between 85-100% FTP. Sweet spot to threshold oscillation.",
   "structure": [

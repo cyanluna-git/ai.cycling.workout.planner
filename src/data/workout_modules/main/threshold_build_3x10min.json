@@ -1,7 +1,9 @@
 {
   "name": "Threshold Build 3x10min",
   "duration_minutes": 40,
+  "category": "Main",
   "type": "Threshold",
+  "description": "Main module: Threshold Build 3x10min",
   "structure": [
     {
       "type": "steady",

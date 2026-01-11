@@ -1,7 +1,9 @@
 {
   "name": "Threshold Hard 4x8min",
   "duration_minutes": 41,
+  "category": "Main",
   "type": "Threshold",
+  "description": "Main module: Threshold Hard 4x8min",
   "structure": [
     {
       "type": "steady",

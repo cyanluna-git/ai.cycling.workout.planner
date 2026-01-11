@@ -1,6 +1,8 @@
 {
   "name": "Fade Out 12min",
   "duration_minutes": 12,
+  "category": "Cooldown",
+  "description": "Cooldown module: Fade Out 12min",
   "structure": [
     {
       "type": "cooldown_ramp",

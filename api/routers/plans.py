@@ -118,7 +118,9 @@ def _smart_fallback_for_unknown_block(block_type: str, block: dict) -> Optional[
     type_lower = block_type.lower()
 
     # Warmup patterns
-    if any(keyword in type_lower for keyword in ["warmup", "warm_up", "warm-up", "ramp_up"]):
+    if any(
+        keyword in type_lower for keyword in ["warmup", "warm_up", "warm-up", "ramp_up"]
+    ):
         return {
             "duration": block.get("duration_minutes", 10) * 60,
             "power": {
@@ -131,7 +133,10 @@ def _smart_fallback_for_unknown_block(block_type: str, block: dict) -> Optional[
         }
 
     # Cooldown patterns
-    if any(keyword in type_lower for keyword in ["cooldown", "cool_down", "cool-down", "ramp_down"]):
+    if any(
+        keyword in type_lower
+        for keyword in ["cooldown", "cool_down", "cool-down", "ramp_down"]
+    ):
         return {
             "duration": block.get("duration_minutes", 10) * 60,
             "power": {
@@ -149,8 +154,12 @@ def _smart_fallback_for_unknown_block(block_type: str, block: dict) -> Optional[
         work_power = block.get("work_power") or block.get("power", 95)
         rest_power = block.get("rest_power", 50)
         reps = block.get("repetitions") or block.get("reps", 1)
-        work_duration = block.get("work_duration_seconds") or block.get("work_duration", 300)
-        rest_duration = block.get("rest_duration_seconds") or block.get("rest_duration", 120)
+        work_duration = block.get("work_duration_seconds") or block.get(
+            "work_duration", 300
+        )
+        rest_duration = block.get("rest_duration_seconds") or block.get(
+            "rest_duration", 120
+        )
 
         # Single work/rest pair - repetitions handled by repeat key
         work_step = {
@@ -197,19 +206,12 @@ def convert_structure_to_steps(module_keys: List[str], ftp: int) -> List[dict]:
         List of workout step dictionaries compatible with frontend WorkoutStep type
     """
     from src.services.workout_modules import (
-        WARMUP_MODULES,
-        MAIN_SEGMENTS,
-        REST_SEGMENTS,
-        COOLDOWN_MODULES,
+        ALL_MODULES,
+        get_module_category,
     )
 
-    # Combine all module dictionaries
-    all_modules = {
-        **WARMUP_MODULES,
-        **MAIN_SEGMENTS,
-        **REST_SEGMENTS,
-        **COOLDOWN_MODULES,
-    }
+    # Use the combined module dictionary
+    all_modules = ALL_MODULES
 
     steps = []
 
@@ -230,34 +232,47 @@ def convert_structure_to_steps(module_keys: List[str], ftp: int) -> List[dict]:
     cooldown_indices = []
 
     for idx, module_key in enumerate(module_keys):
-        if module_key in WARMUP_MODULES:
+        category = get_module_category(module_key)
+        if category == "Warmup":
             warmup_indices.append(idx)
             logger.debug(f"  Found WARMUP module '{module_key}' at position {idx}")
-        elif module_key in COOLDOWN_MODULES:
+        elif category == "Cooldown":
             cooldown_indices.append(idx)
             logger.debug(f"  Found COOLDOWN module '{module_key}' at position {idx}")
 
     # Check if warmup modules are at the beginning
     if warmup_indices and warmup_indices[0] != 0:
-        logger.error(f"❌ INVALID STRUCTURE: Warmup module '{module_keys[warmup_indices[0]]}' found at position {warmup_indices[0]}, should be at position 0")
+        logger.error(
+            f"❌ INVALID STRUCTURE: Warmup module '{module_keys[warmup_indices[0]]}' found at position {warmup_indices[0]}, should be at position 0"
+        )
         logger.error(f"   Original order: {module_keys}")
         # Auto-fix: Move warmup modules to the beginning
         warmup_modules = [module_keys[i] for i in warmup_indices]
-        other_modules = [module_keys[i] for i in range(len(module_keys)) if i not in warmup_indices]
+        other_modules = [
+            module_keys[i] for i in range(len(module_keys)) if i not in warmup_indices
+        ]
         module_keys = warmup_modules + other_modules
         logger.warning(f"🔧 AUTO-FIX: Reordered modules to: {module_keys}")
         # Recalculate indices after reordering
-        cooldown_indices = [i for i, k in enumerate(module_keys) if k in COOLDOWN_MODULES]
+        cooldown_indices = [
+            i for i, k in enumerate(module_keys) if get_module_category(k) == "Cooldown"
+        ]
 
     # Check if cooldown modules are at the end
     if cooldown_indices:
         expected_start = len(module_keys) - len(cooldown_indices)
         if cooldown_indices[0] != expected_start:
-            logger.error(f"❌ INVALID STRUCTURE: Cooldown module '{module_keys[cooldown_indices[0]]}' found at position {cooldown_indices[0]}, should be at position {expected_start}")
+            logger.error(
+                f"❌ INVALID STRUCTURE: Cooldown module '{module_keys[cooldown_indices[0]]}' found at position {cooldown_indices[0]}, should be at position {expected_start}"
+            )
             logger.error(f"   Original order: {module_keys}")
             # Auto-fix: Move cooldown modules to the end
             cooldown_modules = [module_keys[i] for i in cooldown_indices]
-            other_modules = [module_keys[i] for i in range(len(module_keys)) if i not in cooldown_indices]
+            other_modules = [
+                module_keys[i]
+                for i in range(len(module_keys))
+                if i not in cooldown_indices
+            ]
             module_keys = other_modules + cooldown_modules
             logger.warning(f"🔧 AUTO-FIX: Reordered modules to: {module_keys}")
 
@@ -270,9 +285,13 @@ def convert_structure_to_steps(module_keys: List[str], ftp: int) -> List[dict]:
             fallback_key = fallback_modules.get(module_key)
             if fallback_key:
                 module = all_modules.get(fallback_key)
-                logger.info(f"Module not found: {module_key}, using fallback: {fallback_key}")
+                logger.info(
+                    f"Module not found: {module_key}, using fallback: {fallback_key}"
+                )
             else:
-                logger.warning(f"Module not found: {module_key}, no fallback available. Skipping.")
+                logger.warning(
+                    f"Module not found: {module_key}, no fallback available. Skipping."
+                )
                 continue
 
         # Convert each block in module structure to WorkoutStep
@@ -374,11 +393,15 @@ def convert_structure_to_steps(module_keys: List[str], ftp: int) -> List[dict]:
 
             else:
                 # Unknown block type - try smart fallback based on type name
-                logger.warning(f"Unknown block type: {block_type}, attempting smart fallback")
+                logger.warning(
+                    f"Unknown block type: {block_type}, attempting smart fallback"
+                )
                 fallback_step = _smart_fallback_for_unknown_block(block_type, block)
                 if fallback_step:
                     steps.append(fallback_step)
-                    logger.info(f"Applied smart fallback for '{block_type}': {fallback_step}")
+                    logger.info(
+                        f"Applied smart fallback for '{block_type}': {fallback_step}"
+                    )
                 else:
                     logger.error(f"No fallback available for block type: {block_type}")
 
@@ -608,12 +631,10 @@ async def generate_weekly_plan(
 
     # Clear cache to ensure fresh data on next request
     # Clear both granular and complete fitness cache keys
-    clear_user_cache(user["id"], keys=[
-        "calendar",
-        "fitness:complete",
-        "fitness:training",
-        "fitness:wellness"
-    ])
+    clear_user_cache(
+        user["id"],
+        keys=["calendar", "fitness:complete", "fitness:training", "fitness:wellness"],
+    )
     logger.info(f"Cleared cache for user {user['id'][:8]}... after plan generation")
 
     # Return the created plan - pass the week_start we just generated
@@ -815,13 +836,13 @@ async def regenerate_today_workout(
     logger.info(f"Regenerated workout {workout_id} for user {user['id']}")
 
     # Clear cache to ensure fresh data on next request
-    clear_user_cache(user["id"], keys=[
-        "calendar",
-        "fitness:complete",
-        "fitness:training",
-        "fitness:wellness"
-    ])
-    logger.info(f"Cleared cache for user {user['id'][:8]}... after workout regeneration")
+    clear_user_cache(
+        user["id"],
+        keys=["calendar", "fitness:complete", "fitness:training", "fitness:wellness"],
+    )
+    logger.info(
+        f"Cleared cache for user {user['id'][:8]}... after workout regeneration"
+    )
 
     return {
         "success": True,
@@ -902,6 +923,7 @@ async def register_weekly_plan_to_intervals(
 
     # Get user profile for FTP
     from api.services.user_api_service import get_user_profile
+
     try:
         user_profile = await get_user_profile(user["id"])
         ftp = user_profile.ftp
@@ -944,7 +966,9 @@ async def register_weekly_plan_to_intervals(
             existing_workout = intervals.check_workout_exists(workout_date)
             if existing_workout:
                 existing_id = existing_workout.get("id")
-                logger.info(f"Found existing workout on {workout_date} (event_id: {existing_id}), deleting before registration")
+                logger.info(
+                    f"Found existing workout on {workout_date} (event_id: {existing_id}), deleting before registration"
+                )
                 intervals.delete_event(existing_id)
 
             # Register to Intervals.icu
@@ -961,14 +985,20 @@ async def register_weekly_plan_to_intervals(
             # Store event_id for sync tracking
             event_id = result.get("id")
             if event_id:
-                supabase.table("daily_workouts").update({
-                    "intervals_event_id": event_id,
-                    "status": "registered",
-                    "updated_at": datetime.now().isoformat()
-                }).eq("id", workout["id"]).execute()
-                logger.info(f"Registered workout {workout_name} for {workout_date} (event_id: {event_id})")
+                supabase.table("daily_workouts").update(
+                    {
+                        "intervals_event_id": event_id,
+                        "status": "registered",
+                        "updated_at": datetime.now().isoformat(),
+                    }
+                ).eq("id", workout["id"]).execute()
+                logger.info(
+                    f"Registered workout {workout_name} for {workout_date} (event_id: {event_id})"
+                )
             else:
-                logger.warning(f"Registered workout {workout_name} but no event_id returned")
+                logger.warning(
+                    f"Registered workout {workout_name} but no event_id returned"
+                )
 
             registered_count += 1
 
@@ -976,24 +1006,31 @@ async def register_weekly_plan_to_intervals(
             failed_count += 1
             error_msg = f"{workout.get('workout_date')}: {str(e)}"
             errors.append(error_msg)
-            logger.error(f"Failed to register workout {workout.get('id')}: {e}", exc_info=True)
+            logger.error(
+                f"Failed to register workout {workout.get('id')}: {e}", exc_info=True
+            )
 
     # Clear cache after registering workouts to Intervals.icu
     if registered_count > 0:
-        clear_user_cache(user["id"], keys=[
-            "calendar",
-            "fitness:complete",
-            "fitness:training",
-            "fitness:wellness"
-        ])
-        logger.info(f"Cleared cache for user {user['id'][:8]}... after registering {registered_count} workouts")
+        clear_user_cache(
+            user["id"],
+            keys=[
+                "calendar",
+                "fitness:complete",
+                "fitness:training",
+                "fitness:wellness",
+            ],
+        )
+        logger.info(
+            f"Cleared cache for user {user['id'][:8]}... after registering {registered_count} workouts"
+        )
 
     return {
         "success": True,
         "registered": registered_count,
         "failed": failed_count,
         "errors": errors if errors else None,
-        "message": f"Successfully registered {registered_count} workouts to Intervals.icu"
+        "message": f"Successfully registered {registered_count} workouts to Intervals.icu",
     }
 
 
@@ -1069,7 +1106,7 @@ async def sync_weekly_plan_with_intervals(
             "success": True,
             "changes": {"deleted": [], "moved": [], "modified": []},
             "synced": 0,
-            "message": "No registered workouts to sync"
+            "message": "No registered workouts to sync",
         }
 
     # Get Intervals.icu client
@@ -1082,7 +1119,9 @@ async def sync_weekly_plan_with_intervals(
         events = intervals.get_events(oldest=week_start, newest=week_end)
     except Exception as e:
         logger.error(f"Failed to fetch events from Intervals.icu: {e}")
-        raise HTTPException(status_code=502, detail=f"Failed to fetch from Intervals.icu: {str(e)}")
+        raise HTTPException(
+            status_code=502, detail=f"Failed to fetch from Intervals.icu: {str(e)}"
+        )
 
     # Build event lookup by ID
     events_by_id = {str(event.get("id")): event for event in events if event.get("id")}
@@ -1100,17 +1139,17 @@ async def sync_weekly_plan_with_intervals(
 
         if event_id not in events_by_id:
             # Workout was deleted from Intervals.icu
-            deleted.append({
-                "date": workout_date,
-                "name": workout_name,
-                "event_id": event_id
-            })
+            deleted.append(
+                {"date": workout_date, "name": workout_name, "event_id": event_id}
+            )
             # Clear the event_id in DB
-            supabase.table("daily_workouts").update({
-                "intervals_event_id": None,
-                "status": "planned",  # Revert to planned status
-                "updated_at": datetime.now().isoformat()
-            }).eq("id", workout["id"]).execute()
+            supabase.table("daily_workouts").update(
+                {
+                    "intervals_event_id": None,
+                    "status": "planned",  # Revert to planned status
+                    "updated_at": datetime.now().isoformat(),
+                }
+            ).eq("id", workout["id"]).execute()
         else:
             # Check if moved or modified
             event = events_by_id[event_id]
@@ -1119,23 +1158,27 @@ async def sync_weekly_plan_with_intervals(
 
             if event_date != workout_date:
                 # Workout was moved to a different date
-                moved.append({
-                    "from_date": workout_date,
-                    "to_date": event_date,
-                    "name": event_name,
-                    "event_id": event_id
-                })
+                moved.append(
+                    {
+                        "from_date": workout_date,
+                        "to_date": event_date,
+                        "name": event_name,
+                        "event_id": event_id,
+                    }
+                )
                 # Note: We don't auto-update the date as it might conflict with another workout
                 # Just report the change for now
 
             if event_name and event_name != workout_name:
                 # Workout name was modified
-                modified.append({
-                    "date": workout_date,
-                    "old_name": workout_name,
-                    "new_name": event_name,
-                    "event_id": event_id
-                })
+                modified.append(
+                    {
+                        "date": workout_date,
+                        "old_name": workout_name,
+                        "new_name": event_name,
+                        "event_id": event_id,
+                    }
+                )
 
             synced += 1
 
@@ -1155,11 +1198,7 @@ async def sync_weekly_plan_with_intervals(
 
     return {
         "success": True,
-        "changes": {
-            "deleted": deleted,
-            "moved": moved,
-            "modified": modified
-        },
+        "changes": {"deleted": deleted, "moved": moved, "modified": modified},
         "synced": synced,
-        "message": message
+        "message": message,
     }

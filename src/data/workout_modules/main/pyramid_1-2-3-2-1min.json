@@ -1,7 +1,9 @@
 {
   "name": "Pyramid 1-2-3-2-1min",
   "duration_minutes": 17,
+  "category": "Main",
   "type": "Mixed",
+  "description": "Main module: Pyramid 1-2-3-2-1min",
   "structure": [
     {
       "type": "steady",

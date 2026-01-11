@@ -1,7 +1,9 @@
 {
   "name": "SST Continuous 2x20min",
   "duration_minutes": 45,
+  "category": "Main",
   "type": "SweetSpot",
+  "description": "Main module: SST Continuous 2x20min",
   "structure": [
     {
       "type": "steady",

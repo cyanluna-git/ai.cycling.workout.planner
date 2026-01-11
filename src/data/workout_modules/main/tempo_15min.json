@@ -1,7 +1,9 @@
 {
   "name": "Tempo 15min",
   "duration_minutes": 15,
+  "category": "Main",
   "type": "Endurance",
+  "description": "Main module: Tempo 15min",
   "structure": [
     {
       "type": "steady",

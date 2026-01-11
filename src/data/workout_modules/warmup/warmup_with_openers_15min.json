@@ -1,6 +1,8 @@
 {
   "name": "Warmup with Openers 15min",
   "duration_minutes": 15,
+  "category": "Warmup",
+  "description": "Warmup module: Warmup with Openers 15min",
   "structure": [
     {
       "type": "steady",

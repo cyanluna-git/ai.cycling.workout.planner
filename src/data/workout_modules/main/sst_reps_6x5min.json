@@ -1,7 +1,9 @@
 {
   "name": "SST Reps 6x5min",
   "duration_minutes": 45,
+  "category": "Main",
   "type": "SweetSpot",
+  "description": "Main module: SST Reps 6x5min",
   "structure": [
     {
       "type": "steady",

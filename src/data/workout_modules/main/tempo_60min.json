@@ -1,13 +1,14 @@
 {
-    "name": "Tempo 60min",
-    "duration_minutes": 60,
-    "type": "Tempo",
-    "description": "60-minute sustained tempo effort at 82% FTP (Zone 3). Extended aerobic power building at moderate intensity.",
-    "structure": [
-        {
-            "type": "steady",
-            "power": 82,
-            "duration_minutes": 60
-        }
-    ]
+  "name": "Tempo 60min",
+  "duration_minutes": 60,
+  "category": "Main",
+  "type": "Tempo",
+  "description": "60-minute sustained tempo effort at 82% FTP (Zone 3). Extended aerobic power building at moderate intensity.",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 82,
+      "duration_minutes": 60
+    }
+  ]
 }

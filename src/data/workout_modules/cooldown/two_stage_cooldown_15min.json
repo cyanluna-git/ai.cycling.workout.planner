@@ -1,6 +1,8 @@
 {
   "name": "Two Stage Cooldown 15min",
   "duration_minutes": 15,
+  "category": "Cooldown",
+  "description": "Cooldown module: Two Stage Cooldown 15min",
   "structure": [
     {
       "type": "steady",

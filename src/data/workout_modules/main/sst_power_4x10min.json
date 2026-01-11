@@ -1,7 +1,9 @@
 {
   "name": "SST Power 4x10min",
   "duration_minutes": 55,
+  "category": "Main",
   "type": "SweetSpot",
+  "description": "Main module: SST Power 4x10min",
   "structure": [
     {
       "type": "steady",

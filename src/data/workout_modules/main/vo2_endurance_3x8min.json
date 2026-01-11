@@ -1,7 +1,9 @@
 {
   "name": "VO2 Endurance 3x8min",
   "duration_minutes": 40,
+  "category": "Main",
   "type": "VO2max",
+  "description": "Main module: VO2 Endurance 3x8min",
   "structure": [
     {
       "type": "steady",

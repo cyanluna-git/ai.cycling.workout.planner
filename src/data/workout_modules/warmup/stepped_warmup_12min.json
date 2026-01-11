@@ -1,28 +1,28 @@
 {
-    "name": "Stepped Warmup 12min",
-    "duration_minutes": 12,
-    "type": "Warmup",
-    "description": "3-minute steps steadily increasing intensity (50% -> 60% -> 70% -> 80%).",
-    "structure": [
-        {
-            "type": "steady",
-            "power": 50,
-            "duration_minutes": 3
-        },
-        {
-            "type": "steady",
-            "power": 60,
-            "duration_minutes": 3
-        },
-        {
-            "type": "steady",
-            "power": 70,
-            "duration_minutes": 3
-        },
-        {
-            "type": "steady",
-            "power": 80,
-            "duration_minutes": 3
-        }
-    ]
+  "name": "Stepped Warmup 12min",
+  "duration_minutes": 12,
+  "category": "Warmup",
+  "description": "3-minute steps steadily increasing intensity (50% -> 60% -> 70% -> 80%).",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 50,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 60,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 70,
+      "duration_minutes": 3
+    },
+    {
+      "type": "steady",
+      "power": 80,
+      "duration_minutes": 3
+    }
+  ]
 }

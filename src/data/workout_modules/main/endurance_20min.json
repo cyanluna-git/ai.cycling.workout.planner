@@ -1,7 +1,9 @@
 {
   "name": "Endurance 20min",
   "duration_minutes": 20,
+  "category": "Main",
   "type": "Endurance",
+  "description": "Main module: Endurance 20min",
   "structure": [
     {
       "type": "steady",

@@ -1,7 +1,9 @@
 {
   "name": "Over/Under x3",
   "duration_minutes": 12,
+  "category": "Main",
   "type": "Threshold",
+  "description": "Main module: Over/Under x3",
   "structure": [
     {
       "type": "over_under",

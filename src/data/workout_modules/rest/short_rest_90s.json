@@ -1,6 +1,8 @@
 {
   "name": "Short Rest 90s",
   "duration_minutes": 1.5,
+  "category": "Rest",
+  "description": "Rest module: Short Rest 90s",
   "structure": [
     {
       "type": "steady",

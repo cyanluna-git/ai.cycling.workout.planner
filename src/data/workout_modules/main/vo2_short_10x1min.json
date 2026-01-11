@@ -1,7 +1,9 @@
 {
   "name": "VO2 Short 10x1min",
   "duration_minutes": 19,
+  "category": "Main",
   "type": "VO2max",
+  "description": "Main module: VO2 Short 10x1min",
   "structure": [
     {
       "type": "steady",

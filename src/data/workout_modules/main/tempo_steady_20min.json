@@ -1,7 +1,9 @@
 {
   "name": "Tempo Steady 20min",
   "duration_minutes": 20,
+  "category": "Main",
   "type": "Tempo",
+  "description": "Main module: Tempo Steady 20min",
   "structure": [
     {
       "type": "steady",

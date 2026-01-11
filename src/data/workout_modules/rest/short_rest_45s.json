@@ -1,6 +1,8 @@
 {
   "name": "Short Rest 45s",
   "duration_minutes": 0.75,
+  "category": "Rest",
+  "description": "Rest module: Short Rest 45s",
   "structure": [
     {
       "type": "steady",

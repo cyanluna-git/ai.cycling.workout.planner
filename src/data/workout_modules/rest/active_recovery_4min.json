@@ -1,6 +1,8 @@
 {
   "name": "Active Recovery 4min",
   "duration_minutes": 4,
+  "category": "Rest",
+  "description": "Rest module: Active Recovery 4min",
   "structure": [
     {
       "type": "steady",

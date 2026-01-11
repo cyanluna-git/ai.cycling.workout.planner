@@ -1,6 +1,8 @@
 {
   "name": "Progressive Ramp 20min",
   "duration_minutes": 20,
+  "category": "Warmup",
+  "description": "Warmup module: Progressive Ramp 20min",
   "structure": [
     {
       "type": "warmup_ramp",

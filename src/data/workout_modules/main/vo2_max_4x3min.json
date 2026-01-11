@@ -1,7 +1,9 @@
 {
   "name": "VO2 Max 4x3min",
   "duration_minutes": 24,
+  "category": "Main",
   "type": "VO2max",
+  "description": "Main module: VO2 Max 4x3min",
   "structure": [
     {
       "type": "steady",

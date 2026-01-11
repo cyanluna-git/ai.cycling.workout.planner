@@ -1,7 +1,9 @@
 {
   "name": "SST Extended 1x40min",
   "duration_minutes": 40,
+  "category": "Main",
   "type": "SweetSpot",
+  "description": "Main module: SST Extended 1x40min",
   "structure": [
     {
       "type": "steady",

@@ -1,41 +1,41 @@
 {
-    "name": "Activation Spin 10min",
-    "duration_minutes": 10,
-    "type": "Warmup",
-    "description": "Standard ramp with 3x 1-minute high-cadence spin-ups to wake up users legs.",
-    "structure": [
-        {
-            "type": "warmup_ramp",
-            "start_power": 40,
-            "end_power": 65,
-            "duration_minutes": 5
-        },
-        {
-            "type": "steady",
-            "power": 65,
-            "duration_minutes": 1
-        },
-        {
-            "type": "steady",
-            "power": 90,
-            "duration_minutes": 1,
-            "cadence": 100
-        },
-        {
-            "type": "steady",
-            "power": 65,
-            "duration_minutes": 1
-        },
-        {
-            "type": "steady",
-            "power": 100,
-            "duration_minutes": 1,
-            "cadence": 110
-        },
-        {
-            "type": "steady",
-            "power": 55,
-            "duration_minutes": 1
-        }
-    ]
+  "name": "Activation Spin 10min",
+  "duration_minutes": 10,
+  "category": "Warmup",
+  "description": "Standard ramp with 3x 1-minute high-cadence spin-ups to wake up users legs.",
+  "structure": [
+    {
+      "type": "warmup_ramp",
+      "start_power": 40,
+      "end_power": 65,
+      "duration_minutes": 5
+    },
+    {
+      "type": "steady",
+      "power": 65,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 90,
+      "duration_minutes": 1,
+      "cadence": 100
+    },
+    {
+      "type": "steady",
+      "power": 65,
+      "duration_minutes": 1
+    },
+    {
+      "type": "steady",
+      "power": 100,
+      "duration_minutes": 1,
+      "cadence": 110
+    },
+    {
+      "type": "steady",
+      "power": 55,
+      "duration_minutes": 1
+    }
+  ]
 }

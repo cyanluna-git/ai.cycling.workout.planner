@@ -1,13 +1,14 @@
 {
-    "name": "FatMax 90min",
-    "duration_minutes": 90,
-    "type": "Endurance",
-    "description": "Extended 90-minute FatMax zone at 58% FTP. Deep aerobic fat oxidation training. Ideal for ultra-endurance preparation and polarized base building.",
-    "structure": [
-        {
-            "type": "steady",
-            "power": 58,
-            "duration_minutes": 90
-        }
-    ]
+  "name": "FatMax 90min",
+  "duration_minutes": 90,
+  "category": "Main",
+  "type": "Endurance",
+  "description": "Extended 90-minute FatMax zone at 58% FTP. Deep aerobic fat oxidation training. Ideal for ultra-endurance preparation and polarized base building.",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 58,
+      "duration_minutes": 90
+    }
+  ]
 }

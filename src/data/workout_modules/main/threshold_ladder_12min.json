@@ -1,38 +1,39 @@
 {
-    "name": "Threshold Ladder 12min",
-    "duration_minutes": 12,
-    "type": "Threshold",
-    "description": "A pyramid of intensity around FTP. 2m@95% -> 2m@100% -> 2m@105% -> 2m@100% -> 2m@95% -> 2m@90%.",
-    "structure": [
-        {
-            "type": "steady",
-            "power": 95,
-            "duration_minutes": 2
-        },
-        {
-            "type": "steady",
-            "power": 100,
-            "duration_minutes": 2
-        },
-        {
-            "type": "steady",
-            "power": 105,
-            "duration_minutes": 2
-        },
-        {
-            "type": "steady",
-            "power": 100,
-            "duration_minutes": 2
-        },
-        {
-            "type": "steady",
-            "power": 95,
-            "duration_minutes": 2
-        },
-        {
-            "type": "steady",
-            "power": 90,
-            "duration_minutes": 2
-        }
-    ]
+  "name": "Threshold Ladder 12min",
+  "duration_minutes": 12,
+  "category": "Main",
+  "type": "Threshold",
+  "description": "A pyramid of intensity around FTP. 2m@95% -> 2m@100% -> 2m@105% -> 2m@100% -> 2m@95% -> 2m@90%.",
+  "structure": [
+    {
+      "type": "steady",
+      "power": 95,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 100,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 105,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 100,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 95,
+      "duration_minutes": 2
+    },
+    {
+      "type": "steady",
+      "power": 90,
+      "duration_minutes": 2
+    }
+  ]
 }

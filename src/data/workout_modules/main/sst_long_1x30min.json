@@ -1,7 +1,9 @@
 {
   "name": "SST Long 1x30min",
   "duration_minutes": 30,
+  "category": "Main",
   "type": "SweetSpot",
+  "description": "Main module: SST Long 1x30min",
   "structure": [
     {
       "type": "steady",

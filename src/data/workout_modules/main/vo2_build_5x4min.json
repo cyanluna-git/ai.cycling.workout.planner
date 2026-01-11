@@ -1,7 +1,9 @@
 {
   "name": "VO2 Build 5x4min",
   "duration_minutes": 36,
+  "category": "Main",
   "type": "VO2max",
+  "description": "Main module: VO2 Build 5x4min",
   "structure": [
     {
       "type": "steady",

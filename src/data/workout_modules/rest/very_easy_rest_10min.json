@@ -1,6 +1,8 @@
 {
   "name": "Very Easy Rest 10min",
   "duration_minutes": 10,
+  "category": "Rest",
+  "description": "Rest module: Very Easy Rest 10min",
   "structure": [
     {
       "type": "steady",

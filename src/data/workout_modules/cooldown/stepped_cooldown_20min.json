@@ -1,6 +1,8 @@
 {
   "name": "Stepped Cooldown 20min",
   "duration_minutes": 20,
+  "category": "Cooldown",
+  "description": "Cooldown module: Stepped Cooldown 20min",
   "structure": [
     {
       "type": "steady",

@@ -1,7 +1,9 @@
 {
   "name": "Tempo Volume 3x12min",
   "duration_minutes": 44,
+  "category": "Main",
   "type": "Tempo",
+  "description": "Main module: Tempo Volume 3x12min",
   "structure": [
     {
       "type": "steady",

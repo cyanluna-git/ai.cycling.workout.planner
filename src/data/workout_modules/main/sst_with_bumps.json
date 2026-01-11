@@ -1,7 +1,9 @@
 {
   "name": "SST with Surges",
   "duration_minutes": 12,
+  "category": "Main",
   "type": "SweetSpot",
+  "description": "Main module: SST with Surges",
   "structure": [
     {
       "type": "steady",

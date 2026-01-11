@@ -1,7 +1,9 @@
 {
   "name": "Threshold Power 3x12min",
   "duration_minutes": 48,
+  "category": "Main",
   "type": "Threshold",
+  "description": "Main module: Threshold Power 3x12min",
   "structure": [
     {
       "type": "steady",

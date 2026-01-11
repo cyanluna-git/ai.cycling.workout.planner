@@ -1,7 +1,9 @@
 {
   "name": "VO2 Blast 8x2min",
   "duration_minutes": 30,
+  "category": "Main",
   "type": "VO2max",
+  "description": "Main module: VO2 Blast 8x2min",
   "structure": [
     {
       "type": "steady",
