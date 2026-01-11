@@ -23,11 +23,13 @@ import {
     generateWeeklyPlan,
     deleteWeeklyPlan,
     registerWeeklyPlanToIntervals,
+    syncWeeklyPlanWithIntervals,
     type FitnessData,
     type GeneratedWorkout,
     type WorkoutGenerateRequest,
     type WeeklyCalendarData,
     type WeeklyPlan,
+    type SyncResult,
 } from "@/lib/api";
 
 interface DashboardState {
@@ -41,6 +43,8 @@ interface DashboardState {
     isLoadingPlan: boolean;
     isGeneratingPlan: boolean;
     isRegisteringPlanAll: boolean;
+    isSyncingPlan: boolean;
+    syncResult: SyncResult | null;
     isLoading: boolean;
     isRegistering: boolean;
     error: string | null;
@@ -55,8 +59,10 @@ interface DashboardActions {
     handleGenerateWeeklyPlan: () => Promise<void>;
     handleDeleteWeeklyPlan: (planId: string) => Promise<void>;
     handleRegisterWeeklyPlanAll: (planId: string) => Promise<void>;
+    handleSyncWeeklyPlan: (planId: string) => Promise<void>;
     handleWeekNavigation: (direction: 'prev' | 'next') => void;
     clearMessages: () => void;
+    clearSyncResult: () => void;
 }
 
 export type UseDashboardReturn = DashboardState & DashboardActions;
@@ -70,6 +76,8 @@ export function useDashboard(): UseDashboardReturn {
     const [workout, setWorkout] = useState<GeneratedWorkout | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isRegistering, setIsRegistering] = useState(false);
+    const [isSyncingPlan, setIsSyncingPlan] = useState(false);
+    const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
 
@@ -334,6 +342,34 @@ export function useDashboard(): UseDashboardReturn {
         setCurrentWeekOffset(newOffset);
     }, [currentWeekOffset]);
 
+    const handleSyncWeeklyPlan = useCallback(async (planId: string) => {
+        setIsSyncingPlan(true);
+        setError(null);
+        setSyncResult(null);
+        try {
+            const result = await syncWeeklyPlanWithIntervals(session?.access_token || '', planId);
+            setSyncResult(result);
+            if (result.success) {
+                const hasChanges = result.changes.deleted.length > 0 ||
+                    result.changes.moved.length > 0 ||
+                    result.changes.modified.length > 0;
+                if (hasChanges) {
+                    // Invalidate to refresh data after sync
+                    queryClient.invalidateQueries({ queryKey: queryKeys.weeklyPlan(weekStartDate) });
+                }
+                setSuccess(result.message);
+            }
+        } catch (e) {
+            setError(`Sync failed: ${e instanceof Error ? e.message : String(e)}`);
+        } finally {
+            setIsSyncingPlan(false);
+        }
+    }, [session, queryClient, weekStartDate]);
+
+    const clearSyncResult = useCallback(() => {
+        setSyncResult(null);
+    }, []);
+
     return {
         // State
         isApiConfigured,
@@ -346,6 +382,8 @@ export function useDashboard(): UseDashboardReturn {
         isLoadingPlan,
         isGeneratingPlan: generatePlanMutation.isPending,
         isRegisteringPlanAll: registerPlanAllMutation.isPending,
+        isSyncingPlan,
+        syncResult,
         isLoading,
         isRegistering,
         error,
@@ -358,7 +396,9 @@ export function useDashboard(): UseDashboardReturn {
         handleGenerateWeeklyPlan,
         handleDeleteWeeklyPlan,
         handleRegisterWeeklyPlanAll,
+        handleSyncWeeklyPlan,
         handleWeekNavigation,
+        clearSyncResult,
         clearMessages,
     };
 }

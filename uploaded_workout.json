@@ -1,11 +1,11 @@
 {
-  "start_date_local": "2026-01-10T00:00:00",
+  "start_date_local": "2026-01-18T00:00:00",
   "category": "WORKOUT",
-  "name": "[AICoach] Endurance Accelerator",
-  "description": "\nMain Set\n- 5m 45%\n- 5m 55%\n- 5m 65%\n- 5m 75%\n- 15m 75%\n- 20m 65%\n\nCooldown\n- 20m 65% -> 40%",
+  "name": "Long Zone 2 Ride",
+  "description": "Long Zone 2 ride to build aerobic base and improve fat oxidation. Essential for recovery and overall endurance.",
   "type": "Ride",
-  "moving_time": 4500,
-  "icu_training_load": 56,
+  "moving_time": 7200,
+  "icu_training_load": 96,
   "filename": "workout.zwo",
-  "file_contents_base64": "<804 chars>"
+  "file_contents_base64": "<680 chars>"
 }

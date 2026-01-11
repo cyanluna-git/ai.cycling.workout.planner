@@ -381,3 +381,36 @@ export async function registerWeeklyPlanToIntervals(
     if (!res.ok) throw new Error('Failed to register plan to Intervals.icu');
     return res.json();
 }
+
+export interface SyncChange {
+    date?: string;
+    name?: string;
+    event_id: string;
+    from_date?: string;
+    to_date?: string;
+    old_name?: string;
+    new_name?: string;
+}
+
+export interface SyncResult {
+    success: boolean;
+    changes: {
+        deleted: SyncChange[];
+        moved: SyncChange[];
+        modified: SyncChange[];
+    };
+    synced: number;
+    message: string;
+}
+
+export async function syncWeeklyPlanWithIntervals(
+    token: string,
+    planId: string
+): Promise<SyncResult> {
+    const res = await fetch(`${API_BASE}/api/plans/weekly/${planId}/sync`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to sync with Intervals.icu');
+    return res.json();
+}
