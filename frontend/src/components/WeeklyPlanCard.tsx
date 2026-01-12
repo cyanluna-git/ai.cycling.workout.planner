@@ -60,60 +60,44 @@ function DailyWorkoutRow({
     const isRest = workoutType === "Rest";
 
     // Session label for Norwegian-style double sessions
-    const sessionLabel = workout.session === "AM" ? "🌅 " : workout.session === "PM" ? "🌆 " : "";
+    const sessionLabel = workout.session === "AM" ? "🌅" : workout.session === "PM" ? "🌆" : "";
 
     return (
         <div
-            className={`flex gap-3 p-3 rounded-lg ${colorClass} transition-all hover:scale-[1.01] cursor-pointer`}
+            className={`flex items-center gap-2 px-2 py-1.5 rounded-lg ${colorClass} transition-all hover:scale-[1.01] cursor-pointer`}
             onClick={onClick}
             title={workout.planned_rationale}
         >
-            {/* Left: Day info (fixed width) */}
-            <div className="flex-shrink-0 w-16">
-                <div className="text-xs font-medium opacity-70">
+            {/* Left: Day info (compact) */}
+            <div className="flex-shrink-0 w-12 text-center">
+                <div className="text-[10px] font-medium opacity-70 leading-tight">
                     {workout.day_name}
-                    {workout.session && (
-                        <span className="ml-1 font-bold">{workout.session}</span>
-                    )}
                 </div>
-                <div className="text-lg font-bold">
+                <div className="text-base font-bold leading-tight">
                     {new Date(workout.workout_date).getDate()}
                 </div>
             </div>
 
-            {/* Right: Workout info + Chart (stacked vertically) */}
-            <div className="flex-grow min-w-0 flex flex-col gap-2">
-                {/* Top: Name and duration info */}
-                <div>
-                    <div className="font-semibold text-sm truncate">
-                        {sessionLabel}{emoji} {workout.planned_name || (isRest ? "Rest Day" : "Workout")}
+            {/* Middle: Workout info (compact, single line) */}
+            <div className="flex-grow min-w-0">
+                <div className="font-semibold text-xs truncate leading-tight">
+                    {sessionLabel}{emoji} {workout.planned_name || (isRest ? "Complete Rest" : "Workout")}
+                </div>
+                {!isRest && (
+                    <div className="text-[10px] opacity-80 leading-tight">
+                        {workout.planned_duration}분 • TSS {workout.planned_tss || 0}
                     </div>
-                    {!isRest && (
-                        <div className="text-xs mt-0.5 opacity-80">
-                            {workout.planned_duration}분 • TSS {workout.planned_tss || 0}
-                        </div>
-                    )}
-                    {workout.status === "completed" && (
-                        <div className="text-xs mt-0.5 text-green-600 font-medium">✅ 완료</div>
-                    )}
-                    {workout.status === "skipped" && (
-                        <div className="text-xs mt-0.5 text-gray-500 font-medium">⏭️ 건너뜀</div>
-                    )}
-                    {workout.status === "regenerated" && (
-                        <div className="text-xs mt-0.5 text-blue-600 font-medium">🔄 재생성됨</div>
-                    )}
-                </div>
+                )}
+                {isRest && (
+                    <div className="text-[10px] opacity-60 leading-tight">😴 Rest</div>
+                )}
+            </div>
 
-                {/* Bottom: Chart thumbnail (full width) */}
-                <div className="w-full h-12">
-                    {!isRest && workout.planned_steps && workout.planned_steps.length > 0 ? (
-                        <WorkoutThumbnailChart steps={workout.planned_steps} height={48} />
-                    ) : (
-                        <div className="flex items-center justify-center h-full text-xs text-gray-400">
-                            {isRest ? "😴 Rest" : "No chart"}
-                        </div>
-                    )}
-                </div>
+            {/* Right: Chart thumbnail (compact) */}
+            <div className="flex-shrink-0 w-28 h-8">
+                {!isRest && workout.planned_steps && workout.planned_steps.length > 0 ? (
+                    <WorkoutThumbnailChart steps={workout.planned_steps} height={32} />
+                ) : null}
             </div>
         </div>
     );
