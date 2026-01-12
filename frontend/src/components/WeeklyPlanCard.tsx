@@ -64,12 +64,12 @@ function DailyWorkoutRow({
 
     return (
         <div
-            className={`flex items-center gap-4 p-4 rounded-lg ${colorClass} transition-all hover:scale-[1.01] cursor-pointer`}
+            className={`flex gap-3 p-3 rounded-lg ${colorClass} transition-all hover:scale-[1.01] cursor-pointer`}
             onClick={onClick}
             title={workout.planned_rationale}
         >
-            {/* Left: Day info */}
-            <div className="flex-shrink-0 w-24">
+            {/* Left: Day info (fixed width) */}
+            <div className="flex-shrink-0 w-16">
                 <div className="text-xs font-medium opacity-70">
                     {workout.day_name}
                     {workout.session && (
@@ -81,36 +81,39 @@ function DailyWorkoutRow({
                 </div>
             </div>
 
-            {/* Middle: Workout info */}
-            <div className="flex-grow min-w-0">
-                <div className="font-semibold text-sm truncate">
-                    {sessionLabel}{emoji} {workout.planned_name || (isRest ? "Rest Day" : "Workout")}
+            {/* Right: Workout info + Chart (stacked vertically) */}
+            <div className="flex-grow min-w-0 flex flex-col gap-2">
+                {/* Top: Name and duration info */}
+                <div>
+                    <div className="font-semibold text-sm truncate">
+                        {sessionLabel}{emoji} {workout.planned_name || (isRest ? "Rest Day" : "Workout")}
+                    </div>
+                    {!isRest && (
+                        <div className="text-xs mt-0.5 opacity-80">
+                            {workout.planned_duration}분 • TSS {workout.planned_tss || 0}
+                        </div>
+                    )}
+                    {workout.status === "completed" && (
+                        <div className="text-xs mt-0.5 text-green-600 font-medium">✅ 완료</div>
+                    )}
+                    {workout.status === "skipped" && (
+                        <div className="text-xs mt-0.5 text-gray-500 font-medium">⏭️ 건너뜀</div>
+                    )}
+                    {workout.status === "regenerated" && (
+                        <div className="text-xs mt-0.5 text-blue-600 font-medium">🔄 재생성됨</div>
+                    )}
                 </div>
-                {!isRest && (
-                    <div className="text-xs mt-1 opacity-80">
-                        {workout.planned_duration}분 • TSS {workout.planned_tss || 0}
-                    </div>
-                )}
-                {workout.status === "completed" && (
-                    <div className="text-xs mt-1 text-green-600 font-medium">✅ 완료</div>
-                )}
-                {workout.status === "skipped" && (
-                    <div className="text-xs mt-1 text-gray-500 font-medium">⏭️ 건너뜀</div>
-                )}
-                {workout.status === "regenerated" && (
-                    <div className="text-xs mt-1 text-blue-600 font-medium">🔄 재생성됨</div>
-                )}
-            </div>
 
-            {/* Right: Chart thumbnail */}
-            <div className="flex-shrink-0 w-48 h-14">
-                {!isRest && workout.planned_steps && workout.planned_steps.length > 0 ? (
-                    <WorkoutThumbnailChart steps={workout.planned_steps} height={50} />
-                ) : (
-                    <div className="flex items-center justify-center h-full text-xs text-gray-400">
-                        {isRest ? "😴 Rest" : "No chart"}
-                    </div>
-                )}
+                {/* Bottom: Chart thumbnail (full width) */}
+                <div className="w-full h-12">
+                    {!isRest && workout.planned_steps && workout.planned_steps.length > 0 ? (
+                        <WorkoutThumbnailChart steps={workout.planned_steps} height={48} />
+                    ) : (
+                        <div className="flex items-center justify-center h-full text-xs text-gray-400">
+                            {isRest ? "😴 Rest" : "No chart"}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
