@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { TrainingMetrics, WellnessMetrics, AthleteProfile } from "@/lib/api";
 
@@ -8,6 +9,7 @@ interface FitnessCardProps {
 }
 
 export function FitnessCard({ training, wellness, profile }: FitnessCardProps) {
+    const { t } = useTranslation();
     // TSB color based on value
     const getTsbColor = (tsb: number) => {
         if (tsb > 10) return "text-green-500";
@@ -34,7 +36,7 @@ export function FitnessCard({ training, wellness, profile }: FitnessCardProps) {
         <Card className="w-full">
             <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center gap-2">
-                    📊 오늘의 컨디션
+                    {t('fitness.title')}
                 </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -54,7 +56,7 @@ export function FitnessCard({ training, wellness, profile }: FitnessCardProps) {
                     )}
                     {profile.weight && (
                         <div className="flex items-center gap-1">
-                            <span className="text-xs text-muted-foreground">체중</span>
+                            <span className="text-xs text-muted-foreground">{t('fitness.weight')}</span>
                             <span className="font-bold">{profile.weight}kg</span>
                         </div>
                     )}
@@ -70,13 +72,13 @@ export function FitnessCard({ training, wellness, profile }: FitnessCardProps) {
                 <div className="grid grid-cols-2 gap-4">
                     {/* Left: Training Metrics */}
                     <div className="space-y-2">
-                        <div className="text-xs font-medium text-muted-foreground mb-1">📈 훈련 부하</div>
+                        <div className="text-xs font-medium text-muted-foreground mb-1">{t('fitness.trainingLoad')}</div>
                         <div className="flex justify-between items-baseline">
-                            <span className="text-sm text-muted-foreground">CTL (체력)</span>
+                            <span className="text-sm text-muted-foreground">{t('fitness.ctlLabel')}</span>
                             <span className="text-lg font-bold">{training.ctl.toFixed(1)}</span>
                         </div>
                         <div className="flex justify-between items-baseline">
-                            <span className="text-sm text-muted-foreground">ATL (피로)</span>
+                            <span className="text-sm text-muted-foreground">{t('fitness.atlLabel')}</span>
                             <span className="text-lg font-bold">{training.atl.toFixed(1)}</span>
                         </div>
                         <div className="flex justify-between items-baseline">
@@ -89,7 +91,7 @@ export function FitnessCard({ training, wellness, profile }: FitnessCardProps) {
 
                     {/* Right: Wellness Metrics */}
                     <div className="space-y-2">
-                        <div className="text-xs font-medium text-muted-foreground mb-1">💚 웰니스</div>
+                        <div className="text-xs font-medium text-muted-foreground mb-1">{t('fitness.wellness')}</div>
                         {wellness.hrv && (
                             <div className="flex justify-between items-baseline">
                                 <span className="text-sm text-muted-foreground">HRV</span>
@@ -98,13 +100,13 @@ export function FitnessCard({ training, wellness, profile }: FitnessCardProps) {
                         )}
                         {wellness.rhr && (
                             <div className="flex justify-between items-baseline">
-                                <span className="text-sm text-muted-foreground">안정 심박</span>
+                                <span className="text-sm text-muted-foreground">{t('fitness.restingHR')}</span>
                                 <span className="text-lg font-bold">{wellness.rhr} bpm</span>
                             </div>
                         )}
                         {wellness.sleep_hours && (
                             <div className="flex justify-between items-baseline">
-                                <span className="text-sm text-muted-foreground">수면</span>
+                                <span className="text-sm text-muted-foreground">{t('fitness.sleep')}</span>
                                 <span className={`text-lg font-bold ${wellness.sleep_hours >= 7 ? 'text-green-500' : wellness.sleep_hours >= 6 ? 'text-yellow-500' : 'text-red-500'}`}>
                                     {wellness.sleep_hours.toFixed(1)}h
                                 </span>
@@ -112,7 +114,7 @@ export function FitnessCard({ training, wellness, profile }: FitnessCardProps) {
                         )}
                         {wellness.sleep_score && !wellness.sleep_hours && (
                             <div className="flex justify-between items-baseline">
-                                <span className="text-sm text-muted-foreground">수면 점수</span>
+                                <span className="text-sm text-muted-foreground">{t('fitness.sleepScore')}</span>
                                 <span className={`text-lg font-bold ${wellness.sleep_score >= 80 ? 'text-green-500' : wellness.sleep_score >= 60 ? 'text-yellow-500' : 'text-red-500'}`}>
                                     {wellness.sleep_score.toFixed(0)}점
                                 </span>
@@ -125,7 +127,7 @@ export function FitnessCard({ training, wellness, profile }: FitnessCardProps) {
                 <div className="pt-3 border-t">
                     <div className="flex justify-between items-center">
                         <div className="flex items-center gap-2">
-                            <span className="text-sm text-muted-foreground">오늘의 준비도</span>
+                            <span className="text-sm text-muted-foreground">{t('fitness.readiness')}</span>
                             <span className="text-xs text-muted-foreground">{training.form_status}</span>
                         </div>
                         <span className={`font-bold ${getReadinessColor(wellness.readiness)}`}>
