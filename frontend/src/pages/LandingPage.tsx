@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -11,6 +12,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-background to-muted">
+            <div className="absolute top-4 right-4"><LanguageSwitcher /></div>
             <div className="container mx-auto px-4 py-16">
                 <div className="text-center max-w-3xl mx-auto">
                     <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
