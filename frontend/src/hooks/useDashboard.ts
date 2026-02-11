@@ -9,6 +9,7 @@
  */
 
 import { useState, useCallback, useEffect } from "react";
+import i18n from '@/i18n/config';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { queryKeys } from "@/lib/queryClient";
@@ -155,11 +156,11 @@ export function useDashboard(): UseDashboardReturn {
                 setWorkout(result.workout);
                 setError(null);
             } else {
-                setError(result.error || "워크아웃 생성 실패");
+                setError(result.error || i18n.t("workout.generateFailed"));
             }
         },
         onError: (e: Error) => {
-            setError(`생성 오류: ${e.message}`);
+            setError(i18n.t("workout.generateError", { message: e.message }));
         },
     });
 
@@ -177,16 +178,16 @@ export function useDashboard(): UseDashboardReturn {
         }) => createWorkout(data, session?.access_token || ''),
         onSuccess: (result) => {
             if (result.success) {
-                setSuccess(`✅ 등록 완료! (Event ID: ${result.event_id})`);
+                setSuccess(i18n.t("workout.registerSuccess", { eventId: result.event_id }));
                 // Invalidate calendar to refetch with new workout
                 queryClient.invalidateQueries({ queryKey: queryKeys.weeklyCalendar() });
                 queryClient.invalidateQueries({ queryKey: queryKeys.fitness() });
             } else {
-                setError(result.error || "등록 실패");
+                setError(result.error || i18n.t("workout.registerFailed"));
             }
         },
         onError: (e: Error) => {
-            setError(`등록 오류: ${e.message}`);
+            setError(i18n.t("workout.registerError", { message: e.message }));
         },
     });
 
@@ -195,7 +196,7 @@ export function useDashboard(): UseDashboardReturn {
         onSuccess: (plan) => {
             // Update cache with new plan
             queryClient.setQueryData(queryKeys.weeklyPlan(weekStartDate), plan);
-            setSuccess("✅ 주간 워크아웃 계획이 생성되었습니다!");
+            setSuccess(i18n.t("weeklyPlan.generateSuccess"));
             // Invalidate related caches
             queryClient.invalidateQueries({ queryKey: queryKeys.weeklyCalendar() });
             queryClient.invalidateQueries({ queryKey: queryKeys.fitness() });
@@ -203,9 +204,9 @@ export function useDashboard(): UseDashboardReturn {
         onError: (e: Error) => {
             const errorMsg = e.message;
             if (errorMsg.includes('rate_limit') || errorMsg.includes('429')) {
-                setError(`⏱️ API 사용량 한도 도달. 잠시 후 다시 시도해주세요.`);
+                setError(i18n.t("weeklyPlan.generateRateLimit"));
             } else {
-                setError(`주간 계획 생성 실패: ${errorMsg}`);
+                setError(i18n.t("weeklyPlan.generateFailed", { message: errorMsg }));
             }
         },
     });
@@ -216,12 +217,12 @@ export function useDashboard(): UseDashboardReturn {
         onSuccess: () => {
             // Remove from cache
             queryClient.setQueryData(queryKeys.weeklyPlan(weekStartDate), null);
-            setSuccess("주간 계획이 삭제되었습니다.");
+            setSuccess(i18n.t("weeklyPlan.deleted"));
             // Invalidate calendar
             queryClient.invalidateQueries({ queryKey: queryKeys.weeklyCalendar() });
         },
         onError: (e: Error) => {
-            setError(`삭제 실패: ${e.message}`);
+            setError(i18n.t("weeklyPlan.deleteFailed", { message: e.message }));
         },
     });
 
@@ -229,16 +230,16 @@ export function useDashboard(): UseDashboardReturn {
         mutationFn: (planId: string) =>
             registerWeeklyPlanToIntervals(session?.access_token || '', planId),
         onSuccess: (result) => {
-            setSuccess(`${result.registered}개의 워크아웃이 Intervals.icu에 등록되었습니다.`);
+            setSuccess(i18n.t("weeklyPlan.registerResult", { registered: result.registered }));
             if (result.failed > 0) {
-                setError(`${result.failed}개의 워크아웃 등록 실패`);
+                setError(i18n.t("weeklyPlan.registerPartialFail", { failed: result.failed }));
             }
             // Invalidate calendar to show registered workouts
             queryClient.invalidateQueries({ queryKey: queryKeys.weeklyCalendar() });
             queryClient.invalidateQueries({ queryKey: queryKeys.fitness() });
         },
         onError: (e: Error) => {
-            setError(`등록 실패: ${e.message}`);
+            setError(i18n.t("weeklyPlan.registerFailed", { message: e.message }));
         },
     });
 
@@ -305,10 +306,10 @@ export function useDashboard(): UseDashboardReturn {
                 setWorkout(result.workout);
                 setSuccess(`📅 ${date} 워크아웃을 불러왔습니다.`);
             } else {
-                setError(`${date}에는 저장된 워크아웃이 없습니다.`);
+                setError(i18n.t("workout.noSavedWorkout", { date }));
             }
         } catch (e) {
-            setError(`불러오기 실패: ${e instanceof Error ? e.message : String(e)}`);
+            setError(i18n.t("workout.loadFailed", { message: e instanceof Error ? e.message : String(e) }));
         } finally {
             setIsLoading(false);
         }

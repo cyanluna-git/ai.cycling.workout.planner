@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,306 +9,144 @@ import { useAuth } from '@/contexts/AuthContext'
 const API_BASE = import.meta.env.VITE_API_URL || ''
 
 interface Settings {
-    ftp: number
-    max_hr: number
-    lthr: number
-    training_goal: string
-    exclude_barcode_workouts?: boolean
-    training_style?: string
-    preferred_duration?: number
-    training_focus?: string  // recovery, maintain, build
+    ftp: number; max_hr: number; lthr: number; training_goal: string;
+    exclude_barcode_workouts?: boolean; training_style?: string;
+    preferred_duration?: number; training_focus?: string;
 }
 
-interface ApiKeysCheck {
-    intervals_configured: boolean
-}
+interface ApiKeysCheck { intervals_configured: boolean; }
 
 export function SettingsPage({ onBack }: { onBack: () => void }) {
+    const { t } = useTranslation();
     const { session, signOut } = useAuth()
     const [settings, setSettings] = useState<Settings>({
-        ftp: 200,
-        max_hr: 190,
-        lthr: 170,
-        training_goal: '지구력 강화',
-        exclude_barcode_workouts: false,
-        training_style: 'auto',
-        preferred_duration: 60,
-        training_focus: 'maintain',
+        ftp: 200, max_hr: 190, lthr: 170, training_goal: '',
+        exclude_barcode_workouts: false, training_style: 'auto',
+        preferred_duration: 60, training_focus: 'maintain',
     })
-    const [apiKeys, setApiKeys] = useState({
-        intervals_api_key: '',
-        athlete_id: '',
-    })
+    const [apiKeys, setApiKeys] = useState({ intervals_api_key: '', athlete_id: '' })
     const [apiKeysCheck, setApiKeysCheck] = useState<ApiKeysCheck | null>(null)
     const [saving, setSaving] = useState(false)
     const [message, setMessage] = useState<string | null>(null)
 
     useEffect(() => {
-        if (session?.access_token) {
-            fetchSettings()
-            checkApiKeys()
-        }
+        if (session?.access_token) { fetchSettings(); checkApiKeys(); }
     }, [session])
 
     const fetchSettings = async () => {
         try {
-            const res = await fetch(`${API_BASE}/api/settings`, {
-                headers: { Authorization: `Bearer ${session?.access_token}` },
-            })
-            if (res.ok) {
-                const data = await res.json()
-                setSettings(data.settings)
-            }
-        } catch (e) {
-            console.error('Failed to fetch settings', e)
-        }
+            const res = await fetch(`${API_BASE}/api/settings`, { headers: { Authorization: `Bearer ${session?.access_token}` } });
+            if (res.ok) { const data = await res.json(); setSettings(data.settings); }
+        } catch (e) { console.error('Failed to fetch settings', e); }
     }
 
     const checkApiKeys = async () => {
         try {
-            const res = await fetch(`${API_BASE}/api/settings/api-keys/check`, {
-                headers: { Authorization: `Bearer ${session?.access_token}` },
-            })
-            if (res.ok) {
-                setApiKeysCheck(await res.json())
-            }
-        } catch (e) {
-            console.error('Failed to check API keys', e)
-        }
+            const res = await fetch(`${API_BASE}/api/settings/api-keys/check`, { headers: { Authorization: `Bearer ${session?.access_token}` } });
+            if (res.ok) setApiKeysCheck(await res.json());
+        } catch (e) { console.error('Failed to check API keys', e); }
     }
 
     const saveSettings = async () => {
-        setSaving(true)
-        setMessage(null)
+        setSaving(true); setMessage(null);
         try {
             const res = await fetch(`${API_BASE}/api/settings`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${session?.access_token}`,
-                },
+                method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
                 body: JSON.stringify(settings),
-            })
-            if (res.ok) {
-                setMessage('✅ 설정이 저장되었습니다')
-            }
-        } catch (e) {
-            setMessage('❌ 저장 실패')
-        } finally {
-            setSaving(false)
-        }
+            });
+            if (res.ok) setMessage(t('settings.settingsSaved'));
+        } catch (e) { setMessage(t('common.saveFailed')); } finally { setSaving(false); }
     }
 
     const saveApiKeys = async () => {
-        setSaving(true)
-        setMessage(null)
+        setSaving(true); setMessage(null);
         try {
             const res = await fetch(`${API_BASE}/api/settings/api-keys`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${session?.access_token}`,
-                },
+                method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
                 body: JSON.stringify(apiKeys),
-            })
-            if (res.ok) {
-                setMessage('✅ API 키가 저장되었습니다')
-                checkApiKeys()
-                setApiKeys({ ...apiKeys, intervals_api_key: '' })
-            }
-        } catch (e) {
-            setMessage('❌ 저장 실패')
-        } finally {
-            setSaving(false)
-        }
+            });
+            if (res.ok) { setMessage(t('settings.apiKeySaved')); checkApiKeys(); setApiKeys({ ...apiKeys, intervals_api_key: '' }); }
+        } catch (e) { setMessage(t('common.saveFailed')); } finally { setSaving(false); }
     }
 
     return (
         <div className="min-h-screen bg-background p-4">
             <div className="container mx-auto max-w-2xl space-y-6">
-                {/* Header */}
                 <div className="flex justify-between items-center">
-                    <Button variant="ghost" onClick={onBack}>
-                        ← 돌아가기
-                    </Button>
-                    <Button variant="outline" onClick={signOut}>
-                        로그아웃
-                    </Button>
+                    <Button variant="ghost" onClick={onBack}>{t('common.back')}</Button>
+                    <Button variant="outline" onClick={signOut}>{t('common.logout')}</Button>
                 </div>
-
-                {message && (
-                    <div className="p-3 rounded bg-muted text-center">{message}</div>
-                )}
-
-                {/* Training Settings */}
+                {message && <div className="p-3 rounded bg-muted text-center">{message}</div>}
                 <Card>
-                    <CardHeader>
-                        <CardTitle>🎯 훈련 설정</CardTitle>
-                    </CardHeader>
+                    <CardHeader><CardTitle>{t('settings.trainingTitle')}</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
-                        <p className="text-sm text-muted-foreground">
-                            FTP, 최대 심박수, 역치 심박수는 Intervals.icu에서 자동으로 가져옵니다.
-                        </p>
-
-                        {/* Training Focus - Simple 3 options */}
+                        <p className="text-sm text-muted-foreground">{t('settings.trainingAutoSync')}</p>
                         <div className="space-y-2">
-                            <Label>주간 훈련 목표</Label>
+                            <Label>{t('settings.weeklyGoal')}</Label>
                             <div className="grid grid-cols-3 gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setSettings({ ...settings, training_focus: 'recovery' })}
-                                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${settings.training_focus === 'recovery'
-                                            ? 'bg-green-500 text-white'
-                                            : 'bg-muted hover:bg-muted/80'
-                                        }`}
-                                >
-                                    🌿 회복
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setSettings({ ...settings, training_focus: 'maintain' })}
-                                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${settings.training_focus === 'maintain'
-                                            ? 'bg-blue-500 text-white'
-                                            : 'bg-muted hover:bg-muted/80'
-                                        }`}
-                                >
-                                    ⚖️ 유지
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setSettings({ ...settings, training_focus: 'build' })}
-                                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${settings.training_focus === 'build'
-                                            ? 'bg-orange-500 text-white'
-                                            : 'bg-muted hover:bg-muted/80'
-                                        }`}
-                                >
-                                    💪 강화
-                                </button>
+                                <button type="button" onClick={() => setSettings({ ...settings, training_focus: 'recovery' })} className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${settings.training_focus === 'recovery' ? 'bg-green-500 text-white' : 'bg-muted hover:bg-muted/80'}`}>{t('settings.recovery')}</button>
+                                <button type="button" onClick={() => setSettings({ ...settings, training_focus: 'maintain' })} className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${settings.training_focus === 'maintain' ? 'bg-blue-500 text-white' : 'bg-muted hover:bg-muted/80'}`}>{t('settings.maintain')}</button>
+                                <button type="button" onClick={() => setSettings({ ...settings, training_focus: 'build' })} className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${settings.training_focus === 'build' ? 'bg-orange-500 text-white' : 'bg-muted hover:bg-muted/80'}`}>{t('settings.build')}</button>
                             </div>
-                            <p className="text-xs text-muted-foreground">
-                                회복: TSS -30% / 유지: 현재 유지 / 강화: TSS +10%
-                            </p>
+                            <p className="text-xs text-muted-foreground">{t('settings.focusDescription')}</p>
                         </div>
-
-                        {/* Training Style - for Weekly Plan */}
                         <div className="space-y-2">
-                            <Label>훈련 스타일</Label>
-                            <select
-                                value={settings.training_style || 'auto'}
-                                onChange={(e) =>
-                                    setSettings({ ...settings, training_style: e.target.value })
-                                }
-                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                            >
-                                <option value="auto">자동 (TSB 기반)</option>
-                                <option value="polarized">양극화 (80/20)</option>
-                                <option value="norwegian">노르웨이식 (역치)</option>
-                                <option value="sweetspot">스윗스팟</option>
-                                <option value="threshold">역치 중심</option>
-                                <option value="endurance">지구력</option>
+                            <Label>{t('settings.trainingStyle')}</Label>
+                            <select value={settings.training_style || 'auto'} onChange={(e) => setSettings({ ...settings, training_style: e.target.value })} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                                <option value="auto">{t('settings.styleAuto')}</option>
+                                <option value="polarized">{t('settings.stylePolarized')}</option>
+                                <option value="norwegian">{t('settings.styleNorwegian')}</option>
+                                <option value="sweetspot">{t('settings.styleSweetspot')}</option>
+                                <option value="threshold">{t('settings.styleThreshold')}</option>
+                                <option value="endurance">{t('settings.styleEndurance')}</option>
                             </select>
                         </div>
-
                         <div className="flex items-center space-x-2">
-                            <input
-                                type="checkbox"
-                                id="exclude_barcode"
-                                checked={settings.exclude_barcode_workouts ?? false}
-                                onChange={(e) =>
-                                    setSettings({ ...settings, exclude_barcode_workouts: e.target.checked })
-                                }
-                                className="h-4 w-4 rounded border-gray-300"
-                            />
+                            <input type="checkbox" id="exclude_barcode" checked={settings.exclude_barcode_workouts ?? false} onChange={(e) => setSettings({ ...settings, exclude_barcode_workouts: e.target.checked })} className="h-4 w-4 rounded border-gray-300" />
                             <div>
-                                <label htmlFor="exclude_barcode" className="text-sm font-medium cursor-pointer">
-                                    바코드형 인터벌 워크아웃 제외 (40/20, 30/30 등)
-                                </label>
-                                <p className="text-xs text-muted-foreground">
-                                    ERG 반응이 느린 스마트 롤러 등에 권장
-                                </p>
+                                <label htmlFor="exclude_barcode" className="text-sm font-medium cursor-pointer">{t('settings.excludeBarcode')}</label>
+                                <p className="text-xs text-muted-foreground">{t('settings.excludeBarcodeHint')}</p>
                             </div>
                         </div>
-                        <Button onClick={saveSettings} disabled={saving}>
-                            {saving ? '저장 중...' : '설정 저장'}
-                        </Button>
+                        <Button onClick={saveSettings} disabled={saving}>{saving ? t('common.saving') : t('settings.saveSettings')}</Button>
                     </CardContent>
                 </Card>
-
-                {/* API Keys */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>🔑 Intervals.icu 연동</CardTitle>
+                        <CardTitle>{t('settings.apiTitle')}</CardTitle>
                         {apiKeysCheck && (
                             <div className="text-sm text-muted-foreground">
-                                연동 상태: {apiKeysCheck.intervals_configured ? '✅ 완료' : '❌ 미설정'}
+                                {t('settings.apiStatus')} {apiKeysCheck.intervals_configured ? t('settings.apiConnected') : t('settings.apiNotConnected')}
                             </div>
                         )}
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {apiKeysCheck?.intervals_configured ? (
-                            /* Connected state - simple message */
                             <div className="text-center py-4">
                                 <div className="text-4xl mb-2">🎉</div>
-                                <p className="text-sm text-muted-foreground">
-                                    Intervals.icu에 정상적으로 연결되어 있습니다.
-                                </p>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="mt-4"
-                                    onClick={() => setApiKeysCheck({ intervals_configured: false })}
-                                >
-                                    API 키 재설정
-                                </Button>
+                                <p className="text-sm text-muted-foreground">{t('settings.apiConnectedMessage')}</p>
+                                <Button variant="outline" size="sm" className="mt-4" onClick={() => setApiKeysCheck({ intervals_configured: false })}>{t('settings.apiResetKey')}</Button>
                             </div>
                         ) : (
-                            /* Not connected - show setup form */
                             <>
-                                {/* Guide Section */}
                                 <div className="p-4 rounded-lg bg-muted/50 border border-border">
-                                    <h4 className="font-medium mb-2">📌 API 키 발급 방법</h4>
+                                    <h4 className="font-medium mb-2">{t('settings.apiGuideTitle')}</h4>
                                     <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                                        <li>
-                                            <a
-                                                href="https://intervals.icu/settings"
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-primary hover:underline"
-                                            >
-                                                Intervals.icu Settings
-                                            </a>
-                                            {' '}페이지로 이동
-                                        </li>
-                                        <li>"Developer" 탭 클릭</li>
-                                        <li>"API Key" 섹션에서 키 복사</li>
-                                        <li>페이지 상단의 Athlete ID도 함께 확인 (예: i123456)</li>
+                                        <li><a href="https://intervals.icu/settings" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Intervals.icu Settings</a> {t('settings.apiGuideStep1')}</li>
+                                        <li>{t('settings.apiGuideStep2')}</li>
+                                        <li>{t('settings.apiGuideStep3')}</li>
+                                        <li>{t('settings.apiGuideStep4')}</li>
                                     </ol>
                                 </div>
-
                                 <div className="space-y-2">
-                                    <Label>Intervals.icu API Key</Label>
-                                    <Input
-                                        type="password"
-                                        placeholder="API 키 입력"
-                                        value={apiKeys.intervals_api_key}
-                                        onChange={(e) =>
-                                            setApiKeys({ ...apiKeys, intervals_api_key: e.target.value })
-                                        }
-                                    />
+                                    <Label>{t('settings.apiKeyLabel')}</Label>
+                                    <Input type="password" placeholder={t('settings.apiKeyPlaceholder')} value={apiKeys.intervals_api_key} onChange={(e) => setApiKeys({ ...apiKeys, intervals_api_key: e.target.value })} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Athlete ID</Label>
-                                    <Input
-                                        placeholder="예: i123456"
-                                        value={apiKeys.athlete_id}
-                                        onChange={(e) =>
-                                            setApiKeys({ ...apiKeys, athlete_id: e.target.value })
-                                        }
-                                    />
+                                    <Input placeholder={t('settings.athleteIdPlaceholder')} value={apiKeys.athlete_id} onChange={(e) => setApiKeys({ ...apiKeys, athlete_id: e.target.value })} />
                                 </div>
-                                <Button onClick={saveApiKeys} disabled={saving}>
-                                    {saving ? '저장 중...' : 'API 키 저장'}
-                                </Button>
+                                <Button onClick={saveApiKeys} disabled={saving}>{saving ? t('common.saving') : t('settings.saveApiKey')}</Button>
                             </>
                         )}
                     </CardContent>

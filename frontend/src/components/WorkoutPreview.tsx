@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { GeneratedWorkout } from "@/lib/api";
@@ -44,6 +45,7 @@ function formatStepWithWatts(step: string, ftp: number): { text: string; color: 
 }
 
 export function WorkoutPreview({ workout, onRegister, isRegistering, isRegistered, ftp = 250 }: WorkoutPreviewProps) {
+    const { t } = useTranslation();
     // Use structured steps if available (preferred), otherwise fall back to pre-formatted text
     const sections = workout.steps && workout.steps.length > 0
         ? formatWorkoutSections(workout.steps, ftp)
@@ -55,7 +57,7 @@ export function WorkoutPreview({ workout, onRegister, isRegistering, isRegistere
                 <CardTitle className="text-lg flex items-center justify-between">
                     <span>✨ {cleanWorkoutName(workout.name)}</span>
                     <span className="text-sm font-normal text-muted-foreground">
-                        {workout.workout_type} • ~{workout.estimated_duration_minutes}분
+                        {workout.workout_type} • ~{workout.estimated_duration_minutes}{t("common.minutes")}
                         {workout.estimated_tss && ` • TSS ${workout.estimated_tss}`}
                     </span>
                 </CardTitle>
@@ -153,7 +155,7 @@ export function WorkoutPreview({ workout, onRegister, isRegistering, isRegistere
                 {/* Register Button or Success Message */}
                 {isRegistered ? (
                     <div className="w-full bg-green-500/10 text-green-600 font-bold py-2 rounded-md text-center border border-green-200 dark:border-green-900">
-                        ✅ 등록 완료!
+                        {"✅ " + t("common.registered") + "!"}
                     </div>
                 ) : (
                     <Button
