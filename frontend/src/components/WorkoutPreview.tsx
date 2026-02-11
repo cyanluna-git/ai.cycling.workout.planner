@@ -163,7 +163,7 @@ export function WorkoutPreview({ workout, onRegister, isRegistering, isRegistere
                         className="w-full"
                         disabled={isRegistering}
                     >
-                        {isRegistering ? "등록 중..." : "📅 Intervals.icu에 등록"}
+                        {isRegistering ? t("common.registering") : t("workout.registerToIntervals")}
                     </Button>
                 )}
             </CardContent>

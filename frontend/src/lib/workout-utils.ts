@@ -5,6 +5,7 @@
  */
 
 import { WORKOUT_PREFIX, AI_GENERATED_PREFIX } from "./constants";
+import i18n from "@/i18n/config";
 
 /**
  * Clean workout name by removing common prefixes.
@@ -23,15 +24,15 @@ export function cleanWorkoutName(name: string): string {
  * Format duration in minutes to a readable string.
  * 
  * @param minutes - Duration in minutes
- * @returns Formatted string like "1시간 30분" or "45분"
+ * @returns Formatted string like "1h 30min" or "45min"
  */
 export function formatDuration(minutes: number): string {
     if (minutes < 60) {
-        return `${minutes}분`;
+        return `${minutes}${i18n.t("common.minutes")}`;
     }
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    return mins > 0 ? `${hours}시간 ${mins}분` : `${hours}시간`;
+    return mins > 0 ? `${hours}${i18n.t("common.hours")} ${mins}${i18n.t("common.minutes")}` : `${hours}${i18n.t("common.hours")}`;
 }
 
 /**

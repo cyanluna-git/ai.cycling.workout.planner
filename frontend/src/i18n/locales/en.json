@@ -160,7 +160,8 @@
     "bloodPressure": "Blood Pressure",
     "respiration": "Respiration",
     "bodyFat": "Body Fat",
-    "readiness": "Today's Readiness"
+    "readiness": "Today's Readiness",
+    "perMinute": "/min"
   },
   "calendar": {
     "title": "📅 This Week's Overview",
@@ -170,7 +171,15 @@
     "plannedWorkout": "📅 Planned workout",
     "completedLegend": "Completed activities",
     "plannedLegend": "Planned workouts",
-    "dayNames": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    "dayNames": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri",
+      "Sat",
+      "Sun"
+    ]
   },
   "workout": {
     "todayTitle": "🚴 Today's Workout",
@@ -220,7 +229,8 @@
     "deleteFailed": "Delete failed: {{message}}",
     "registerResult": "{{registered}} workouts registered to Intervals.icu.",
     "registerPartialFail": "{{failed}} workouts failed to register",
-    "registerFailed": "Registration failed: {{message}}"
+    "registerFailed": "Registration failed: {{message}}",
+    "syncFailed": "Sync failed: {{message}}"
   },
   "admin": {
     "back": "← Back",
