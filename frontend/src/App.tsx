@@ -96,7 +96,7 @@ function Dashboard() {
           <div className="space-y-6">
             {fitness && <FitnessCard training={fitness.training} wellness={fitness.wellness} profile={fitness.profile} />}
             <WeeklyCalendarCard calendar={weeklyCalendar} isLoading={isLoadingCalendar} onSelectDate={handleSelectDate} />
-            <TodayWorkoutCard workout={workout} onGenerate={handleGenerate} onRegister={handleRegister} isLoading={isLoading} isRegistering={isRegistering} isRegistered={!!success && success.includes("등록 완료") || success.includes("Registered")} ftp={fitness?.profile?.ftp ?? 250} error={error} success={success} />
+            <TodayWorkoutCard workout={workout} onGenerate={handleGenerate} onRegister={handleRegister} isLoading={isLoading} isRegistering={isRegistering} isRegistered={!!success && (success.includes(t('common.registered')) || success.includes("Registered"))} ftp={fitness?.profile?.ftp ?? 250} error={error} success={success} />
           </div>
           <div className="space-y-4">
             <WeeklyPlanCard plan={weeklyPlan} isLoading={isLoadingPlan} isGenerating={isGeneratingPlan} isRegisteringAll={isRegisteringPlanAll} isSyncing={isSyncingPlan} currentWeekOffset={currentWeekOffset} onGenerate={handleGenerateWeeklyPlan} onDelete={handleDeleteWeeklyPlan} onRegisterAll={handleRegisterWeeklyPlanAll} onSync={handleSyncWeeklyPlan} onWeekNavigation={handleWeekNavigation} />
