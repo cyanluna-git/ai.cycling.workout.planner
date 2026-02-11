@@ -55,6 +55,7 @@ function DailyWorkoutRow({
     workout: DailyWorkout;
     onClick: () => void;
 }) {
+    const { t } = useTranslation();
     const workoutType = workout.planned_type || "Endurance";
     const colorClass = typeColors[workoutType] || typeColors.Endurance;
     const emoji = typeEmoji[workoutType] || "🚴";
@@ -86,7 +87,7 @@ function DailyWorkoutRow({
                 </div>
                 {!isRest && (
                     <div className="text-[10px] opacity-80 leading-tight">
-                        {workout.planned_duration}분 • TSS {workout.planned_tss || 0}
+                        {workout.planned_duration}{t("common.minutes")} • TSS {workout.planned_tss || 0}
                     </div>
                 )}
                 {isRest && (
@@ -156,7 +157,7 @@ export function WeeklyPlanCard({
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle>📅 주간 워크아웃 계획</CardTitle>
+                    <CardTitle>{t("weeklyPlan.title")}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="flex items-center justify-center py-8">
@@ -181,7 +182,7 @@ export function WeeklyPlanCard({
                                 onClick={() => onWeekNavigation('prev')}
                                 disabled={isLoading}
                             >
-                                ← 지난 주
+                                {t("weeklyPlan.prevWeek")}
                             </Button>
                             <div className="text-sm font-medium px-4 py-2 bg-primary/10 rounded-md">
                                 {getWeekLabel()}
@@ -192,12 +193,12 @@ export function WeeklyPlanCard({
                                 onClick={() => onWeekNavigation('next')}
                                 disabled={isLoading}
                             >
-                                다음 주 →
+                                {t("weeklyPlan.nextWeekBtn")}
                             </Button>
                         </div>
                     )}
 
-                    <CardTitle>📅 주간 워크아웃 계획</CardTitle>
+                    <CardTitle>{t("weeklyPlan.title")}</CardTitle>
                     <CardDescription>
                         {getWeekLabel()} ({getNextWeekRange()}) - {t("weeklyPlan.createPrompt")}
                     </CardDescription>
@@ -215,10 +216,10 @@ export function WeeklyPlanCard({
                             {isGenerating ? (
                                 <>
                                     <span className="animate-spin mr-2">⏳</span>
-                                    생성 중...
+                                    {t("common.generating")}
                                 </>
                             ) : (
-                                <>🗓️ 주간 계획 생성</>
+                                <>{t("weeklyPlan.generatePlan")}</>
                             )}
                         </Button>
                     </div>
@@ -256,7 +257,7 @@ export function WeeklyPlanCard({
                             onClick={() => onWeekNavigation('prev')}
                             disabled={isLoading}
                         >
-                            ← 지난 주
+                            {t("weeklyPlan.prevWeek")}
                         </Button>
                         <div className="text-sm font-medium px-4 py-2 bg-primary/10 rounded-md">
                             {getWeekLabel()}
@@ -267,14 +268,14 @@ export function WeeklyPlanCard({
                             onClick={() => onWeekNavigation('next')}
                             disabled={isLoading}
                         >
-                            다음 주 →
+                            {t("weeklyPlan.nextWeekBtn")}
                         </Button>
                     </div>
                 )}
 
                 <div className="flex items-center justify-between">
                     <div>
-                        <CardTitle>📅 주간 워크아웃 계획</CardTitle>
+                        <CardTitle>{t("weeklyPlan.title")}</CardTitle>
                         <CardDescription>
                             {formatDateRange()} • {styleNames[plan.training_style || "auto"]}
                         </CardDescription>
@@ -343,7 +344,7 @@ export function WeeklyPlanCard({
                         onClick={onGenerate}
                         disabled={isGenerating}
                     >
-                        {isGenerating ? "생성 중..." : "🔄 재생성"}
+                        {isGenerating ? t("common.generating") : t("weeklyPlan.regenerate")}
                     </Button>
                     {onSync && (
                         <Button
@@ -352,7 +353,7 @@ export function WeeklyPlanCard({
                             onClick={() => onSync(plan.id)}
                             disabled={isSyncing}
                         >
-                            {isSyncing ? "동기화 중..." : "🔃 Sync"}
+                            {isSyncing ? t("weeklyPlan.syncing") : "🔃 Sync"}
                         </Button>
                     )}
                     {onRegisterAll && (
@@ -362,7 +363,7 @@ export function WeeklyPlanCard({
                             onClick={() => onRegisterAll(plan.id)}
                             disabled={isRegisteringAll}
                         >
-                            {isRegisteringAll ? "등록 중..." : "📤 Intervals.icu 등록"}
+                            {isRegisteringAll ? t("common.registering") : t("weeklyPlan.registerAll")}
                         </Button>
                     )}
                     {onDelete && (
@@ -376,25 +377,19 @@ export function WeeklyPlanCard({
                                             onDelete(plan.id);
                                             setShowConfirmDelete(false);
                                         }}
-                                    >
-                                        확인
-                                    </Button>
+                                    >{t("common.confirm")}</Button>
                                     <Button
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => setShowConfirmDelete(false)}
-                                    >
-                                        취소
-                                    </Button>
+                                    >{t("common.cancel")}</Button>
                                 </div>
                             ) : (
                                 <Button
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => setShowConfirmDelete(true)}
-                                >
-                                    🗑️ 삭제
-                                </Button>
+                                >{"🗑️ " + t("common.delete")}</Button>
                             )}
                         </>
                     )}

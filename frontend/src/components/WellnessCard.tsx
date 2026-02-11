@@ -102,7 +102,7 @@ export function WellnessCard({ wellness, className }: WellnessCardProps) {
                                 <div className="flex items-center gap-2">
                                     <span className="text-sm text-muted-foreground">{t('wellnessCard.sleepScore')}</span>
                                     <span className={`font-bold ${wellness.sleep_score >= 80 ? 'text-green-500' : wellness.sleep_score >= 60 ? 'text-yellow-500' : 'text-red-500'}`}>
-                                        {wellness.sleep_score.toFixed(0)}점
+                                        {wellness.sleep_score.toFixed(0)}{t("common.points")}
                                     </span>
                                 </div>
                             )}
@@ -193,7 +193,7 @@ export function WellnessCard({ wellness, className }: WellnessCardProps) {
                                 <div className="flex items-center gap-2">
                                     <span className="text-sm text-muted-foreground">{t('wellnessCard.respiration')}</span>
                                     <span className="font-bold">{wellness.respiration.toFixed(1)}</span>
-                                    <span className="text-xs text-muted-foreground">/분</span>
+                                    <span className="text-xs text-muted-foreground">{t("wellnessCard.perMinute")}</span>
                                 </div>
                             )}
                             {wellness.body_fat && (

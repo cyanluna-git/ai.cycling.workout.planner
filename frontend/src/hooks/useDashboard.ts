@@ -247,7 +247,7 @@ export function useDashboard(): UseDashboardReturn {
     useEffect(() => {
         if (!workout && todayWorkoutData && todayWorkoutData.success && todayWorkoutData.workout) {
             setWorkout(todayWorkoutData.workout);
-            setSuccess("📅 오늘의 워크아웃을 불러왔습니다.");
+            setSuccess(i18n.t("workout.loadedWorkout"));
         }
     }, [todayWorkoutData, workout]);
 
@@ -304,7 +304,7 @@ export function useDashboard(): UseDashboardReturn {
             const result = await fetchTodaysWorkout(session?.access_token || '', date);
             if (result.success && result.workout) {
                 setWorkout(result.workout);
-                setSuccess(`📅 ${date} 워크아웃을 불러왔습니다.`);
+                setSuccess(i18n.t("workout.loadedDateWorkout", { date }));
             } else {
                 setError(i18n.t("workout.noSavedWorkout", { date }));
             }
@@ -361,7 +361,7 @@ export function useDashboard(): UseDashboardReturn {
                 setSuccess(result.message);
             }
         } catch (e) {
-            setError(`Sync failed: ${e instanceof Error ? e.message : String(e)}`);
+            setError(i18n.t("weeklyPlan.syncFailed", { message: e instanceof Error ? e.message : String(e) }));
         } finally {
             setIsSyncingPlan(false);
         }

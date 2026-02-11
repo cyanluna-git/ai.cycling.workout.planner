@@ -160,7 +160,8 @@
     "bloodPressure": "혈압",
     "respiration": "호흡수",
     "bodyFat": "체지방",
-    "readiness": "오늘의 준비도"
+    "readiness": "오늘의 준비도",
+    "perMinute": "/분"
   },
   "calendar": {
     "title": "📅 이번 주 현황",
@@ -170,7 +171,15 @@
     "plannedWorkout": "📅 계획된 워크아웃",
     "completedLegend": "완료된 활동",
     "plannedLegend": "계획된 워크아웃",
-    "dayNames": ["월", "화", "수", "목", "금", "토", "일"]
+    "dayNames": [
+      "월",
+      "화",
+      "수",
+      "목",
+      "금",
+      "토",
+      "일"
+    ]
   },
   "workout": {
     "todayTitle": "🚴 오늘의 워크아웃",
@@ -220,7 +229,8 @@
     "deleteFailed": "삭제 실패: {{message}}",
     "registerResult": "{{registered}}개의 워크아웃이 Intervals.icu에 등록되었습니다.",
     "registerPartialFail": "{{failed}}개의 워크아웃 등록 실패",
-    "registerFailed": "등록 실패: {{message}}"
+    "registerFailed": "등록 실패: {{message}}",
+    "syncFailed": "동기화 실패: {{message}}"
   },
   "admin": {
     "back": "← 뒤로",

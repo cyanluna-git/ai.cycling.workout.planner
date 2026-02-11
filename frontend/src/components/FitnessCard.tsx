@@ -116,7 +116,7 @@ export function FitnessCard({ training, wellness, profile }: FitnessCardProps) {
                             <div className="flex justify-between items-baseline">
                                 <span className="text-sm text-muted-foreground">{t('fitness.sleepScore')}</span>
                                 <span className={`text-lg font-bold ${wellness.sleep_score >= 80 ? 'text-green-500' : wellness.sleep_score >= 60 ? 'text-yellow-500' : 'text-red-500'}`}>
-                                    {wellness.sleep_score.toFixed(0)}점
+                                    {wellness.sleep_score.toFixed(0)}{t("common.points")}
                                 </span>
                             </div>
                         )}
