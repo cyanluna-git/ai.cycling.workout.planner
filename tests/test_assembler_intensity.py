@@ -167,3 +167,67 @@ if __name__ == "__main__":
         import traceback
         traceback.print_exc()
         sys.exit(1)
+
+
+class TestWarmupCooldownValidation:
+    """Test warmup and cooldown auto-insertion in assemble_from_plan."""
+
+    def test_warmup_prepended_when_missing(self):
+        """First module should be warmup, auto-prepend if missing."""
+        assembler = WorkoutAssembler(tsb=0)
+        
+        # Start with main segment (no warmup)
+        modules = ["sweetspot_climb", "flush_and_fade"]
+        workout = assembler.assemble_from_plan(modules)
+        
+        # First module should be warmup
+        first_module = workout['modules'][0]
+        assert first_module['type'] == 'Warmup', \
+            f"Expected Warmup as first module, got {first_module['type']}"
+        print(f"✅ Warmup auto-prepended: {first_module.get('name', 'Unknown')}")
+
+    def test_warmup_preserved_when_present(self):
+        """Warmup should not be duplicated if already present."""
+        assembler = WorkoutAssembler(tsb=0)
+        
+        # Proper structure (warmup -> main -> cooldown)
+        modules = ["zone2_ramp", "sweetspot_climb", "flush_and_fade"]
+        workout = assembler.assemble_from_plan(modules)
+        
+        # Should have exactly 3 modules (no extra warmup)
+        assert len(workout['modules']) == 3, \
+            f"Expected 3 modules, got {len(workout['modules'])}"
+        print(f"✅ Warmup preserved, no duplication")
+
+    def test_cooldown_appended_when_missing(self):
+        """Last module should be cooldown, auto-append if missing."""
+        assembler = WorkoutAssembler(tsb=0)
+        
+        # No cooldown
+        modules = ["zone2_ramp", "sweetspot_climb"]
+        workout = assembler.assemble_from_plan(modules)
+        
+        # Last module should be cooldown
+        last_module = workout['modules'][-1]
+        assert last_module['type'] == 'Cooldown', \
+            f"Expected Cooldown as last module, got {last_module['type']}"
+        print(f"✅ Cooldown auto-appended: {last_module.get('name', 'Unknown')}")
+
+    def test_both_warmup_and_cooldown_added(self):
+        """Both warmup and cooldown should be added if missing."""
+        assembler = WorkoutAssembler(tsb=0)
+        
+        # Only main segment
+        modules = ["sweetspot_climb"]
+        workout = assembler.assemble_from_plan(modules)
+        
+        # Should have 3 modules: warmup + main + cooldown
+        assert len(workout['modules']) == 3, \
+            f"Expected 3 modules, got {len(workout['modules'])}"
+        
+        first = workout['modules'][0]
+        last = workout['modules'][-1]
+        
+        assert first['type'] == 'Warmup', f"First should be Warmup, got {first['type']}"
+        assert last['type'] == 'Cooldown', f"Last should be Cooldown, got {last['type']}"
+        print("✅ Both warmup and cooldown auto-added")
