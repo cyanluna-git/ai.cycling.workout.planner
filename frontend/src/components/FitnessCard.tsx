@@ -69,7 +69,7 @@ export function FitnessCard({ training, wellness, profile }: FitnessCardProps) {
                 </div>
 
                 {/* Training Load & Wellness - Two Columns */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     {/* Left: Training Metrics */}
                     <div className="space-y-2">
                         <div className="text-xs font-medium text-muted-foreground mb-1">{t('fitness.trainingLoad')}</div>

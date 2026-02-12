@@ -121,3 +121,12 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Mobile safe area */
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  overflow-x: hidden;
+}

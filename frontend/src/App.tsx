@@ -72,27 +72,34 @@ function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold">🚴 AI Cycling Coach</h1>
-            <p className="text-muted-foreground text-sm">{t('dashboard.subtitle')}</p>
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
+          {/* Top row: Title + User actions */}
+          <div className="flex justify-between items-center">
+            <h1 className="text-xl sm:text-2xl font-bold">🚴 AI Cycling Coach</h1>
+            <div className="flex items-center gap-1 sm:gap-2">
+              <LanguageSwitcher />
+              <Button variant="ghost" size="sm" onClick={signOut} className="text-xs sm:text-sm">
+                {t('common.logout')}
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">{user?.email}</span>
-            <a href="https://docs.google.com/forms/d/e/1FAIpQLSdgOIB6sEsQ-a-vlYpq4DnrnQ_wM7kjO7IILLFQaEe9gLcmhg/viewform" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-              {t('dashboard.feedback')}
-            </a>
-            {isAdmin && (
-              <Button variant="outline" size="sm" onClick={() => setShowAdmin(true)}>{t('dashboard.admin')}</Button>
-            )}
-            <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>{t('dashboard.settings')}</Button>
-            <LanguageSwitcher />
-            <Button variant="ghost" size="sm" onClick={signOut}>{t('common.logout')}</Button>
+          {/* Bottom row: Navigation buttons */}
+          <div className="flex items-center justify-between mt-2">
+            <p className="text-muted-foreground text-xs sm:text-sm truncate max-w-[180px] sm:max-w-none">{user?.email}</p>
+            <div className="flex items-center gap-1 sm:gap-2">
+              <a href="https://docs.google.com/forms/d/e/1FAIpQLSdgOIB6sEsQ-a-vlYpq4DnrnQ_wM7kjO7IILLFQaEe9gLcmhg/viewform" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-primary transition-colors hidden sm:inline">
+                {t('dashboard.feedback')}
+              </a>
+              {isAdmin && (
+                <Button variant="outline" size="sm" onClick={() => setShowAdmin(true)} className="text-xs h-7 px-2 sm:h-8 sm:px-3">{t('dashboard.admin')}</Button>
+              )}
+              <Button variant="outline" size="sm" onClick={() => setShowSettings(true)} className="text-xs h-7 px-2 sm:h-8 sm:px-3">{t('dashboard.settings')}</Button>
+            </div>
           </div>
         </div>
       </header>
-      <main className="container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           <div className="space-y-6">
             {fitness && <FitnessCard training={fitness.training} wellness={fitness.wellness} profile={fitness.profile} />}
             <WeeklyCalendarCard calendar={weeklyCalendar} isLoading={isLoadingCalendar} onSelectDate={handleSelectDate} />
