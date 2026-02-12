@@ -133,7 +133,11 @@
     "apiKeyPlaceholder": "API 키 입력",
     "athleteIdPlaceholder": "예: i123456",
     "saveApiKey": "API 키 저장",
-    "apiKeySaved": "✅ 연동 완료! 이제 AI 코치를 사용할 수 있어요"
+    "apiKeySaved": "✅ 연동 완료! 이제 AI 코치를 사용할 수 있어요",
+    "weeklyTssTarget": "주간 TSS 목표",
+    "weeklyTssHint": "주간 TSS 목표를 설정하세요. 비워두면 CTL 기반으로 자동 계산됩니다.",
+    "tssAuto": "자동",
+    "tssReset": "자동으로 되돌리기"
   },
   "fitness": {
     "title": "📊 오늘의 컨디션",
@@ -248,7 +252,12 @@
     "registerFailed": "등록 실패: {{message}}",
     "syncFailed": "동기화 실패: {{message}}",
     "emptyTitle": "주간 훈련 계획이 없습니다",
-    "emptyDesc": "이번 주 전체 훈련 계획을 한 번에 생성하세요. AI가 회복/강화 리듬에 맞춰 7일 계획을 만들어드립니다."
+    "emptyDesc": "이번 주 전체 훈련 계획을 한 번에 생성하세요. AI가 회복/강화 리듬에 맞춰 7일 계획을 만들어드립니다.",
+    "tssProgress": "{{accumulated}}/{{target}} TSS",
+    "tssRemaining": "남은 TSS: {{remaining}}",
+    "daysRemaining": "남은 {{days}}일",
+    "tssAchievementStatus": "{{status}}",
+    "tssWarningUnachievable": "남은 {{days}}일로 목표 TSS {{target}} 달성이 어렵습니다. 현재 {{accumulated}}/{{target}} ({{pct}}%). 목표를 조정하시겠습니까?"
   },
   "admin": {
     "back": "← 뒤로",
@@ -372,5 +381,21 @@
     "announcement": "업데이트",
     "newFeatures": "새로운 기능을 소개합니다:",
     "dismiss": "확인했습니다"
+  },
+  "achievements": {
+    "streakLabel": "{{count}}주 연속 달성 중!",
+    "bestStreak": "최고 기록: {{count}}주",
+    "totalAchieved": "총 달성: {{count}}주",
+    "noStreak": "아직 달성 기록이 없습니다",
+    "statusAchieved": "달성",
+    "statusExceeded": "초과 달성",
+    "statusPartial": "부분 달성",
+    "statusMissed": "미달성",
+    "statusInProgress": "진행 중",
+    "statusNoTarget": "목표 없음",
+    "achievementPct": "달성률 {{pct}}%",
+    "nextBadge": "다음 뱃지까지 {{remaining}}주",
+    "earnedBadges": "획득한 뱃지",
+    "noBadges": "아직 획득한 뱃지가 없습니다"
   }
 }

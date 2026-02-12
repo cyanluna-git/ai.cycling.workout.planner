@@ -179,3 +179,61 @@ class TestBackwardCompatibility:
         )
         assert isinstance(plan, WeeklyPlan)
         assert len(plan.daily_plans) >= 7
+
+
+# ---------------------------------------------------------------------------
+# Weekly TSS Target
+# ---------------------------------------------------------------------------
+class TestWeeklyTssTarget:
+    def test_weekly_tss_target_from_parameter(self):
+        """weekly_tss_target parameter should override auto calculation."""
+        gen = _make_generator({"training_style": "sweetspot", "training_focus": "maintain", "preferred_duration": 60})
+        gen.llm.generate.return_value = _mock_llm_response()
+        plan = gen.generate_weekly_plan(
+            ctl=50.0, atl=55.0, tsb=-5.0, form_status="Neutral",
+            week_start=date(2026, 2, 16),
+            weekly_tss_target=500,
+        )
+        assert isinstance(plan, WeeklyPlan)
+
+    def test_weekly_tss_target_from_user_settings(self):
+        """weekly_tss_target from user_settings should be used when no param."""
+        gen = _make_generator({
+            "training_style": "sweetspot",
+            "training_focus": "maintain",
+            "preferred_duration": 60,
+            "weekly_tss_target": 450,
+        })
+        gen.llm.generate.return_value = _mock_llm_response()
+        plan = gen.generate_weekly_plan(
+            ctl=50.0, atl=55.0, tsb=-5.0, form_status="Neutral",
+            week_start=date(2026, 2, 16),
+        )
+        assert isinstance(plan, WeeklyPlan)
+
+    def test_weekly_tss_target_param_overrides_settings(self):
+        """Parameter should take priority over user_settings."""
+        gen = _make_generator({
+            "training_style": "sweetspot",
+            "training_focus": "maintain",
+            "preferred_duration": 60,
+            "weekly_tss_target": 450,
+        })
+        gen.llm.generate.return_value = _mock_llm_response()
+        plan = gen.generate_weekly_plan(
+            ctl=50.0, atl=55.0, tsb=-5.0, form_status="Neutral",
+            week_start=date(2026, 2, 16),
+            weekly_tss_target=600,
+        )
+        assert isinstance(plan, WeeklyPlan)
+
+    def test_weekly_tss_target_none_uses_auto(self):
+        """No weekly_tss_target should use auto calculation (backward compat)."""
+        gen = _make_generator({"training_style": "sweetspot", "training_focus": "build", "preferred_duration": 60})
+        gen.llm.generate.return_value = _mock_llm_response()
+        plan = gen.generate_weekly_plan(
+            ctl=60.0, atl=65.0, tsb=-5.0, form_status="Neutral",
+            week_start=date(2026, 2, 16),
+        )
+        assert isinstance(plan, WeeklyPlan)
+        assert len(plan.daily_plans) >= 7
