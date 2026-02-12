@@ -12,7 +12,7 @@ i18n
       ko: { translation: ko },
       en: { translation: en },
     },
-    lng: 'ko', // Default to Korean
+    // Remove hardcoded lng to allow browser detection
     fallbackLng: 'ko',
     interpolation: {
       escapeValue: false,
