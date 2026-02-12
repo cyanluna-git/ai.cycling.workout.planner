@@ -171,6 +171,7 @@ class WorkoutGenerator:
         form: str,
         duration: int,
         goal: str,
+        intensity: str = "moderate",
         weekly_tss: int = 0,
         yesterday_load: int = 0,
         exclude_barcode: bool = False,
@@ -206,6 +207,7 @@ class WorkoutGenerator:
             yesterday_load=yesterday_load,
             duration=duration,
             goal=goal,
+            intensity=intensity,
             balance_hints=balance_hints,
         )
 
@@ -303,6 +305,7 @@ class WorkoutGenerator:
                 weekly_tss=weekly_tss,
                 yesterday_load=yesterday_load,
                 exclude_barcode=self.profile.exclude_barcode_workouts,
+                intensity=intensity,
             )
 
             logger.info(
