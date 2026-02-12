@@ -1,12 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { AuthPage } from "@/pages/AuthPage";
-import { ResetPasswordPage } from "@/pages/ResetPasswordPage";
-import { SettingsPage } from "@/pages/SettingsPage";
-import { OnboardingPage } from "@/pages/OnboardingPage";
-import { LandingPage } from "@/pages/LandingPage";
-import { AdminPage } from "@/pages/AdminPage";
 import { FitnessCard } from "@/components/FitnessCard";
 import { TodayWorkoutCard } from "@/components/TodayWorkoutCard";
 import { WeeklyCalendarCard } from "@/components/WeeklyCalendarCard";
@@ -17,7 +11,28 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Button } from "@/components/ui/button";
 import { useDashboard } from "@/hooks/useDashboard";
 
+// Lazy load pages for code splitting
+const AuthPage = lazy(() => import("@/pages/AuthPage").then(m => ({ default: m.AuthPage })));
+const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage").then(m => ({ default: m.ResetPasswordPage })));
+const SettingsPage = lazy(() => import("@/pages/SettingsPage").then(m => ({ default: m.SettingsPage })));
+const OnboardingPage = lazy(() => import("@/pages/OnboardingPage").then(m => ({ default: m.OnboardingPage })));
+const LandingPage = lazy(() => import("@/pages/LandingPage").then(m => ({ default: m.LandingPage })));
+const AdminPage = lazy(() => import("@/pages/AdminPage").then(m => ({ default: m.AdminPage })));
+
 const API_BASE = import.meta.env.VITE_API_URL || '';
+
+// Loading fallback component
+function PageLoader() {
+  const { t } = useTranslation();
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+        <p className="text-muted-foreground">{t('common.loading')}</p>
+      </div>
+    </div>
+  );
+}
 
 function Dashboard() {
   const { t } = useTranslation();
@@ -64,11 +79,28 @@ function Dashboard() {
   }
 
   if (!isApiConfigured) {
-    return <OnboardingPage onComplete={handleOnboardingComplete} accessToken={session?.access_token || ""} />;
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <OnboardingPage onComplete={handleOnboardingComplete} accessToken={session?.access_token || ""} />
+      </Suspense>
+    );
   }
 
-  if (showSettings) return <SettingsPage onBack={() => setShowSettings(false)} />;
-  if (showAdmin) return <AdminPage onBack={() => setShowAdmin(false)} />;
+  if (showSettings) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <SettingsPage onBack={() => setShowSettings(false)} />
+      </Suspense>
+    );
+  }
+
+  if (showAdmin) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <AdminPage onBack={() => setShowAdmin(false)} />
+      </Suspense>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -136,12 +168,26 @@ function AppContent() {
   }
 
   if (showResetPassword) {
-    return <ResetPasswordPage onComplete={() => { setShowResetPassword(false); window.location.hash = ''; }} />;
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <ResetPasswordPage onComplete={() => { setShowResetPassword(false); window.location.hash = ''; }} />
+      </Suspense>
+    );
   }
 
   if (!user) {
-    if (showLanding) return <LandingPage onGetStarted={() => setShowLanding(false)} />;
-    return <AuthPage />;
+    if (showLanding) {
+      return (
+        <Suspense fallback={<PageLoader />}>
+          <LandingPage onGetStarted={() => setShowLanding(false)} />
+        </Suspense>
+      );
+    }
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <AuthPage />
+      </Suspense>
+    );
   }
 
   return <Dashboard />;
