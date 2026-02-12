@@ -203,6 +203,7 @@ WEEKLY_PLAN_USER_PROMPT = """# Athlete Context
 - **Current ATL (Fatigue):** {atl:.1f}
 - **Current TSB (Form):** {tsb:.1f} ({form_status})
 - **Weekly TSS Target:** {weekly_tss_target}
+{athlete_context}
 
 # ALLOWED Workout Types (based on current form)
 You may ONLY use these workout types: {allowed_types}
@@ -253,6 +254,7 @@ class WeeklyPlan:
     training_style: str
     total_planned_tss: int
     daily_plans: List[DailyPlan]
+    used_modules: List[str] = None  # All module keys used this week
 
 
 # ---------------------------------------------------------------------------
@@ -280,6 +282,10 @@ class WeeklyPlanGenerator:
         atl: float,
         tsb: float,
         form_status: str,
+        ftp: Optional[float] = None,
+        weight: Optional[float] = None,
+        wellness_score: Optional[float] = None,
+        indoor_outdoor_pref: Optional[str] = None,
         week_start: Optional[date] = None,
         exclude_barcode: bool = False,
     ) -> WeeklyPlan:
@@ -353,6 +359,13 @@ class WeeklyPlanGenerator:
         }
         focus_description = focus_descriptions.get(training_focus, "Maintain")
 
+        # Build athlete context
+        athlete_context = self._build_athlete_context(
+            ftp=ftp, weight=weight,
+            wellness_score=wellness_score,
+            indoor_outdoor_pref=indoor_outdoor_pref,
+        )
+
         # Build user prompt
         user_prompt = WEEKLY_PLAN_USER_PROMPT.format(
             training_style=training_style,
@@ -370,6 +383,7 @@ class WeeklyPlanGenerator:
             week_end=week_end.strftime("%Y-%m-%d"),
             weekly_structure=weekly_structure,
             module_inventory=module_inventory,
+            athlete_context=athlete_context,
         )
 
         logger.info(f"Generating weekly plan for {week_start} to {week_end}")
@@ -397,8 +411,11 @@ class WeeklyPlanGenerator:
             else:
                 logger.error(f"All {max_retries} attempts failed, using fallback plan")
 
-        # Calculate total TSS
+        # Calculate total TSS and collect used modules
         total_tss = sum(dp.estimated_tss for dp in daily_plans)
+        used_modules = []
+        for dp in daily_plans:
+            used_modules.extend(dp.selected_modules)
 
         return WeeklyPlan(
             week_start=week_start,
@@ -406,6 +423,7 @@ class WeeklyPlanGenerator:
             training_style=training_style,
             total_planned_tss=total_tss,
             daily_plans=daily_plans,
+            used_modules=used_modules,
         )
 
     # -----------------------------------------------------------------------
@@ -430,6 +448,9 @@ class WeeklyPlanGenerator:
         if tsb >= 10:
             return "polarized"
         return "sweetspot"
+
+    # -----------------------------------------------------------------------
+    # Athlete context builder
 
     # -----------------------------------------------------------------------
     # TSS validation
