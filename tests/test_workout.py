@@ -1,4 +1,10 @@
-"""Test script for workout creation without AI."""
+"""Test script for workout creation without AI.
+
+Requires INTERVALS_API_KEY and ATHLETE_ID env vars.
+"""
+
+import os
+import pytest
 
 from datetime import date
 from src.config import load_config
@@ -22,6 +28,10 @@ Cooldown
 SAMPLE_NAME = "Test Workout - Sweet Spot v3"
 
 
+@pytest.mark.skipif(
+    not os.getenv("INTERVALS_API_KEY"),
+    reason="INTERVALS_API_KEY not set (integration test)"
+)
 def test_create_workout(target_date: str = None):
     """Create a test workout on the specified date."""
     config = load_config()
