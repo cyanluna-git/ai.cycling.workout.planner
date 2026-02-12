@@ -58,9 +58,9 @@ class WorkoutAssembler:
 
         # 2. Select cooldown based on duration
         if target_duration <= 30:
-            cooldown = self.cooldown_modules["ramp_short"]
+            cooldown = self.cooldown_modules["cooldown_ramp_short"]
         elif target_duration <= 60:
-            cooldown = self.cooldown_modules["ramp_standard"]
+            cooldown = self.cooldown_modules["cooldown_ramp_standard"]
         else:
             cooldown = self.cooldown_modules["flush_and_fade"]
 

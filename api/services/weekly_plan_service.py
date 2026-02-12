@@ -123,7 +123,7 @@ You are an expert Cycling Coach creating a structured 7-day training plan.
 1. **Structure - CRITICAL MODULE ORDER:**
    - **ALWAYS** follow this order: WARMUP modules -> MAIN modules -> COOLDOWN modules
    - **WARMUP modules MUST be FIRST** (e.g., ramp_standard, progressive_ramp_15min)
-   - **COOLDOWN modules MUST be LAST** (e.g., flush_and_fade, cooldown_extended)
+   - **COOLDOWN modules MUST be LAST** (e.g., flush_and_fade, extended_flush_25min)
    - **NEVER** place cooldown modules at the beginning or warmup modules at the end
    - Example CORRECT order: ["ramp_standard", "endurance_60min", "flush_and_fade"]
    - Example WRONG order: ["flush_and_fade", "endurance_60min", "ramp_standard"]

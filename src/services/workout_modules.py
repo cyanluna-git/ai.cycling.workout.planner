@@ -153,8 +153,9 @@ ALL_MODULES = {**WARMUP_MODULES, **MAIN_SEGMENTS, **REST_SEGMENTS, **COOLDOWN_MO
 def get_module_category(module_key: str) -> str:
     """Get the category of a module (Warmup, Main, Cooldown, Rest).
 
-    Uses the 'category' field if available, otherwise falls back to
-    checking which dictionary contains the module.
+    Checks each category dictionary directly to avoid key-collision issues
+    where ALL_MODULES might have one category overwrite another.
+    Uses the 'category' field from JSON when available.
 
     Args:
         module_key: The module key (filename without extension)
@@ -162,22 +163,16 @@ def get_module_category(module_key: str) -> str:
     Returns:
         Category string: 'Warmup', 'Main', 'Cooldown', 'Rest', or 'Unknown'
     """
-    module_data = ALL_MODULES.get(module_key)
-
-    if module_data:
-        # Use category field if available
-        if "category" in module_data:
-            return module_data["category"]
-
-        # Fallback: check which dictionary contains the module
-        if module_key in WARMUP_MODULES:
-            return "Warmup"
-        elif module_key in COOLDOWN_MODULES:
-            return "Cooldown"
-        elif module_key in REST_SEGMENTS:
-            return "Rest"
-        elif module_key in MAIN_SEGMENTS:
-            return "Main"
+    # Check individual dictionaries directly to avoid key-collision in ALL_MODULES
+    for modules_dict, category_name in [
+        (WARMUP_MODULES, "Warmup"),
+        (MAIN_SEGMENTS, "Main"),
+        (REST_SEGMENTS, "Rest"),
+        (COOLDOWN_MODULES, "Cooldown"),
+    ]:
+        if module_key in modules_dict:
+            data = modules_dict[module_key]
+            return data.get("category", category_name)
 
     return "Unknown"
 
