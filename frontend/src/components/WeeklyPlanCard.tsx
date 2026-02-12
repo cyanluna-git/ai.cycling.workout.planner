@@ -66,7 +66,7 @@ function DailyWorkoutRow({
 
     return (
         <div
-            className={`flex items-center gap-2 px-2 py-1.5 rounded-lg ${colorClass} transition-all hover:scale-[1.01] cursor-pointer`}
+            className={`flex items-center gap-2 px-2 py-2.5 min-h-[44px] rounded-lg ${colorClass} transition-all hover:scale-[1.01] cursor-pointer`}
             onClick={onClick}
             title={workout.planned_rationale}
         >
@@ -178,7 +178,7 @@ export function WeeklyPlanCard({
                         <div className="flex items-center justify-center gap-4 mb-3">
                             <Button
                                 variant="outline"
-                                size="sm"
+                                className="h-11 sm:h-9 transition-all active:scale-95"
                                 onClick={() => onWeekNavigation('prev')}
                                 disabled={isLoading}
                             >
@@ -189,7 +189,7 @@ export function WeeklyPlanCard({
                             </div>
                             <Button
                                 variant="outline"
-                                size="sm"
+                                className="h-11 sm:h-9 transition-all active:scale-95"
                                 onClick={() => onWeekNavigation('next')}
                                 disabled={isLoading}
                             >
@@ -219,7 +219,7 @@ export function WeeklyPlanCard({
                                     {t("common.generating")}
                                 </>
                             ) : (
-                                <>{t("weeklyPlan.generatePlan")}</>
+                                <>{(<>{t("weeklyPlan.generatePlan")}</>)}</>
                             )}
                         </Button>
                     </div>
@@ -253,7 +253,7 @@ export function WeeklyPlanCard({
                     <div className="flex items-center justify-center gap-4 mb-3">
                         <Button
                             variant="outline"
-                            size="sm"
+                            className="h-11 sm:h-9 transition-all active:scale-95"
                             onClick={() => onWeekNavigation('prev')}
                             disabled={isLoading}
                         >
@@ -264,7 +264,7 @@ export function WeeklyPlanCard({
                         </div>
                         <Button
                             variant="outline"
-                            size="sm"
+                            className="h-11 sm:h-9 transition-all active:scale-95"
                             onClick={() => onWeekNavigation('next')}
                             disabled={isLoading}
                         >
@@ -340,16 +340,16 @@ export function WeeklyPlanCard({
                 <div className="flex flex-wrap gap-2 justify-end pt-4 mt-4 border-t">
                     <Button
                         variant="outline"
-                        size="sm"
+                        className="h-11 sm:h-9 transition-all active:scale-95"
                         onClick={onGenerate}
                         disabled={isGenerating}
                     >
-                        {isGenerating ? t("common.generating") : t("weeklyPlan.regenerate")}
+                        {isGenerating ? (<><span className="animate-spin">⏳</span>{t("common.generating")}</> ) : t("weeklyPlan.regenerate")}
                     </Button>
                     {onSync && (
                         <Button
                             variant="outline"
-                            size="sm"
+                            className="h-11 sm:h-9 transition-all active:scale-95"
                             onClick={() => onSync(plan.id)}
                             disabled={isSyncing}
                         >
@@ -359,7 +359,7 @@ export function WeeklyPlanCard({
                     {onRegisterAll && (
                         <Button
                             variant="default"
-                            size="sm"
+                            className="h-11 sm:h-9 transition-all active:scale-95"
                             onClick={() => onRegisterAll(plan.id)}
                             disabled={isRegisteringAll}
                         >
@@ -372,7 +372,7 @@ export function WeeklyPlanCard({
                                 <div className="flex gap-1">
                                     <Button
                                         variant="destructive"
-                                        size="sm"
+                                        className="h-11 sm:h-9 transition-all active:scale-95"
                                         onClick={() => {
                                             onDelete(plan.id);
                                             setShowConfirmDelete(false);
@@ -380,14 +380,14 @@ export function WeeklyPlanCard({
                                     >{t("common.confirm")}</Button>
                                     <Button
                                         variant="ghost"
-                                        size="sm"
+                                        className="h-11 sm:h-9 transition-all active:scale-95"
                                         onClick={() => setShowConfirmDelete(false)}
                                     >{t("common.cancel")}</Button>
                                 </div>
                             ) : (
                                 <Button
                                     variant="ghost"
-                                    size="sm"
+                                    className="h-11 sm:h-9 transition-all active:scale-95"
                                     onClick={() => setShowConfirmDelete(true)}
                                 >{"🗑️ " + t("common.delete")}</Button>
                             )}
