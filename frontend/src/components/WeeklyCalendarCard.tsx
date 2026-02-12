@@ -71,8 +71,7 @@ export function WeeklyCalendarCard({ calendar, isLoading, onSelectDate }: Weekly
                 <CardContent>
                     <div className="animate-pulse space-y-2">
                         <div className="h-16 bg-muted rounded"></div>
-                        </div>
-                </div>
+                    </div>
                 </CardContent>
             </Card>
         );
@@ -111,15 +110,11 @@ export function WeeklyCalendarCard({ calendar, isLoading, onSelectDate }: Weekly
                         <div className="flex items-center gap-1.5 bg-blue-100 px-2 py-1 rounded">
                             <span className="w-2 h-2 border border-dashed border-blue-500 rounded-sm"></span>
                             <span className="text-blue-700">{t('calendar.planned')} {calendar.planned_tss}</span>
-                            </div>
-                </div>
+                        </div>
                         <div className="flex items-center gap-1.5 bg-green-100 px-2 py-1 rounded">
                             <span className="w-2 h-2 bg-green-500 rounded-sm"></span>
                             <span className="text-green-700">{t('calendar.completed')} {calendar.actual_tss}</span>
-                            </div>
-                </div>
                         </div>
-                </div>
                     </div>
                 </div>
             </CardHeader>
@@ -136,8 +131,7 @@ export function WeeklyCalendarCard({ calendar, isLoading, onSelectDate }: Weekly
                             <div className="text-xs text-muted-foreground mb-1">{day.dayName}</div>
                             <div className={`text-sm font-bold mb-2 ${isToday(day.date) ? 'text-primary' : ''}`}>
                                 {formatDate(day.date)}
-                                </div>
-                </div>
+                            </div>
 
                             <div className="space-y-1">
                                 {day.events.map((event) => (
@@ -159,28 +153,23 @@ export function WeeklyCalendarCard({ calendar, isLoading, onSelectDate }: Weekly
                                                     {cleanWorkoutName(event.name)}
                                                 </span>
                                             </span>
-                                            </div>
-                </div>
+                                        </div>
                                         {event.tss ? (
                                             <div className="mt-0.5 opacity-80 text-[9px] pl-3">
                                                 TSS {event.tss}
                                                 {event.duration_minutes ? ` • ${event.duration_minutes}m` : ''}
-                                                </div>
-                </div>
+                                            </div>
                                         ) : null}
-                                        </div>
-                </div>
+                                    </div>
                                 ))}
-                                </div>
-                </div>
+                            </div>
 
                             {day.events.length === 0 && (
                                 <div className="text-xs text-muted-foreground pt-4">-</div>
                             )}
-                            </div>
-                </div>
+                        </div>
                     ))}
-                    </div>
+                </div>
                 </div>
 
                 {/* Legend */}
@@ -188,13 +177,10 @@ export function WeeklyCalendarCard({ calendar, isLoading, onSelectDate }: Weekly
                     <div className="flex items-center gap-1.5">
                         <span className="text-green-600">✓</span>
                         <span>{t('calendar.completedLegend')}</span>
-                        </div>
-                </div>
+                    </div>
                     <div className="flex items-center gap-1.5">
                         <span className="opacity-60">•</span>
                         <span>{t('calendar.plannedLegend')}</span>
-                        </div>
-                </div>
                     </div>
                 </div>
             </CardContent>
