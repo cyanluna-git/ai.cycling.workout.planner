@@ -122,7 +122,7 @@ def run_daily_workflow(
 
         # Step 5: Generate workout with AI
         logger.info("Step 5: Generating workout with AI...")
-        workout = generator.generate(
+        workout = generator.generate_enhanced(
             training_metrics,
             wellness_metrics,
             target_date,
