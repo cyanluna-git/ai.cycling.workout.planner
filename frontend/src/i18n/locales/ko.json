@@ -1,4 +1,5 @@
 {
+  "_comment": "🚨 EMOJI RULE: Only add emoji to i18n values if the code does NOT prefix emoji. Most buttons/labels have emoji in code, so keep i18n values emoji-free. Check TodayWorkoutCard.tsx, WeeklyPlanCard.tsx, etc. before adding emoji.",
   "common": {
     "loading": "로딩 중...",
     "saving": "저장 중...",
@@ -204,8 +205,8 @@
     "intensityHard": "빡세게",
     "indoor": "🏠 실내",
     "generate": "🎯 오늘의 훈련 만들기",
-    "regenerate": "🔄 다른 훈련으로 변경",
-    "register": "📅 캘린더에 추가",
+    "regenerate": "다른 훈련으로 변경",
+    "register": "캘린더에 추가",
     "registerToIntervals": "✅ 캘린더에 저장하고 기기 동기화",
     "regenIntensityLabel": "다시 생성 할 때 강도 선택:",
     "noChartData": "차트 데이터를 불러올 수 없습니다.",
