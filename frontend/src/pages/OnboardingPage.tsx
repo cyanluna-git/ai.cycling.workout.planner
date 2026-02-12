@@ -12,6 +12,26 @@ interface OnboardingPageProps {
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
+// Progress Bar Component
+const ProgressBar = ({ step, total }: { step: number; total: number }) => {
+    const { t } = useTranslation();
+    const percentage = (step / total) * 100;
+    return (
+        <div className="max-w-2xl mx-auto mb-8">
+            <div className="flex justify-between mb-2 text-sm text-muted-foreground">
+                <span>{t('onboarding.stepProgress', { step, total })}</span>
+                <span>{percentage.toFixed(0)}%</span>
+            </div>
+            <div className="h-2 bg-muted rounded-full overflow-hidden">
+                <div 
+                    className="h-full bg-primary transition-all duration-300"
+                    style={{ width: `${percentage}%` }}
+                />
+            </div>
+        </div>
+    );
+};
+
 export function OnboardingPage({ onComplete, accessToken }: OnboardingPageProps) {
     const { t } = useTranslation();
     const [step, setStep] = useState(1);
@@ -42,15 +62,15 @@ export function OnboardingPage({ onComplete, accessToken }: OnboardingPageProps)
                     <p className="text-center text-muted-foreground">{t('onboarding.subtitle')}</p>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    <div className="flex justify-center gap-2 mb-6">
-                        {[1, 2, 3].map((s) => (
-                            <div key={s} className={`w-3 h-3 rounded-full ${s === step ? "bg-primary" : s < step ? "bg-primary/50" : "bg-muted"}`} />
-                        ))}
-                    </div>
+                    {/* Progress Bar */}
+                    <ProgressBar step={step} total={3} />
 
                     {step === 1 && (
                         <div className="space-y-4">
-                            <h3 className="text-lg font-semibold">{t('onboarding.step1Title')}</h3>
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-lg font-semibold">{t('onboarding.step1Title')}</h3>
+                                <span className="text-xs text-muted-foreground">⏱️ {t('onboarding.step1Time')}</span>
+                            </div>
                             <div className="bg-muted/50 rounded-lg p-4 space-y-3">
                                 <p><strong>Intervals.icu</strong> {t('onboarding.step1Desc1')}</p>
                                 <p>{t('onboarding.step1Desc2')}</p>
@@ -65,7 +85,10 @@ export function OnboardingPage({ onComplete, accessToken }: OnboardingPageProps)
 
                     {step === 2 && (
                         <div className="space-y-4">
-                            <h3 className="text-lg font-semibold">{t('onboarding.step2Title')}</h3>
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-lg font-semibold">{t('onboarding.step2Title')}</h3>
+                                <span className="text-xs text-muted-foreground">⏱️ {t('onboarding.step2Time')}</span>
+                            </div>
                             <div className="bg-muted/50 rounded-lg p-4 space-y-4">
                                 <ol className="list-decimal list-inside space-y-2 text-sm">
                                     <li><a href="https://intervals.icu/settings" target="_blank" rel="noopener noreferrer" className="text-primary underline">Intervals.icu Settings</a> {t('onboarding.step2Inst1')}</li>
@@ -90,8 +113,11 @@ export function OnboardingPage({ onComplete, accessToken }: OnboardingPageProps)
 
                     {step === 3 && (
                         <div className="space-y-4">
-                            <h3 className="text-lg font-semibold">{t('onboarding.step3Title')}</h3>
-                            {error && <div className="bg-destructive/10 text-destructive p-3 rounded-lg text-sm">\u274c {error}</div>}
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-lg font-semibold">{t('onboarding.step3Title')}</h3>
+                                <span className="text-xs text-muted-foreground">⏱️ {t('onboarding.step3Time')}</span>
+                            </div>
+                            {error && <div className="bg-destructive/10 text-destructive p-3 rounded-lg text-sm">❌ {error}</div>}
                             <div className="space-y-4">
                                 <div><Label htmlFor="athleteId">Athlete ID</Label><Input id="athleteId" placeholder="i12345" value={athleteId} onChange={(e) => setAthleteId(e.target.value)} /></div>
                                 <div><Label htmlFor="apiKey">API Key</Label><Input id="apiKey" type="password" placeholder={t('onboarding.step3ApiKeyPlaceholder')} value={apiKey} onChange={(e) => setApiKey(e.target.value)} /></div>
