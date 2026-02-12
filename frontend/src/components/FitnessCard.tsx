@@ -1,5 +1,4 @@
 import { useTranslation } from 'react-i18next';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { TrainingMetrics, WellnessMetrics, AthleteProfile } from "@/lib/api";
 
@@ -75,48 +74,21 @@ export function FitnessCard({ training, wellness, profile }: FitnessCardProps) {
                     <div className="space-y-2">
                         <div className="text-xs font-medium text-muted-foreground mb-1">{t('fitness.trainingLoad')}</div>
                         <div className="flex justify-between items-baseline">
-                            <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <span className="text-sm text-muted-foreground cursor-help border-b border-dashed border-muted-foreground/50">
-                                        {t('fitness.ctlLabel')}
-                                    </span>
-                                </TooltipTrigger>
-                                <TooltipContent className="max-w-xs">
-                                    <p className="text-sm">{t('fitness.ctlTooltip')}</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
+                            <span className="text-sm text-muted-foreground">
+                                {t('fitness.ctlLabel')}
+                            </span>
                             <span className="text-lg font-bold">{training.ctl.toFixed(1)}</span>
                         </div>
                         <div className="flex justify-between items-baseline">
-                            <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <span className="text-sm text-muted-foreground cursor-help border-b border-dashed border-muted-foreground/50">
-                                        {t('fitness.atlLabel')}
-                                    </span>
-                                </TooltipTrigger>
-                                <TooltipContent className="max-w-xs">
-                                    <p className="text-sm">{t('fitness.atlTooltip')}</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
+                            <span className="text-sm text-muted-foreground">
+                                {t('fitness.atlLabel')}
+                            </span>
                             <span className="text-lg font-bold">{training.atl.toFixed(1)}</span>
                         </div>
                         <div className="flex justify-between items-baseline">
-                            <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <span className="text-sm text-muted-foreground cursor-help border-b border-dashed border-muted-foreground/50">
-                                        TSB
-                                    </span>
-                                </TooltipTrigger>
-                                <TooltipContent className="max-w-xs">
-                                    <p className="text-sm">{t('fitness.tsbTooltip')}</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
+                            <span className="text-sm text-muted-foreground">
+                                TSB
+                            </span>
                             <span className={`text-lg font-bold ${getTsbColor(training.tsb)}`}>
                                 {getTsbEmoji(training.tsb)} {training.tsb.toFixed(1)}
                             </span>
@@ -169,6 +141,46 @@ export function FitnessCard({ training, wellness, profile }: FitnessCardProps) {
                         </span>
                     </div>
                 </div>
+
+                {/* NEW: Glossary Section */}
+                <details className="mt-4 pt-4 border-t">
+                    <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2">
+                        <span>💡 {t('fitness.glossaryTitle')}</span>
+                        <span className="text-xs">▼</span>
+                    </summary>
+                    <div className="mt-3 space-y-3 text-sm">
+                        <div>
+                            <div className="font-semibold mb-1">🔹 {t('fitness.ctlLabel')}</div>
+                            <p className="text-muted-foreground text-xs leading-relaxed">
+                                {t('fitness.ctlGlossary')}
+                            </p>
+                        </div>
+                        <div>
+                            <div className="font-semibold mb-1">🔹 {t('fitness.atlLabel')}</div>
+                            <p className="text-muted-foreground text-xs leading-relaxed">
+                                {t('fitness.atlGlossary')}
+                            </p>
+                        </div>
+                        <div>
+                            <div className="font-semibold mb-1">🔹 TSB (컨디션)</div>
+                            <p className="text-muted-foreground text-xs leading-relaxed">
+                                {t('fitness.tsbGlossary')}
+                            </p>
+                        </div>
+                        <div>
+                            <div className="font-semibold mb-1">🔹 FTP (역치 파워)</div>
+                            <p className="text-muted-foreground text-xs leading-relaxed">
+                                {t('fitness.ftpGlossary')}
+                            </p>
+                        </div>
+                        <div>
+                            <div className="font-semibold mb-1">🔹 HRV (심박 변이도)</div>
+                            <p className="text-muted-foreground text-xs leading-relaxed">
+                                {t('fitness.hrvGlossary')}
+                            </p>
+                        </div>
+                    </div>
+                </details>
             </CardContent>
         </Card>
     );

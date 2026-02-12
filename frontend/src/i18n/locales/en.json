@@ -147,7 +147,13 @@
     "readiness": "Today's Readiness",
     "ctlTooltip": "Chronic Training Load. Average training volume over the past 6 weeks, representing your current fitness level.",
     "atlTooltip": "Acute Training Load. Average training volume over the past 7 days, representing your current fatigue level.",
-    "tsbTooltip": "Training Stress Balance. CTL - ATL value: +10 or higher means well-rested, -10 or lower means fatigue accumulated."
+    "tsbTooltip": "Training Stress Balance. CTL - ATL value: +10 or higher means well-rested, -10 or lower means fatigue accumulated.",
+    "glossaryTitle": "View Glossary",
+    "ctlGlossary": "Chronic Training Load. Average training load over the past 42 days, representing your current fitness level. Higher is better.",
+    "atlGlossary": "Acute Training Load. Average training load over the past 7 days, representing your current fatigue. Higher means more fatigued.",
+    "tsbGlossary": "Training Stress Balance = CTL - ATL. +10 or above: recovered, ready for high intensity / -10 to +10: moderate state / -10 or below: fatigued, recovery needed",
+    "ftpGlossary": "Functional Threshold Power. Maximum power sustainable for 1 hour, used as the basis for training intensity.",
+    "hrvGlossary": "Heart Rate Variability. Indicator of recovery status. Higher values indicate better condition."
   },
   "wellnessCard": {
     "title": "🌿 Wellness Status",

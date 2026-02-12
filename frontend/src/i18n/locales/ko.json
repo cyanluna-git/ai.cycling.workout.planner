@@ -147,7 +147,13 @@
     "readiness": "오늘의 준비도",
     "ctlTooltip": "장기 훈련 부하 (Chronic Training Load). 최근 6주간의 평균 훈련량으로 현재 체력 수준을 나타냅니다.",
     "atlTooltip": "단기 훈련 부하 (Acute Training Load). 최근 7일간의 평균 훈련량으로 현재 피로도를 나타냅니다.",
-    "tsbTooltip": "훈련 스트레스 밸런스. CTL - ATL 값으로, +10 이상이면 회복됨, -10 이하면 피로 누적 상태입니다."
+    "tsbTooltip": "훈련 스트레스 밸런스. CTL - ATL 값으로, +10 이상이면 회복됨, -10 이하면 피로 누적 상태입니다.",
+    "glossaryTitle": "용어 설명 보기",
+    "ctlGlossary": "Chronic Training Load (장기 훈련 부하). 최근 42일간의 평균 훈련량으로 현재 체력 수준을 나타냅니다. 높을수록 체력이 좋습니다.",
+    "atlGlossary": "Acute Training Load (단기 훈련 부하). 최근 7일간의 평균 훈련량으로 현재 피로도를 나타냅니다. 높을수록 피곤한 상태입니다.",
+    "tsbGlossary": "Training Stress Balance = CTL - ATL. +10 이상: 회복 완료, 고강도 가능 / -10 ~ +10: 적당한 상태 / -10 이하: 피로 누적, 회복 필요",
+    "ftpGlossary": "Functional Threshold Power (기능적 역치 파워). 1시간 동안 유지 가능한 최대 파워로, 훈련 강도의 기준이 됩니다.",
+    "hrvGlossary": "Heart Rate Variability (심박 변이도). 회복도를 나타내는 지표로, 높을수록 좋은 컨디션입니다."
   },
   "wellnessCard": {
     "title": "🌿 웰니스 상태",
