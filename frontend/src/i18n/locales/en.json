@@ -133,7 +133,11 @@
     "apiKeyPlaceholder": "Enter API key",
     "athleteIdPlaceholder": "e.g., i123456",
     "saveApiKey": "Save API Key",
-    "apiKeySaved": "✅ Connected! Your AI coach is ready"
+    "apiKeySaved": "✅ Connected! Your AI coach is ready",
+    "weeklyTssTarget": "Weekly TSS Target",
+    "weeklyTssHint": "Set your weekly TSS target. Leave empty for auto-calculation based on CTL.",
+    "tssAuto": "Auto",
+    "tssReset": "Reset to auto"
   },
   "fitness": {
     "title": "📊 Today's Condition",
@@ -248,7 +252,10 @@
     "registerFailed": "Registration failed: {{message}}",
     "syncFailed": "Sync failed: {{message}}",
     "emptyTitle": "No Weekly Training Plan",
-    "emptyDesc": "Generate your entire week's training plan at once. AI creates a 7-day plan aligned with recovery/build rhythm."
+    "emptyDesc": "Generate your entire week's training plan at once. AI creates a 7-day plan aligned with recovery/build rhythm.",
+    "tssProgress": "{{accumulated}}/{{target}} TSS",
+    "tssRemaining": "Remaining: {{remaining}} TSS",
+    "daysRemaining": "{{days}} days left"
   },
   "admin": {
     "back": "← Back",
