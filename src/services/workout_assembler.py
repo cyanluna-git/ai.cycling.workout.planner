@@ -254,8 +254,18 @@ class WorkoutAssembler:
             if not fitting:
                 break
 
-            # Random selection for variety
-            key, segment = random.choice(fitting)
+            # Weighted selection for diversity
+            # Get priority weights from usage tracker (less used = higher weight)
+            try:
+                from .module_usage_tracker import get_tracker
+                tracker = get_tracker()
+                fitting_keys = [key for key, _ in fitting]
+                weights_dict = tracker.calculate_priority_weights(fitting_keys, category="main")
+                weights = [weights_dict.get(key, 1.0) for key in fitting_keys]
+                key, segment = random.choices(fitting, weights=weights, k=1)[0]
+            except Exception as e:
+                logger.debug(f"Fallback to random selection: {e}")
+                key, segment = random.choice(fitting)
             selected.append(segment)
             remaining_time -= segment["duration_minutes"]
             remaining_time -= 2  # Account for rest between segments
