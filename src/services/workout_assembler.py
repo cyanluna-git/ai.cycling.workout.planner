@@ -15,6 +15,11 @@ logger = logging.getLogger(__name__)
 class WorkoutAssembler:
     """Assembles workouts from modular segments based on target duration."""
 
+    # TSB (Training Stress Balance) intensity thresholds
+    # Based on sport science standards for fatigue/freshness assessment
+    TSB_FATIGUE_THRESHOLD = -10  # Below this: recommend easy intensity
+    TSB_FRESH_THRESHOLD = 10      # Above this: recommend hard intensity
+
     def __init__(self, tsb: float = 0.0, training_goal: str = "", exclude_barcode: bool = False):
         self.tsb = tsb
         self.training_goal = training_goal
@@ -31,6 +36,8 @@ class WorkoutAssembler:
         intensity: str = "moderate",
     ) -> Dict[str, Any]:
         """Assemble a complete workout skeleton from modules.
+
+
 
         Args:
             target_duration: Target workout duration in minutes.
@@ -186,10 +193,10 @@ class WorkoutAssembler:
         """
         # [HOTFIX] Determine intensity based on TSB if auto
         if intensity == "auto" or not intensity:
-            if self.tsb <= -10:  # Fatigued state
+            if self.tsb <= self.TSB_FATIGUE_THRESHOLD:  # Fatigued state
                 intensity = "easy"
                 logger.debug(f"TSB {self.tsb:.1f}: Auto-selected 'easy' intensity (fatigued)")
-            elif self.tsb >= 10:  # Fresh state
+            elif self.tsb >= self.TSB_FRESH_THRESHOLD:  # Fresh state
                 intensity = "hard"
                 logger.debug(f"TSB {self.tsb:.1f}: Auto-selected 'hard' intensity (fresh)")
             else:  # Neutral state
