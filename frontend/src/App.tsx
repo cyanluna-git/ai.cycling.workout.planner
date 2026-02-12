@@ -11,6 +11,7 @@ import { FitnessCard } from "@/components/FitnessCard";
 import { TodayWorkoutCard } from "@/components/TodayWorkoutCard";
 import { WeeklyCalendarCard } from "@/components/WeeklyCalendarCard";
 import { WeeklyPlanCard } from "@/components/WeeklyPlanCard";
+import { FitnessCardSkeleton, WeeklyCalendarSkeleton, WeeklyPlanSkeleton, TodayWorkoutSkeleton } from '@/components/LoadingSkeletons';
 import { UpdateAnnouncementModal } from "@/components/UpdateAnnouncementModal";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Button } from "@/components/ui/button";
@@ -78,7 +79,7 @@ function Dashboard() {
             <h1 className="text-xl sm:text-2xl font-bold">🚴 AI Cycling Coach</h1>
             <div className="flex items-center gap-1 sm:gap-2">
               <LanguageSwitcher />
-              <Button variant="ghost" size="sm" onClick={signOut} className="text-xs sm:text-sm">
+              <Button variant="ghost" onClick={signOut} className="h-11 sm:h-9 text-xs sm:text-sm transition-all active:scale-95">
                 {t('common.logout')}
               </Button>
             </div>
@@ -91,9 +92,9 @@ function Dashboard() {
                 {t('dashboard.feedback')}
               </a>
               {isAdmin && (
-                <Button variant="outline" size="sm" onClick={() => setShowAdmin(true)} className="text-xs h-7 px-2 sm:h-8 sm:px-3">{t('dashboard.admin')}</Button>
+                <Button variant="outline" onClick={() => setShowAdmin(true)} className="h-11 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 transition-all active:scale-95">{t('dashboard.admin')}</Button>
               )}
-              <Button variant="outline" size="sm" onClick={() => setShowSettings(true)} className="text-xs h-7 px-2 sm:h-8 sm:px-3">{t('dashboard.settings')}</Button>
+              <Button variant="outline" onClick={() => setShowSettings(true)} className="h-11 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 transition-all active:scale-95">{t('dashboard.settings')}</Button>
             </div>
           </div>
         </div>
@@ -101,12 +102,12 @@ function Dashboard() {
       <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           <div className="space-y-6">
-            {fitness && <FitnessCard training={fitness.training} wellness={fitness.wellness} profile={fitness.profile} />}
-            <WeeklyCalendarCard calendar={weeklyCalendar} isLoading={isLoadingCalendar} onSelectDate={handleSelectDate} />
-            <TodayWorkoutCard workout={workout} onGenerate={handleGenerate} onRegister={handleRegister} isLoading={isLoading} isRegistering={isRegistering} isRegistered={!!success && (success.includes(t('common.registered')) || success.includes("Registered"))} ftp={fitness?.profile?.ftp ?? 250} error={error} success={success} />
+            {fitness ? <FitnessCard training={fitness.training} wellness={fitness.wellness} profile={fitness.profile} /> : <FitnessCardSkeleton />}
+            {isLoadingCalendar ? <WeeklyCalendarSkeleton /> : <WeeklyCalendarCard calendar={weeklyCalendar} isLoading={false} onSelectDate={handleSelectDate} />}
+            {(!workout && isLoading) ? <TodayWorkoutSkeleton /> : <TodayWorkoutCard workout={workout} onGenerate={handleGenerate} onRegister={handleRegister} isLoading={isLoading} isRegistering={isRegistering} isRegistered={!!success && (success.includes(t('common.registered')) || success.includes("Registered"))} ftp={fitness?.profile?.ftp ?? 250} error={error} success={success} />}
           </div>
           <div className="space-y-4">
-            <WeeklyPlanCard plan={weeklyPlan} isLoading={isLoadingPlan} isGenerating={isGeneratingPlan} isRegisteringAll={isRegisteringPlanAll} isSyncing={isSyncingPlan} currentWeekOffset={currentWeekOffset} onGenerate={handleGenerateWeeklyPlan} onDelete={handleDeleteWeeklyPlan} onRegisterAll={handleRegisterWeeklyPlanAll} onSync={handleSyncWeeklyPlan} onWeekNavigation={handleWeekNavigation} />
+            {isLoadingPlan ? <WeeklyPlanSkeleton /> : <WeeklyPlanCard plan={weeklyPlan} isLoading={isLoadingPlan} isGenerating={isGeneratingPlan} isRegisteringAll={isRegisteringPlanAll} isSyncing={isSyncingPlan} currentWeekOffset={currentWeekOffset} onGenerate={handleGenerateWeeklyPlan} onDelete={handleDeleteWeeklyPlan} onRegisterAll={handleRegisterWeeklyPlanAll} onSync={handleSyncWeeklyPlan} onWeekNavigation={handleWeekNavigation} />}
           </div>
         </div>
       </main>

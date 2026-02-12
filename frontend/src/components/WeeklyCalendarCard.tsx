@@ -125,7 +125,7 @@ export function WeeklyCalendarCard({ calendar, isLoading, onSelectDate }: Weekly
                         <div
                             key={day.date}
                             onClick={() => onSelectDate?.(day.date)}
-                            className={`text-center p-2 rounded-lg min-h-24 cursor-pointer transition-all hover:bg-muted/80 ${isToday(day.date) ? 'bg-primary/5 ring-2 ring-primary' : 'bg-muted/30'
+                            className={`text-center p-3 rounded-lg min-h-[112px] cursor-pointer transition-all hover:bg-muted/80 active:scale-[0.98] ${isToday(day.date) ? 'bg-primary/5 ring-2 ring-primary' : 'bg-muted/30'
                                 }`}
                         >
                             <div className="text-xs text-muted-foreground mb-1">{day.dayName}</div>

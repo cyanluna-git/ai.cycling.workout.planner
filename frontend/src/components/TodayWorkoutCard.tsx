@@ -212,9 +212,8 @@ export function TodayWorkoutCard({
                                     key={i.value}
                                     type="button"
                                     variant={intensity === i.value ? "default" : "outline"}
-                                    size="sm"
                                     onClick={() => setIntensity(i.value)}
-                                    className="text-xs"
+                                    className="h-11 sm:h-9 text-xs transition-all active:scale-95"
                                 >
                                     {i.emoji} {i.label}
                                 </Button>
@@ -226,24 +225,37 @@ export function TodayWorkoutCard({
                     <div className="flex flex-col sm:flex-row gap-2">
                         <Button
                             variant="outline"
-                            size="sm"
                             onClick={handleGenerate}
                             disabled={isLoading}
-                            className="flex-1"
+                            className="flex-1 h-11 sm:h-9 transition-all active:scale-95"
                         >
-                            {isLoading ? t('common.generating') : `🔄 ${t('workout.regenerate')}`}
+                            {isLoading ? (
+                                <>
+                                    <span className="animate-spin">⏳</span>
+                                    {t('common.generating')}
+                                </>
+                            ) : (
+                                `🔄 ${t('workout.regenerate')}`
+                            )}
                         </Button>
                         {isRegistered ? (
-                            <div className="flex-1 bg-green-500/10 text-green-600 font-bold py-2 rounded-md text-center border border-green-200 dark:border-green-900 text-sm">
+                            <div className="flex-1 bg-green-500/10 text-green-600 font-bold py-2 rounded-md text-center border border-green-200 dark:border-green-900 text-sm min-h-[44px] flex items-center justify-center">
                                 ✅ {t('common.registered')}
                             </div>
                         ) : (
                             <Button
                                 onClick={onRegister}
-                                className="flex-1"
                                 disabled={isRegistering}
+                                className="flex-1 h-11 sm:h-9 transition-all active:scale-95"
                             >
-                                {isRegistering ? t('common.registering') : `📅 ${t('workout.register')}`}
+                                {isRegistering ? (
+                                    <>
+                                        <span className="animate-spin">⏳</span>
+                                        {t('common.registering')}
+                                    </>
+                                ) : (
+                                    `📅 ${t('workout.register')}`
+                                )}
                             </Button>
                         )}
                     </div>
@@ -276,6 +288,7 @@ export function TodayWorkoutCard({
                             <span className="text-sm font-medium">{duration}{t('common.minutes')}</span>
                         </div>
                         <Slider
+                            className="touch-none [&_[role=slider]]:h-11 [&_[role=slider]]:w-11 sm:[&_[role=slider]]:h-5 sm:[&_[role=slider]]:w-5"
                             value={[duration]}
                             onValueChange={(v) => setDuration(v[0])}
                             min={30}
@@ -293,9 +306,8 @@ export function TodayWorkoutCard({
                                     key={i.value}
                                     type="button"
                                     variant={intensity === i.value ? "default" : "outline"}
-                                    size="sm"
                                     onClick={() => setIntensity(i.value)}
-                                    className="text-xs"
+                                    className="h-11 sm:h-9 text-xs transition-all active:scale-95"
                                 >
                                     {i.emoji} {i.label}
                                 </Button>
@@ -305,18 +317,29 @@ export function TodayWorkoutCard({
 
                     {/* Bottom Row */}
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
-                        <label className="flex items-center gap-2 cursor-pointer">
+                        <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
                             <input
                                 type="checkbox"
                                 checked={indoor}
                                 onChange={(e) => setIndoor(e.target.checked)}
-                                className="rounded"
+                                className="rounded h-5 w-5"
                             />
                             <span className="text-sm">{t('workout.indoor')}</span>
                         </label>
 
-                        <Button onClick={handleGenerate} className="flex-1" disabled={isLoading}>
-                            {isLoading ? t('common.generating') : t('workout.generate')}
+                        <Button 
+                            onClick={handleGenerate} 
+                            disabled={isLoading}
+                            className="flex-1 h-11 sm:h-9 transition-all active:scale-95"
+                        >
+                            {isLoading ? (
+                                <>
+                                    <span className="animate-spin">⏳</span>
+                                    {t('common.generating')}
+                                </>
+                            ) : (
+                                t('workout.generate')
+                            )}
                         </Button>
                     </div>
                 </div>
