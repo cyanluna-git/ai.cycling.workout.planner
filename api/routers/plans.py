@@ -5,6 +5,7 @@ Endpoints for managing weekly workout plans and daily workouts.
 
 import os
 import sys
+import json
 import logging
 from datetime import date, datetime, timedelta
 from typing import Optional, List
@@ -54,6 +55,9 @@ class WeeklyPlanResponse(BaseModel):
     training_style: Optional[str] = None
     total_planned_tss: Optional[int] = None
     weekly_tss_target: Optional[int] = None
+    total_actual_tss: Optional[int] = None
+    achievement_status: Optional[str] = None  # achieved/exceeded/partial/missed/in_progress/no_target
+    achievement_pct: Optional[int] = None
     daily_workouts: List[DailyWorkoutResponse]
     used_modules: Optional[List[str]] = None
 
@@ -517,6 +521,29 @@ async def get_current_weekly_plan(
             )
         )
 
+    # Calculate achievement info
+    weekly_tss_target = plan.get("weekly_tss_target")
+    total_actual_tss = plan.get("total_actual_tss")
+    achievement_status = plan.get("achievement_status")
+    achievement_pct = None
+
+    # Auto-calculate if not persisted yet
+    if total_actual_tss is None:
+        total_actual_tss = sum(
+            w.get("actual_tss") or w.get("planned_tss", 0)
+            for w in workouts_result.data
+            if w.get("status") == "completed"
+        )
+    if not achievement_status and weekly_tss_target and weekly_tss_target > 0:
+        plan_week_end = datetime.strptime(plan["week_end"], "%Y-%m-%d").date()
+        if date.today() > plan_week_end:
+            achievement_status, achievement_pct = calculate_achievement_status(weekly_tss_target, total_actual_tss)
+        else:
+            achievement_status = "in_progress"
+            achievement_pct = int((total_actual_tss / weekly_tss_target) * 100)
+    elif weekly_tss_target and weekly_tss_target > 0:
+        achievement_pct = int((total_actual_tss / weekly_tss_target) * 100) if total_actual_tss else 0
+
     return WeeklyPlanResponse(
         id=plan["id"],
         week_start=plan["week_start"],
@@ -524,7 +551,10 @@ async def get_current_weekly_plan(
         status=plan["status"],
         training_style=plan.get("training_style"),
         total_planned_tss=plan.get("total_planned_tss"),
-        weekly_tss_target=plan.get("weekly_tss_target"),
+        weekly_tss_target=weekly_tss_target,
+        total_actual_tss=total_actual_tss,
+        achievement_status=achievement_status,
+        achievement_pct=achievement_pct,
         daily_workouts=daily_workouts,
     )
 
@@ -727,11 +757,15 @@ async def get_today_workout(user: dict = Depends(get_current_user)):
     achievement_warning = None
     if weekly_tss_target and not target_achievable:
         achievement_pct = int((accumulated_tss / weekly_tss_target) * 100)
-        achievement_warning = (
-            f"남은 {days_remaining}일로 목표 TSS {weekly_tss_target} 달성이 어렵습니다. "
-            f"현재 {accumulated_tss}/{weekly_tss_target} ({achievement_pct}%). "
-            f"목표를 조정하시겠습니까?"
-        )
+        # Return structured data instead of hardcoded Korean string
+        # Frontend will construct the message using i18n
+        achievement_warning = json.dumps({
+            "key": "tss_target_unachievable",
+            "days": days_remaining,
+            "target": weekly_tss_target,
+            "accumulated": accumulated_tss,
+            "pct": achievement_pct,
+        })
 
     if not workout_result or not workout_result.data:
         return TodayWorkoutResponse(
@@ -1289,4 +1323,214 @@ async def sync_weekly_plan_with_intervals(
         "changes": {"deleted": deleted, "moved": moved, "modified": modified},
         "synced": synced,
         "message": message,
+    }
+
+
+# --- Achievement & Badge System ---
+
+BADGES = {
+    "first_week": {"name": "First Week", "icon": "🎯", "desc_key": "first_week", "type": "streak", "requirement": 1},
+    "consistent_3": {"name": "3 Week Streak", "icon": "🔥", "desc_key": "consistent_3", "type": "streak", "requirement": 3},
+    "consistent_4": {"name": "Month Strong", "icon": "💪", "desc_key": "consistent_4", "type": "streak", "requirement": 4},
+    "consistent_8": {"name": "Iron Will", "icon": "⚡", "desc_key": "consistent_8", "type": "streak", "requirement": 8},
+    "consistent_12": {"name": "Quarter Master", "icon": "🏅", "desc_key": "consistent_12", "type": "streak", "requirement": 12},
+    "consistent_26": {"name": "Half Year Hero", "icon": "🏆", "desc_key": "consistent_26", "type": "streak", "requirement": 26},
+    "consistent_52": {"name": "Year Round Champion", "icon": "👑", "desc_key": "consistent_52", "type": "streak", "requirement": 52},
+    "overachiever_5": {"name": "Overachiever", "icon": "🚀", "desc_key": "overachiever_5", "type": "exceeded", "requirement": 5},
+}
+
+
+def calculate_achievement_status(target, actual):
+    """Calculate achievement status based on target and actual TSS."""
+    if target is None or target == 0:
+        return "no_target", 0
+    pct = int((actual / target) * 100)
+    if pct >= 110:
+        return "exceeded", pct
+    elif pct >= 90:
+        return "achieved", pct
+    elif pct >= 70:
+        return "partial", pct
+    else:
+        return "missed", pct
+
+
+def _calculate_actual_tss_for_plan(supabase, plan_id: str, user_id: str) -> int:
+    """Calculate total actual TSS for a weekly plan from daily workouts."""
+    workouts_result = (
+        supabase.table("daily_workouts")
+        .select("status, actual_tss, planned_tss")
+        .eq("plan_id", plan_id)
+        .eq("user_id", user_id)
+        .execute()
+    )
+    if not workouts_result or not workouts_result.data:
+        return 0
+    total = 0
+    for w in workouts_result.data:
+        if w.get("status") == "completed":
+            total += w.get("actual_tss") or w.get("planned_tss", 0)
+    return total
+
+
+def _is_plan_finalized(plan_data: dict, week_end_str: str) -> bool:
+    """Check if a plan should be considered finalized (week has passed)."""
+    try:
+        week_end = datetime.strptime(week_end_str, "%Y-%m-%d").date()
+        return date.today() > week_end
+    except (ValueError, TypeError):
+        return False
+
+
+@router.get("/plans/achievements")
+async def get_achievements(user: dict = Depends(get_current_user)):
+    """Get user's TSS achievement history, streak, and badges."""
+    supabase = get_supabase_admin_client()
+
+    # Fetch recent weekly plans (up to 52 weeks)
+    recent_plans_result = (
+        supabase.table("weekly_plans")
+        .select("*")
+        .eq("user_id", user["id"])
+        .order("week_start", desc=True)
+        .limit(52)
+        .execute()
+    )
+    plans = recent_plans_result.data if recent_plans_result and recent_plans_result.data else []
+
+    # Process each plan: calculate achievement if not already set
+    weekly_history = []
+    for plan in plans:
+        target = plan.get("weekly_tss_target")
+        status = plan.get("achievement_status")
+        actual_tss = plan.get("total_actual_tss")
+        week_end = plan.get("week_end", "")
+
+        # Auto-calculate for finalized weeks without status
+        if not status and _is_plan_finalized(plan, week_end):
+            if actual_tss is None:
+                actual_tss = _calculate_actual_tss_for_plan(supabase, plan["id"], user["id"])
+            status, pct = calculate_achievement_status(target, actual_tss)
+            # Persist to DB (best-effort)
+            try:
+                supabase.table("weekly_plans").update({
+                    "achievement_status": status,
+                    "total_actual_tss": actual_tss,
+                }).eq("id", plan["id"]).execute()
+            except Exception as e:
+                logger.warning(f"Failed to persist achievement for plan {plan['id']}: {e}")
+        elif not status:
+            # Current/future week
+            if actual_tss is None:
+                actual_tss = _calculate_actual_tss_for_plan(supabase, plan["id"], user["id"])
+            status = "in_progress"
+            pct = int((actual_tss / target) * 100) if target and target > 0 else 0
+        else:
+            pct = int((actual_tss / target) * 100) if target and target > 0 and actual_tss else 0
+
+        weekly_history.append({
+            "week_start": plan.get("week_start"),
+            "week_end": week_end,
+            "weekly_tss_target": target,
+            "total_actual_tss": actual_tss,
+            "achievement_status": status,
+            "achievement_pct": pct,
+        })
+
+    # Calculate current streak (consecutive achieved/exceeded from most recent)
+    streak = 0
+    for entry in weekly_history:
+        if entry["achievement_status"] in ["achieved", "exceeded"]:
+            streak += 1
+        elif entry["achievement_status"] == "in_progress":
+            continue  # Skip current week in progress
+        else:
+            break
+
+    # Calculate best streak ever
+    best_streak = 0
+    current_run = 0
+    for entry in reversed(weekly_history):  # Chronological order
+        if entry["achievement_status"] in ["achieved", "exceeded"]:
+            current_run += 1
+            best_streak = max(best_streak, current_run)
+        elif entry["achievement_status"] == "in_progress":
+            continue
+        else:
+            current_run = 0
+
+    # Totals
+    total_achieved = sum(1 for e in weekly_history if e["achievement_status"] in ["achieved", "exceeded"])
+    total_exceeded = sum(1 for e in weekly_history if e["achievement_status"] == "exceeded")
+
+    # Earned badges
+    earned_badges = []
+    for badge_id, badge in BADGES.items():
+        if badge["type"] == "streak" and best_streak >= badge["requirement"]:
+            earned_badges.append({"id": badge_id, **badge})
+        elif badge["type"] == "exceeded" and total_exceeded >= badge["requirement"]:
+            earned_badges.append({"id": badge_id, **badge})
+
+    # Next badge
+    next_badge = None
+    streak_badges = sorted(
+        [(k, v) for k, v in BADGES.items() if v["type"] == "streak"],
+        key=lambda x: x[1]["requirement"]
+    )
+    for badge_id, badge in streak_badges:
+        if streak < badge["requirement"]:
+            next_badge = {
+                "id": badge_id,
+                **badge,
+                "remaining": badge["requirement"] - streak,
+            }
+            break
+
+    return {
+        "current_streak": streak,
+        "best_streak": best_streak,
+        "total_achieved_weeks": total_achieved,
+        "total_exceeded_weeks": total_exceeded,
+        "earned_badges": earned_badges,
+        "next_badge": next_badge,
+        "weekly_history": weekly_history[:12],  # Last 12 weeks
+    }
+
+
+@router.post("/plans/weekly/{plan_id}/finalize")
+async def finalize_weekly_plan(plan_id: str, user: dict = Depends(get_current_user)):
+    """Finalize a weekly plan and calculate achievement."""
+    supabase = get_supabase_admin_client()
+
+    # Verify ownership
+    plan_result = (
+        supabase.table("weekly_plans")
+        .select("*")
+        .eq("id", plan_id)
+        .eq("user_id", user["id"])
+        .maybe_single()
+        .execute()
+    )
+    if not plan_result or not plan_result.data:
+        raise HTTPException(status_code=404, detail="Plan not found")
+
+    plan = plan_result.data
+    target = plan.get("weekly_tss_target")
+    actual_tss = _calculate_actual_tss_for_plan(supabase, plan_id, user["id"])
+    status, pct = calculate_achievement_status(target, actual_tss)
+
+    # Update plan
+    supabase.table("weekly_plans").update({
+        "achievement_status": status,
+        "total_actual_tss": actual_tss,
+    }).eq("id", plan_id).execute()
+
+    logger.info(f"Finalized plan {plan_id}: {status} ({pct}%) for user {user['id']}")
+
+    return {
+        "success": True,
+        "achievement_status": status,
+        "achievement_pct": pct,
+        "total_actual_tss": actual_tss,
+        "weekly_tss_target": target,
     }
