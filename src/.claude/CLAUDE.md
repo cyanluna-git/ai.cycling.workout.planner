@@ -13,6 +13,14 @@ Core workout logic, LLM client management, and external service clients (Groq/Ge
   - Select workout modules based on TSB
   - Assemble WARMUP → MAIN → COOLDOWN sequence
   - Handle LLM fallback chain (Groq → Gemini 2.0 → Gemini 1.5)
+- **`services/weekly_plan_service.py`** — Weekly plan generation:
+  - System/User prompt separation
+  - TSB-based intensity auto-selection (TSB_INTENSITY_MAP)
+  - Auto training style resolution based on TSB + focus
+  - Style-specific template filtering (only selected style sent to LLM)
+  - Athlete context: FTP, weight, W/kg, wellness, indoor/outdoor
+  - Module validation (remove invalid keys) + order fix
+  - used_modules collection for variety tracking
 - **`services/zwo_converter.py`** — Convert internal format → Zwift XML
 - **`services/prompts/`** — LLM prompt templates (structured, no injection)
 

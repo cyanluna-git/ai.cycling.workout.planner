@@ -41,9 +41,22 @@ Browser → React (port 3005, Vite)
 **Key modules:**
 - **Backend**: `api/routers/` (workout, fitness, plans), `api/services/` (caching, LLM fallback)
 - **Core**: `src/services/` (workout_generator, zwo_converter), `src/clients/` (llm, intervals, supabase)
+- **Weekly Plans**: `api/services/weekly_plan_service.py` (TSB-based intensity selection, style resolution, prompt optimization)
 - **Data**: `src/data/` (workout module JSON library)
 - **Frontend**: `pages/` (Dashboard, Settings), `components/` (FitnessCard, WorkoutForm), `hooks/` (useDashboard)
 
+
+**Weekly Plan Pipeline**:
+```
+Weekly Plans (api/routers/plans.py)
+  → WeeklyPlanGenerator (api/services/weekly_plan_service.py)
+    → System/User prompt split
+    → TSB-based intensity filtering (TSB_INTENSITY_MAP)
+    → Auto style resolution (_resolve_auto_style)
+    → Athlete context (FTP, weight, wellness, indoor/outdoor)
+    → Module validation + order fix
+    → used_modules tracking
+```
 ## Commands
 
 ### Development
