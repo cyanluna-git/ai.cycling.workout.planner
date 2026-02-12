@@ -612,8 +612,25 @@ async def generate_weekly_plan(
 
     llm_client = get_server_llm_client()
 
-    # Resolve weekly_tss_target: request param > user_settings
+    # Resolve weekly_tss_target: request param > user_settings > settings table
     weekly_tss_target = request.weekly_tss_target or user_settings.get("weekly_tss_target")
+    
+    # If still None, try fetching from settings explicitly (column may be missing from select)
+    if weekly_tss_target is None:
+        try:
+            settings_check = (
+                supabase.table("user_settings")
+                .select("weekly_tss_target")
+                .eq("user_id", user["id"])
+                .maybe_single()
+                .execute()
+            )
+            if settings_check and settings_check.data:
+                weekly_tss_target = settings_check.data.get("weekly_tss_target")
+        except Exception:
+            pass  # Column may not exist yet
+    
+    logger.info(f"Resolved weekly_tss_target={weekly_tss_target} for user {user['id'][:8]}...")
 
     generator = WeeklyPlanGenerator(llm_client, user_settings)
     weekly_plan = generator.generate_weekly_plan(
