@@ -53,6 +53,7 @@ class WeeklyPlanResponse(BaseModel):
     status: str
     training_style: Optional[str] = None
     total_planned_tss: Optional[int] = None
+    weekly_tss_target: Optional[int] = None
     daily_workouts: List[DailyWorkoutResponse]
     used_modules: Optional[List[str]] = None
 
@@ -61,6 +62,7 @@ class GenerateWeeklyPlanRequest(BaseModel):
     """Request to generate a weekly plan."""
 
     week_start: Optional[str] = None  # YYYY-MM-DD, default: next Monday
+    weekly_tss_target: Optional[int] = None  # Weekly TSS target (300-700)
     ftp: Optional[float] = None  # Override profile FTP (watts)
     weight: Optional[float] = None  # Override profile weight (kg)
     wellness_score: Optional[float] = None  # Daily wellness 0-10
@@ -74,6 +76,13 @@ class TodayWorkoutResponse(BaseModel):
     workout: Optional[DailyWorkoutResponse] = None
     wellness_hint: Optional[str] = None
     can_regenerate: bool = True
+    # Weekly TSS tracking
+    weekly_tss_target: Optional[int] = None
+    weekly_tss_accumulated: Optional[int] = None
+    weekly_tss_remaining: Optional[int] = None
+    days_remaining_in_week: Optional[int] = None
+    target_achievable: bool = True
+    achievement_warning: Optional[str] = None
 
 
 class RegenerateRequest(BaseModel):
@@ -515,6 +524,7 @@ async def get_current_weekly_plan(
         status=plan["status"],
         training_style=plan.get("training_style"),
         total_planned_tss=plan.get("total_planned_tss"),
+        weekly_tss_target=plan.get("weekly_tss_target"),
         daily_workouts=daily_workouts,
     )
 
@@ -572,6 +582,9 @@ async def generate_weekly_plan(
 
     llm_client = get_server_llm_client()
 
+    # Resolve weekly_tss_target: request param > user_settings
+    weekly_tss_target = request.weekly_tss_target or user_settings.get("weekly_tss_target")
+
     generator = WeeklyPlanGenerator(llm_client, user_settings)
     weekly_plan = generator.generate_weekly_plan(
         ctl=ctl,
@@ -584,6 +597,7 @@ async def generate_weekly_plan(
         indoor_outdoor_pref=request.indoor_outdoor_pref,
         week_start=week_start,
         exclude_barcode=user_settings.get("exclude_barcode_workouts", False),
+        weekly_tss_target=weekly_tss_target,
     )
 
     # Delete existing plan for this week if any
@@ -599,18 +613,19 @@ async def generate_weekly_plan(
         ).execute()
 
     # Save weekly plan to DB
+    plan_insert_data = {
+        "user_id": user["id"],
+        "week_start": week_start.isoformat(),
+        "week_end": week_end.isoformat(),
+        "status": "active",
+        "training_style": weekly_plan.training_style,
+        "total_planned_tss": weekly_plan.total_planned_tss,
+    }
+    if weekly_tss_target is not None:
+        plan_insert_data["weekly_tss_target"] = weekly_tss_target
     plan_result = (
         supabase.table("weekly_plans")
-        .insert(
-            {
-                "user_id": user["id"],
-                "week_start": week_start.isoformat(),
-                "week_end": week_end.isoformat(),
-                "status": "active",
-                "training_style": weekly_plan.training_style,
-                "total_planned_tss": weekly_plan.total_planned_tss,
-            }
-        )
+        .insert(plan_insert_data)
         .execute()
     )
 
@@ -666,11 +681,69 @@ async def get_today_workout(user: dict = Depends(get_current_user)):
         .execute()
     )
 
+    # --- Weekly TSS tracking ---
+    week_start, week_end = get_week_dates(today)
+
+    # Get all workouts for this week
+    week_workouts_result = (
+        supabase.table("daily_workouts")
+        .select("*")
+        .eq("user_id", user["id"])
+        .gte("workout_date", week_start.isoformat())
+        .lte("workout_date", week_end.isoformat())
+        .execute()
+    )
+    week_workouts = week_workouts_result.data if week_workouts_result and week_workouts_result.data else []
+
+    # Accumulated TSS (completed workouts only)
+    accumulated_tss = sum(
+        w.get("actual_tss") or w.get("planned_tss", 0)
+        for w in week_workouts
+        if w.get("status") == "completed"
+    )
+
+    # Get weekly plan for TSS target
+    weekly_plan_result = (
+        supabase.table("weekly_plans")
+        .select("*")
+        .eq("user_id", user["id"])
+        .eq("week_start", week_start.isoformat())
+        .maybe_single()
+        .execute()
+    )
+    weekly_tss_target = None
+    if weekly_plan_result and weekly_plan_result.data:
+        weekly_tss_target = weekly_plan_result.data.get("weekly_tss_target")
+
+    # Days remaining (including today)
+    days_remaining = (week_end - today).days + 1
+
+    # Remaining TSS and achievability
+    remaining_tss = (weekly_tss_target or 0) - accumulated_tss
+    MAX_DAILY_TSS = 150
+    max_achievable = days_remaining * MAX_DAILY_TSS
+    target_achievable = remaining_tss <= max_achievable
+
+    achievement_warning = None
+    if weekly_tss_target and not target_achievable:
+        achievement_pct = int((accumulated_tss / weekly_tss_target) * 100)
+        achievement_warning = (
+            f"남은 {days_remaining}일로 목표 TSS {weekly_tss_target} 달성이 어렵습니다. "
+            f"현재 {accumulated_tss}/{weekly_tss_target} ({achievement_pct}%). "
+            f"목표를 조정하시겠습니까?"
+        )
+
     if not workout_result or not workout_result.data:
         return TodayWorkoutResponse(
             has_plan=False,
             workout=None,
             can_regenerate=True,
+            weekly_tss_target=weekly_tss_target,
+            weekly_tss_accumulated=accumulated_tss,
+            weekly_tss_remaining=max(remaining_tss, 0) if weekly_tss_target else None,
+            days_remaining_in_week=days_remaining,
+            target_achievable=target_achievable,
+            achievement_warning=achievement_warning,
         )
 
     workout = workout_result.data
@@ -720,6 +793,12 @@ async def get_today_workout(user: dict = Depends(get_current_user)):
         ),
         wellness_hint=wellness_hint,
         can_regenerate=workout.get("status") not in ["completed", "skipped"],
+        weekly_tss_target=weekly_tss_target,
+        weekly_tss_accumulated=accumulated_tss,
+        weekly_tss_remaining=max(remaining_tss, 0) if weekly_tss_target else None,
+        days_remaining_in_week=days_remaining,
+        target_achievable=target_achievable,
+        achievement_warning=achievement_warning,
     )
 
 
