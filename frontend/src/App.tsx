@@ -64,7 +64,7 @@ function Dashboard() {
     isRegisteringPlanAll, isSyncingPlan, isLoading, isRegistering, error, success,
     handleGenerate, handleRegister, handleSelectDate, handleOnboardingComplete,
     handleGenerateWeeklyPlan, handleDeleteWeeklyPlan, handleRegisterWeeklyPlanAll,
-    handleSyncWeeklyPlan, handleWeekNavigation,
+    handleSyncWeeklyPlan, handleWeekNavigation, tssProgress,
   } = useDashboard();
 
   if (isApiConfigured === null) {
@@ -139,7 +139,7 @@ function Dashboard() {
             {(!workout && isLoading) ? <TodayWorkoutSkeleton /> : <TodayWorkoutCard workout={workout} onGenerate={handleGenerate} onRegister={handleRegister} isLoading={isLoading} isRegistering={isRegistering} isRegistered={!!success && (success.includes(t('common.registered')) || success.includes("Registered"))} ftp={fitness?.profile?.ftp ?? 250} error={error} success={success} />}
           </div>
           <div className="space-y-4">
-            {isLoadingPlan ? <WeeklyPlanSkeleton /> : <WeeklyPlanCard plan={weeklyPlan} isLoading={isLoadingPlan} isGenerating={isGeneratingPlan} isRegisteringAll={isRegisteringPlanAll} isSyncing={isSyncingPlan} currentWeekOffset={currentWeekOffset} onGenerate={handleGenerateWeeklyPlan} onDelete={handleDeleteWeeklyPlan} onRegisterAll={handleRegisterWeeklyPlanAll} onSync={handleSyncWeeklyPlan} onWeekNavigation={handleWeekNavigation} />}
+            {isLoadingPlan ? <WeeklyPlanSkeleton /> : <WeeklyPlanCard plan={weeklyPlan} isLoading={isLoadingPlan} isGenerating={isGeneratingPlan} isRegisteringAll={isRegisteringPlanAll} isSyncing={isSyncingPlan} currentWeekOffset={currentWeekOffset} tssProgress={tssProgress} onGenerate={handleGenerateWeeklyPlan} onDelete={handleDeleteWeeklyPlan} onRegisterAll={handleRegisterWeeklyPlanAll} onSync={handleSyncWeeklyPlan} onWeekNavigation={handleWeekNavigation} />}
           </div>
         </div>
       </main>
