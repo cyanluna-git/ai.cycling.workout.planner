@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -47,6 +48,7 @@ const API_BASE = import.meta.env.VITE_API_URL || '';
 
 export function AdminPage({ onBack }: AdminPageProps) {
     const { session } = useAuth();
+    const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState<'overview' | 'api-logs' | 'audit-logs'>('overview');
 
     // Overview stats
@@ -210,15 +212,15 @@ export function AdminPage({ onBack }: AdminPageProps) {
                 <div className="container mx-auto px-4 py-4 flex justify-between items-center">
                     <div className="flex items-center gap-4">
                         <Button variant="ghost" onClick={onBack}>
-                            ← 뒤로
+                            {t("admin.back")}
                         </Button>
                         <div>
                             <h1 className="text-2xl font-bold">🔧 Admin Dashboard</h1>
-                            <p className="text-muted-foreground text-sm">시스템 모니터링 및 통계</p>
+                            <p className="text-muted-foreground text-sm">{t('admin.subtitle')}</p>
                         </div>
                     </div>
                     <Button variant="outline" onClick={fetchStats}>
-                        🔄 새로고침
+                        {t("admin.refresh")}
                     </Button>
                 </div>
             </header>
@@ -230,19 +232,19 @@ export function AdminPage({ onBack }: AdminPageProps) {
                         variant={activeTab === 'overview' ? 'default' : 'outline'}
                         onClick={() => setActiveTab('overview')}
                     >
-                        📊 개요
+                        {t("admin.overviewTab")}
                     </Button>
                     <Button
                         variant={activeTab === 'api-logs' ? 'default' : 'outline'}
                         onClick={() => setActiveTab('api-logs')}
                     >
-                        📝 API 로그
+                        {t("admin.apiLogsTab")}
                     </Button>
                     <Button
                         variant={activeTab === 'audit-logs' ? 'default' : 'outline'}
                         onClick={() => setActiveTab('audit-logs')}
                     >
-                        📋 Audit 로그
+                        {t("admin.auditLogsTab")}
                     </Button>
                 </div>
 
@@ -253,51 +255,51 @@ export function AdminPage({ onBack }: AdminPageProps) {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             <Card>
                                 <CardHeader className="pb-2">
-                                    <CardDescription>총 사용자</CardDescription>
+                                    <CardDescription>{t('admin.totalUsers')}</CardDescription>
                                     <CardTitle className="text-3xl">
                                         {statsLoading ? '...' : stats?.total_users ?? 0}
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    <p className="text-sm text-muted-foreground">가입된 전체 사용자 수</p>
+                                    <p className="text-sm text-muted-foreground">{t('admin.totalUsersDesc')}</p>
                                 </CardContent>
                             </Card>
 
                             <Card>
                                 <CardHeader className="pb-2">
-                                    <CardDescription>오늘 워크아웃</CardDescription>
+                                    <CardDescription>{t('admin.todayWorkouts')}</CardDescription>
                                     <CardTitle className="text-3xl text-green-600">
                                         {statsLoading ? '...' : stats?.workouts_today ?? 0}
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    <p className="text-sm text-muted-foreground">오늘 생성된 워크아웃</p>
+                                    <p className="text-sm text-muted-foreground">{t('admin.todayWorkoutsDesc')}</p>
                                 </CardContent>
                             </Card>
 
                             <Card>
                                 <CardHeader className="pb-2">
-                                    <CardDescription>오늘 API 호출</CardDescription>
+                                    <CardDescription>{t('admin.todayApiCalls')}</CardDescription>
                                     <CardTitle className="text-3xl text-blue-600">
                                         {statsLoading ? '...' : stats?.api_calls_today ?? 0}
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent>
                                     <p className="text-sm text-muted-foreground">
-                                        이번 주: {stats?.api_calls_week ?? 0}
+                                        {t('admin.thisWeek', { count: stats?.api_calls_week ?? 0 })}
                                     </p>
                                 </CardContent>
                             </Card>
 
                             <Card>
                                 <CardHeader className="pb-2">
-                                    <CardDescription>평균 응답시간</CardDescription>
+                                    <CardDescription>{t('admin.avgResponseTime')}</CardDescription>
                                     <CardTitle className="text-3xl text-purple-600">
                                         {statsLoading ? '...' : `${stats?.avg_response_time_ms ?? 0}ms`}
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    <p className="text-sm text-muted-foreground">오늘 API 평균</p>
+                                    <p className="text-sm text-muted-foreground">{t('admin.avgResponseTimeDesc')}</p>
                                 </CardContent>
                             </Card>
                         </div>
@@ -305,12 +307,12 @@ export function AdminPage({ onBack }: AdminPageProps) {
                         {/* Weekly Workout Stats Table */}
                         <Card>
                             <CardHeader className="pb-2">
-                                <CardTitle className="text-lg">📅 주간 워크아웃 생성</CardTitle>
-                                <CardDescription>최근 7일 일별 생성 개수</CardDescription>
+                                <CardTitle className="text-lg">{t('admin.weeklyWorkoutsTitle')}</CardTitle>
+                                <CardDescription>{t('admin.weeklyWorkoutsDesc')}</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 {statsLoading ? (
-                                    <div className="text-center py-4 text-muted-foreground">로딩 중...</div>
+                                    <div className="text-center py-4 text-muted-foreground">{t('common.loading')}</div>
                                 ) : (
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-sm">
@@ -366,9 +368,9 @@ export function AdminPage({ onBack }: AdminPageProps) {
                             <CardHeader className="pb-2">
                                 <div className="flex justify-between items-start">
                                     <div>
-                                        <CardTitle className="text-lg">👤 사용자별 워크아웃 생성</CardTitle>
+                                        <CardTitle className="text-lg">{t('admin.userStatsTitle')}</CardTitle>
                                         <CardDescription>
-                                            {userStatsDays === 1 ? '오늘' : userStatsDays === 7 ? '최근 7일간' : '최근 30일간'} 사용자별 생성 횟수 (총 {uniqueUsers}명)
+                                            {userStatsDays === 1 ? t('admin.userStatsDescToday', { count: uniqueUsers }) : userStatsDays === 7 ? t('admin.userStatsDescWeek', { count: uniqueUsers }) : t('admin.userStatsDescMonth', { count: uniqueUsers })}
                                         </CardDescription>
                                     </div>
                                     <div className="flex gap-1">
@@ -376,29 +378,23 @@ export function AdminPage({ onBack }: AdminPageProps) {
                                             variant={userStatsDays === 1 ? 'default' : 'outline'}
                                             size="sm"
                                             onClick={() => setUserStatsDays(1)}
-                                        >
-                                            일일
-                                        </Button>
+                                        >{t("admin.daily")}</Button>
                                         <Button
                                             variant={userStatsDays === 7 ? 'default' : 'outline'}
                                             size="sm"
                                             onClick={() => setUserStatsDays(7)}
-                                        >
-                                            주간
-                                        </Button>
+                                        >{t("admin.weekly")}</Button>
                                         <Button
                                             variant={userStatsDays === 30 ? 'default' : 'outline'}
                                             size="sm"
                                             onClick={() => setUserStatsDays(30)}
-                                        >
-                                            월간
-                                        </Button>
+                                        >{t("admin.monthly")}</Button>
                                     </div>
                                 </div>
                             </CardHeader>
                             <CardContent>
                                 {statsLoading ? (
-                                    <div className="text-center py-4 text-muted-foreground">로딩 중...</div>
+                                    <div className="text-center py-4 text-muted-foreground">{t('common.loading')}</div>
                                 ) : (
                                     <>
                                         {/* Top User Highlight */}
@@ -407,9 +403,9 @@ export function AdminPage({ onBack }: AdminPageProps) {
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-2xl">🏆</span>
                                                     <div>
-                                                        <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">최다 생성 유저</p>
+                                                        <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">{t('admin.topUser')}</p>
                                                         <p className="text-lg font-bold text-yellow-900 dark:text-yellow-100">
-                                                            {topUser.email} - {topUser.count}회
+                                                            {topUser.email} - {topUser.count}{t("common.times")}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -422,9 +418,9 @@ export function AdminPage({ onBack }: AdminPageProps) {
                                                 <table className="w-full text-sm">
                                                     <thead>
                                                         <tr className="border-b">
-                                                            <th className="py-2 px-3 text-left">순위</th>
-                                                            <th className="py-2 px-3 text-left">이메일</th>
-                                                            <th className="py-2 px-3 text-right">생성 횟수</th>
+                                                            <th className="py-2 px-3 text-left">{t('admin.rank')}</th>
+                                                            <th className="py-2 px-3 text-left">{t('common.email')}</th>
+                                                            <th className="py-2 px-3 text-right">{t('admin.creationCount')}</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
@@ -437,7 +433,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
                                                                     {user.email}
                                                                 </td>
                                                                 <td className="py-2 px-3 text-right font-bold text-green-600">
-                                                                    {user.count}회
+                                                                    {user.count}{t("common.times")}
                                                                 </td>
                                                             </tr>
                                                         ))}
@@ -446,7 +442,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
                                             </div>
                                         ) : (
                                             <div className="text-center py-4 text-muted-foreground">
-                                                최근 7일간 생성된 워크아웃이 없습니다.
+                                                {t("admin.noWorkoutsRecent")}
                                             </div>
                                         )}
                                     </>
@@ -457,14 +453,14 @@ export function AdminPage({ onBack }: AdminPageProps) {
                         {/* Quick Actions */}
                         <Card>
                             <CardHeader>
-                                <CardTitle>빠른 액션</CardTitle>
+                                <CardTitle>{t('admin.quickActions')}</CardTitle>
                             </CardHeader>
                             <CardContent className="flex gap-4">
                                 <Button variant="outline" onClick={() => setActiveTab('api-logs')}>
-                                    API 로그 보기 →
+                                    {t("admin.viewApiLogs")}
                                 </Button>
                                 <Button variant="outline" onClick={() => setActiveTab('audit-logs')}>
-                                    Audit 로그 보기 →
+                                    {t("admin.viewAuditLogs")}
                                 </Button>
                             </CardContent>
                         </Card>
@@ -475,25 +471,25 @@ export function AdminPage({ onBack }: AdminPageProps) {
                 {activeTab === 'api-logs' && (
                     <Card>
                         <CardHeader>
-                            <CardTitle>API 요청 로그</CardTitle>
+                            <CardTitle>{t('admin.apiLogsTitle')}</CardTitle>
                             <CardDescription>
-                                총 {apiLogsTotal}개 ({apiLogsPage} 페이지)
+                                {t("admin.totalCount", { total: apiLogsTotal, page: apiLogsPage })}
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
                             {apiLogsLoading ? (
-                                <div className="text-center py-8 text-muted-foreground">로딩 중...</div>
+                                <div className="text-center py-8 text-muted-foreground">{t('common.loading')}</div>
                             ) : (
                                 <>
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-sm">
                                             <thead>
                                                 <tr className="border-b">
-                                                    <th className="py-2 px-3 text-left">시간</th>
-                                                    <th className="py-2 px-3 text-left">메소드</th>
-                                                    <th className="py-2 px-3 text-left">경로</th>
-                                                    <th className="py-2 px-3 text-left">상태</th>
-                                                    <th className="py-2 px-3 text-left">응답시간</th>
+                                                    <th className="py-2 px-3 text-left">{t('admin.time')}</th>
+                                                    <th className="py-2 px-3 text-left">{t('admin.method')}</th>
+                                                    <th className="py-2 px-3 text-left">{t('admin.path')}</th>
+                                                    <th className="py-2 px-3 text-left">{t('admin.status')}</th>
+                                                    <th className="py-2 px-3 text-left">{t('admin.responseTime')}</th>
                                                     <th className="py-2 px-3 text-left">IP</th>
                                                 </tr>
                                             </thead>
@@ -534,7 +530,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
                                             disabled={apiLogsPage <= 1}
                                             onClick={() => fetchApiLogs(apiLogsPage - 1)}
                                         >
-                                            ← 이전
+                                            {t("admin.prevPage")}
                                         </Button>
                                         <span className="flex items-center px-4 text-sm text-muted-foreground">
                                             {apiLogsPage} / {Math.ceil(apiLogsTotal / 20)}
@@ -545,7 +541,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
                                             disabled={apiLogsPage * 20 >= apiLogsTotal}
                                             onClick={() => fetchApiLogs(apiLogsPage + 1)}
                                         >
-                                            다음 →
+                                            {t("admin.nextPage")}
                                         </Button>
                                     </div>
                                 </>
@@ -558,24 +554,24 @@ export function AdminPage({ onBack }: AdminPageProps) {
                 {activeTab === 'audit-logs' && (
                     <Card>
                         <CardHeader>
-                            <CardTitle>Audit 로그</CardTitle>
+                            <CardTitle>{t('admin.auditLogsTitle')}</CardTitle>
                             <CardDescription>
-                                총 {auditLogsTotal}개 ({auditLogsPage} 페이지)
+                                {t("admin.totalCount", { total: auditLogsTotal, page: auditLogsPage })}
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
                             {auditLogsLoading ? (
-                                <div className="text-center py-8 text-muted-foreground">로딩 중...</div>
+                                <div className="text-center py-8 text-muted-foreground">{t('common.loading')}</div>
                             ) : (
                                 <>
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-sm">
                                             <thead>
                                                 <tr className="border-b">
-                                                    <th className="py-2 px-3 text-left">시간</th>
-                                                    <th className="py-2 px-3 text-left">이벤트 타입</th>
-                                                    <th className="py-2 px-3 text-left">사용자 ID</th>
-                                                    <th className="py-2 px-3 text-left">상세</th>
+                                                    <th className="py-2 px-3 text-left">{t('admin.time')}</th>
+                                                    <th className="py-2 px-3 text-left">{t('admin.eventType')}</th>
+                                                    <th className="py-2 px-3 text-left">{t('admin.userId')}</th>
+                                                    <th className="py-2 px-3 text-left">{t('admin.details')}</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -609,7 +605,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
                                             disabled={auditLogsPage <= 1}
                                             onClick={() => fetchAuditLogs(auditLogsPage - 1)}
                                         >
-                                            ← 이전
+                                            {t("admin.prevPage")}
                                         </Button>
                                         <span className="flex items-center px-4 text-sm text-muted-foreground">
                                             {auditLogsPage} / {Math.ceil(auditLogsTotal / 20)}
@@ -620,7 +616,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
                                             disabled={auditLogsPage * 20 >= auditLogsTotal}
                                             onClick={() => fetchAuditLogs(auditLogsPage + 1)}
                                         >
-                                            다음 →
+                                            {t("admin.nextPage")}
                                         </Button>
                                     </div>
                                 </>

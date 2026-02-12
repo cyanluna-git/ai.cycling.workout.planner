@@ -7,12 +7,24 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .routers import workout, fitness, auth, settings, admin, plans
+from starlette.middleware.base import BaseHTTPMiddleware
+from .i18n import get_language
 
 app = FastAPI(
     title="AI Cycling Coach API",
     description="REST API for AI-powered cycling workout generation",
     version="1.0.0",
 )
+
+class LanguageMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        accept_lang = request.headers.get("accept-language", "en")
+        request.state.lang = get_language(accept_lang)
+        response = await call_next(request)
+        return response
+
+# Language detection middleware
+app.add_middleware(LanguageMiddleware)
 
 # Request logging middleware for admin monitoring (added BEFORE CORS)
 from .middleware import RequestLoggingMiddleware

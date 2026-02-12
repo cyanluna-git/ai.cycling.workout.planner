@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -28,6 +29,7 @@ import {
  * - Option to dismiss or view details
  */
 export function UpdateAnnouncementModal() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [update, setUpdate] = useState<VersionUpdate | null>(null);
 
@@ -67,13 +69,13 @@ export function UpdateAnnouncementModal() {
               month: "long",
               day: "numeric",
             })}{" "}
-            업데이트
+            {t("update.announcement")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 my-4">
           <div className="text-sm font-medium text-foreground">
-            새로운 기능을 소개합니다:
+            {t("update.newFeatures")}
           </div>
 
           {update.features.map((feature, index) => (
@@ -104,7 +106,7 @@ export function UpdateAnnouncementModal() {
             onClick={handleClose}
             className="flex-1 sm:flex-none"
           >
-            확인했습니다
+            {t("update.dismiss")}
           </Button>
         </DialogFooter>
       </DialogContent>
