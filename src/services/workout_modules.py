@@ -215,16 +215,31 @@ TYPE_TO_STYLES = {
 }
 
 
+
+# Intensity -> allowed main segment types mapping
+INTENSITY_TYPE_MAP = {
+    "easy": {"Endurance", "Tempo", "Recovery"},
+    "moderate": {"SweetSpot", "Tempo", "Threshold", "Mixed"},
+    "hard": {"VO2max", "Threshold", "Anaerobic", "SweetSpot"},
+}
+
 def get_module_inventory_text(
-    exclude_barcode: bool = False, training_style: str = None
+    exclude_barcode: bool = False, training_style: str = None, intensity: str = None
 ) -> str:
     """Format all modules into a text inventory for LLM prompts.
 
     Args:
         exclude_barcode: If True, exclude barcode-style workouts
         training_style: If provided, highlight suitable modules for this style
+        intensity: If provided (easy/moderate/hard), filter main segments by type
     """
     warmup, main, rest, cooldown = get_filtered_modules(exclude_barcode)
+
+    # Step 2: Pre-filter main segments by intensity
+    if intensity and intensity in INTENSITY_TYPE_MAP:
+        allowed_types = INTENSITY_TYPE_MAP[intensity]
+        main = {k: v for k, v in main.items()
+                if v.get("type", "Mixed") in allowed_types}
 
     inventory = []
 

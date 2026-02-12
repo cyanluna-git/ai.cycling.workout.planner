@@ -22,7 +22,9 @@ from .workout_library import WARMUP_BLOCKS, MAIN_BLOCKS, COOLDOWN_BLOCKS
 from .workout_modules import get_module_inventory_text
 from .prompts import (
     WORKOUT_SYNTAX_GUIDE,
-    MODULE_SELECTOR_PROMPT,
+    MODULE_SELECTOR_SYSTEM,
+    MODULE_SELECTOR_USER,
+    MODULE_SELECTOR_PROMPT,  # backward compat
     SYSTEM_PROMPT,
     TEMPLATE_REFINEMENT_PROMPT,
     USER_PROMPT_TEMPLATE,
@@ -107,6 +109,7 @@ class WorkoutGenerator:
         Returns:
             GeneratedWorkout with name, description, and workout text.
         """
+        logger.warning("WorkoutGenerator.generate() is deprecated. Use generate_enhanced() instead.")
         target_date = target_date or date.today()
 
         # Map auto intensity based on TSB (same logic as WorkoutAssembler)
@@ -175,9 +178,14 @@ class WorkoutGenerator:
         weekly_tss: int = 0,
         yesterday_load: int = 0,
         exclude_barcode: bool = False,
+        ftp: int = 0,
+        weight: float = 0,
+        indoor: bool = False,
+        weekday: str = "",
+        wellness_text: str = "",
     ) -> dict:
         """Use LLM to select module keys from inventory."""
-        inventory_text = get_module_inventory_text(exclude_barcode=exclude_barcode)
+        inventory_text = get_module_inventory_text(exclude_barcode=exclude_barcode, intensity=intensity)
 
         # Get balance hints for variety enforcement
         try:
@@ -199,8 +207,15 @@ class WorkoutGenerator:
             logger.warning(f"Failed to generate balance hints: {e}")
             balance_hints = "  (No usage data available)"
 
-        prompt = MODULE_SELECTOR_PROMPT.format(
+        environment = "Indoor Trainer" if indoor else "Outdoor"
+        system_prompt = MODULE_SELECTOR_SYSTEM
+        user_prompt = MODULE_SELECTOR_USER.format(
             module_inventory=inventory_text,
+            ftp=ftp or "N/A",
+            weight=weight or "N/A",
+            environment=environment,
+            weekday=weekday or "N/A",
+            wellness_text=wellness_text or "No data available",
             tsb=tsb,
             form=form,
             weekly_tss=weekly_tss,
@@ -211,9 +226,8 @@ class WorkoutGenerator:
             balance_hints=balance_hints,
         )
 
-        # No temperature arg in base client generate signature
         response = self.llm.generate(
-            system_prompt=prompt, user_prompt="Please generate the workout plan."
+            system_prompt=system_prompt, user_prompt=user_prompt
         )
 
         # Simple JSON extraction
@@ -296,6 +310,21 @@ class WorkoutGenerator:
             if intensity and intensity != "auto":
                 goal_desc += f" (Preference: {intensity})"
 
+            # Collect athlete context for LLM (Step 3)
+            weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+            weekday_str = weekdays[target_date.weekday()]
+
+            wellness_lines = []
+            if wellness_metrics.hrv:
+                wellness_lines.append(f"- HRV: {wellness_metrics.hrv}")
+            if wellness_metrics.rhr:
+                wellness_lines.append(f"- RHR: {wellness_metrics.rhr} bpm")
+            if wellness_metrics.sleep_hours:
+                wellness_lines.append(f"- Sleep: {wellness_metrics.sleep_hours:.1f} hours")
+            if wellness_metrics.readiness:
+                wellness_lines.append(f"- Readiness: {wellness_metrics.readiness}")
+            wellness_text = "\n".join(wellness_lines) if wellness_lines else "No data available"
+
             logger.info("Requesting workout plan from AI...")
             selection = self._select_modules_with_llm(
                 tsb=tsb,
@@ -306,6 +335,11 @@ class WorkoutGenerator:
                 yesterday_load=yesterday_load,
                 exclude_barcode=self.profile.exclude_barcode_workouts,
                 intensity=intensity,
+                ftp=self.profile.ftp,
+                weight=getattr(self.profile, "weight", 0),
+                indoor=indoor,
+                weekday=weekday_str,
+                wellness_text=wellness_text,
             )
 
             logger.info(
@@ -371,7 +405,7 @@ class WorkoutGenerator:
             steps=steps,
         )
 
-    def _build_enhanced_user_prompt(
+    def _build_enhanced_user_prompt(  # DEPRECATED: unused, kept for reference
         self,
         metrics: TrainingMetrics,
         wellness: WellnessMetrics,
@@ -433,7 +467,7 @@ Settings:
 
 Generate a structured workout using the appropriate protocol types."""
 
-    def _build_refinement_user_prompt(
+    def _build_refinement_user_prompt(  # DEPRECATED: unused, kept for reference
         self,
         metrics: TrainingMetrics,
         wellness: WellnessMetrics,
