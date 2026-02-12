@@ -204,9 +204,11 @@ export function WeeklyPlanCard({
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="text-center py-6">
-                        <p className="text-muted-foreground mb-4">
-                            {t("weeklyPlan.noPlan")}
+                    <div className="py-12 text-center">
+                        <div className="text-5xl mb-4">📅</div>
+                        <h3 className="text-xl font-bold mb-2">{t("weeklyPlan.emptyTitle")}</h3>
+                        <p className="text-muted-foreground text-sm mb-6 max-w-md mx-auto">
+                            {t("weeklyPlan.emptyDesc")}
                         </p>
                         <Button
                             onClick={onGenerate}
@@ -219,7 +221,7 @@ export function WeeklyPlanCard({
                                     {t("common.generating")}
                                 </>
                             ) : (
-                                <>{(<>{t("weeklyPlan.generatePlan")}</>)}</>
+                                t("weeklyPlan.generatePlan")
                             )}
                         </Button>
                     </div>

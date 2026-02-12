@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { TrainingMetrics, WellnessMetrics, AthleteProfile } from "@/lib/api";
 
@@ -74,15 +75,48 @@ export function FitnessCard({ training, wellness, profile }: FitnessCardProps) {
                     <div className="space-y-2">
                         <div className="text-xs font-medium text-muted-foreground mb-1">{t('fitness.trainingLoad')}</div>
                         <div className="flex justify-between items-baseline">
-                            <span className="text-sm text-muted-foreground">{t('fitness.ctlLabel')}</span>
+                            <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <span className="text-sm text-muted-foreground cursor-help border-b border-dashed border-muted-foreground/50">
+                                        {t('fitness.ctlLabel')}
+                                    </span>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs">
+                                    <p className="text-sm">{t('fitness.ctlTooltip')}</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
                             <span className="text-lg font-bold">{training.ctl.toFixed(1)}</span>
                         </div>
                         <div className="flex justify-between items-baseline">
-                            <span className="text-sm text-muted-foreground">{t('fitness.atlLabel')}</span>
+                            <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <span className="text-sm text-muted-foreground cursor-help border-b border-dashed border-muted-foreground/50">
+                                        {t('fitness.atlLabel')}
+                                    </span>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs">
+                                    <p className="text-sm">{t('fitness.atlTooltip')}</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
                             <span className="text-lg font-bold">{training.atl.toFixed(1)}</span>
                         </div>
                         <div className="flex justify-between items-baseline">
-                            <span className="text-sm text-muted-foreground">TSB</span>
+                            <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <span className="text-sm text-muted-foreground cursor-help border-b border-dashed border-muted-foreground/50">
+                                        TSB
+                                    </span>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs">
+                                    <p className="text-sm">{t('fitness.tsbTooltip')}</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
                             <span className={`text-lg font-bold ${getTsbColor(training.tsb)}`}>
                                 {getTsbEmoji(training.tsb)} {training.tsb.toFixed(1)}
                             </span>

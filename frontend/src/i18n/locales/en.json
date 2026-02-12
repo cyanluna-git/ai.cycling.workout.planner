@@ -92,7 +92,11 @@
     "settingUp": "Setting up...",
     "complete": "🚀 Complete Setup",
     "bothRequired": "Both Athlete ID and API Key are required.",
-    "saveFailed": "Failed to save settings."
+    "saveFailed": "Failed to save settings.",
+    "stepProgress": "Step {{step}}/{{total}}",
+    "step1Time": "~2 minutes",
+    "step2Time": "~3 minutes",
+    "step3Time": "~1 minute"
   },
   "settings": {
     "trainingTitle": "🎯 Training Settings",
@@ -140,7 +144,10 @@
     "restingHR": "Resting HR",
     "sleep": "Sleep",
     "sleepScore": "Sleep Score",
-    "readiness": "Today's Readiness"
+    "readiness": "Today's Readiness",
+    "ctlTooltip": "Chronic Training Load. Average training volume over the past 6 weeks, representing your current fitness level.",
+    "atlTooltip": "Acute Training Load. Average training volume over the past 7 days, representing your current fatigue level.",
+    "tsbTooltip": "Training Stress Balance. CTL - ATL value: +10 or higher means well-rested, -10 or lower means fatigue accumulated."
   },
   "wellnessCard": {
     "title": "🌿 Wellness Status",
@@ -204,7 +211,9 @@
     "loadedWorkout": "📅 Today's workout loaded.",
     "loadedDateWorkout": "📅 Loaded workout for {{date}}.",
     "noSavedWorkout": "No saved workout for {{date}}.",
-    "loadFailed": "Failed to load: {{message}}"
+    "loadFailed": "Failed to load: {{message}}",
+    "emptyTitle": "Ready to create your first workout?",
+    "emptyDesc": "Click the button below to generate today's optimal workout. AI analyzes your CTL, ATL, TSB to recommend the perfect training."
   },
   "weeklyPlan": {
     "title": "📅 Weekly Workout Plan",
@@ -230,7 +239,9 @@
     "registerResult": "{{registered}} workouts registered to Intervals.icu.",
     "registerPartialFail": "{{failed}} workouts failed to register",
     "registerFailed": "Registration failed: {{message}}",
-    "syncFailed": "Sync failed: {{message}}"
+    "syncFailed": "Sync failed: {{message}}",
+    "emptyTitle": "No Weekly Training Plan",
+    "emptyDesc": "Generate your entire week's training plan at once. AI creates a 7-day plan aligned with recovery/build rhythm."
   },
   "admin": {
     "back": "← Back",

@@ -95,6 +95,7 @@ export function TodayWorkoutCard({
 
         return (
             <Card className="w-full">
+            {/* Empty state with emoji and guidance */}
                 <CardHeader className="pb-2">
                     <CardTitle className="text-base sm:text-lg">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
@@ -267,13 +268,18 @@ export function TodayWorkoutCard({
     // Show generation form if no workout
     return (
         <Card className="w-full">
+            {/* Empty state with emoji and guidance */}
             <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                    🚴 {t('workout.todayTitle')}
-                </CardTitle>
+                <CardTitle className="text-lg">{t("workout.todayTitle")}</CardTitle>
             </CardHeader>
-            <CardContent>
-                <div className="space-y-4">
+            <CardContent className="py-8 text-center">
+                <div className="max-w-md mx-auto space-y-4">
+                    <div className="text-5xl mb-4">🎯</div>
+                    <h3 className="text-xl font-bold">{t("workout.emptyTitle")}</h3>
+                    <p className="text-muted-foreground text-sm">
+                        {t("workout.emptyDesc")}
+                    </p>
+
                     {/* Messages */}
                     {error && (
                         <div className="bg-destructive/10 text-destructive p-3 rounded-lg text-sm">
@@ -282,10 +288,10 @@ export function TodayWorkoutCard({
                     )}
 
                     {/* Duration */}
-                    <div className="space-y-2">
+                    <div className="space-y-2 mt-6">
                         <div className="flex items-center justify-between">
-                            <Label className="text-sm">{t('workout.duration')}</Label>
-                            <span className="text-sm font-medium">{duration}{t('common.minutes')}</span>
+                            <Label className="text-sm">{t("workout.duration")}</Label>
+                            <span className="text-sm font-medium">{duration}{t("common.minutes")}</span>
                         </div>
                         <Slider
                             className="touch-none [&_[role=slider]]:h-11 [&_[role=slider]]:w-11 sm:[&_[role=slider]]:h-5 sm:[&_[role=slider]]:w-5"
@@ -299,7 +305,7 @@ export function TodayWorkoutCard({
 
                     {/* Intensity Buttons */}
                     <div className="space-y-2">
-                        <Label className="text-sm">{t('workout.intensity')}</Label>
+                        <Label className="text-sm">{t("workout.intensity")}</Label>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                             {INTENSITIES.map((i) => (
                                 <Button
@@ -324,7 +330,7 @@ export function TodayWorkoutCard({
                                 onChange={(e) => setIndoor(e.target.checked)}
                                 className="rounded h-5 w-5"
                             />
-                            <span className="text-sm">{t('workout.indoor')}</span>
+                            <span className="text-sm">{t("workout.indoor")}</span>
                         </label>
 
                         <Button 
@@ -335,10 +341,10 @@ export function TodayWorkoutCard({
                             {isLoading ? (
                                 <>
                                     <span className="animate-spin">⏳</span>
-                                    {t('common.generating')}
+                                    {t("common.generating")}
                                 </>
                             ) : (
-                                t('workout.generate')
+                                t("workout.generate")
                             )}
                         </Button>
                     </div>
