@@ -451,6 +451,36 @@ class WeeklyPlanGenerator:
 
     # -----------------------------------------------------------------------
     # Athlete context builder
+    # -----------------------------------------------------------------------
+    def _build_athlete_context(
+        self,
+        ftp: Optional[float] = None,
+        weight: Optional[float] = None,
+        wellness_score: Optional[float] = None,
+        indoor_outdoor_pref: Optional[str] = None,
+    ) -> str:
+        """Build athlete context string for the prompt.
+
+        Args:
+            ftp: Functional Threshold Power in watts
+            weight: Body weight in kg
+            wellness_score: Subjective wellness (1-10)
+            indoor_outdoor_pref: 'indoor', 'outdoor', or None
+
+        Returns:
+            Formatted context string for the user prompt
+        """  
+        lines = []
+        if ftp is not None:
+            lines.append(f"- **FTP:** {ftp:.0f}W")
+            if weight is not None:
+                wpkg = ftp / weight
+                lines.append(f"- **Weight:** {weight:.1f}kg (W/kg: {wpkg:.2f})")
+        if wellness_score is not None:
+            lines.append(f"- **Wellness Score:** {wellness_score:.0f}/10")
+        if indoor_outdoor_pref:
+            lines.append(f"- **Preference:** {indoor_outdoor_pref}")
+        return "\n".join(lines)
 
     # -----------------------------------------------------------------------
     # TSS validation
