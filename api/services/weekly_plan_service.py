@@ -48,6 +48,16 @@ FORM_STATUS_TO_TSB_KEY = {
 }
 
 
+# Distribution ratios per style (Mon-Sun, rest days = 0)
+DAILY_TSS_RATIOS = {
+    "polarized":  [0.0, 0.12, 0.18, 0.10, 0.0, 0.35, 0.25],  # Long weekend rides
+    "norwegian":  [0.0, 0.18, 0.08, 0.18, 0.0, 0.18, 0.38],  # 3 threshold days + long Sun
+    "sweetspot":  [0.0, 0.16, 0.12, 0.16, 0.0, 0.28, 0.28],  # SS emphasis + weekend
+    "threshold":  [0.0, 0.18, 0.10, 0.18, 0.0, 0.22, 0.32],  # Threshold heavy + long Sun
+    "endurance":  [0.0, 0.12, 0.14, 0.12, 0.0, 0.34, 0.28],  # Volume-focused weekends
+}
+
+
 # ---------------------------------------------------------------------------
 # Per-style weekly structure templates
 # ---------------------------------------------------------------------------
@@ -203,6 +213,10 @@ WEEKLY_PLAN_USER_PROMPT = """# Athlete Context
 - **Current ATL (Fatigue):** {atl:.1f}
 - **Current TSB (Form):** {tsb:.1f} ({form_status})
 - **Weekly TSS Target:** {weekly_tss_target}
+
+# Daily TSS Targets
+Each day has a target TSS. Stay within ±15% of each day\'s target.
+{daily_tss_targets}
 {athlete_context}
 
 # ALLOWED Workout Types (based on current form)
@@ -375,6 +389,25 @@ class WeeklyPlanGenerator:
             indoor_outdoor_pref=indoor_outdoor_pref,
         )
 
+        # Predict daily TSS targets
+        daily_tss_targets = self._predict_daily_tss(
+            weekly_tss_target, training_style, allowed_types
+        )
+        
+        # Format daily TSS targets for prompt
+        day_names = [
+            "Monday", "Tuesday", "Wednesday", "Thursday",
+            "Friday", "Saturday", "Sunday",
+        ]
+        daily_tss_text = []
+        for day_idx, day_name in enumerate(day_names):
+            target_tss = daily_tss_targets.get(day_idx, 0)
+            if target_tss == 0:
+                daily_tss_text.append(f"- {day_name}: Rest (0 TSS)")
+            else:
+                daily_tss_text.append(f"- {day_name}: ~{target_tss} TSS")
+        daily_tss_targets_formatted = "\n".join(daily_tss_text)
+
         # Build user prompt
         user_prompt = WEEKLY_PLAN_USER_PROMPT.format(
             training_style=training_style,
@@ -393,6 +426,7 @@ class WeeklyPlanGenerator:
             weekly_structure=weekly_structure,
             module_inventory=module_inventory,
             athlete_context=athlete_context,
+            daily_tss_targets=daily_tss_targets_formatted,
         )
 
         logger.info(f"Generating weekly plan for {week_start} to {week_end}")
@@ -419,6 +453,9 @@ class WeeklyPlanGenerator:
                 logger.warning(f"Parse failed on attempt {attempt + 1}, retrying...")
             else:
                 logger.error(f"All {max_retries} attempts failed, using fallback plan")
+
+        # Post-validate weekly TSS
+        daily_plans = self._post_validate_weekly_tss(daily_plans, weekly_tss_target)
 
         # Calculate total TSS and collect used modules
         total_tss = sum(dp.estimated_tss for dp in daily_plans)
@@ -492,6 +529,51 @@ class WeeklyPlanGenerator:
         return "\n".join(lines)
 
     # -----------------------------------------------------------------------
+    # Daily TSS prediction
+    # -----------------------------------------------------------------------
+    def _predict_daily_tss(
+        self, weekly_tss_target: int, training_style: str, allowed_types: List[str]
+    ) -> Dict[int, int]:
+        """Pre-allocate daily TSS targets before LLM call.
+        
+        Args:
+            weekly_tss_target: Target total TSS for the week
+            training_style: Training style (polarized, norwegian, etc.)
+            allowed_types: List of allowed workout types based on form
+            
+        Returns:
+            Dict mapping day_index (0-6) to target TSS
+        """
+        # Get ratios for this style (fallback to sweetspot)
+        ratios = DAILY_TSS_RATIOS.get(training_style, DAILY_TSS_RATIOS["sweetspot"])
+        
+        daily_targets = {}
+        for day_index, ratio in enumerate(ratios):
+            # Calculate raw TSS
+            raw_tss = weekly_tss_target * ratio
+            
+            # Round to nearest 5
+            rounded_tss = int(round(raw_tss / 5) * 5)
+            
+            # Apply caps
+            if ratio == 0.0:
+                # Rest day
+                daily_targets[day_index] = 0
+            elif training_style == "endurance" and day_index in [5, 6]:  # Weekend
+                # Endurance weekends can go higher
+                daily_targets[day_index] = min(180, rounded_tss)
+            else:
+                # Standard cap at 150
+                daily_targets[day_index] = min(150, rounded_tss)
+        
+        logger.info(
+            f"Predicted daily TSS for {training_style}: {daily_targets} "
+            f"(total: {sum(daily_targets.values())})"
+        )
+        return daily_targets
+
+
+    # -----------------------------------------------------------------------
     # TSS validation
     # -----------------------------------------------------------------------
     def _validate_and_correct_tss(
@@ -539,6 +621,69 @@ class WeeklyPlanGenerator:
             return expected_tss
 
         return estimated_tss
+
+
+    # -----------------------------------------------------------------------
+    # Post-validation of weekly TSS
+    # -----------------------------------------------------------------------
+    def _post_validate_weekly_tss(
+        self, daily_plans: List[DailyPlan], weekly_tss_target: int
+    ) -> List[DailyPlan]:
+        """Scale daily TSS if total is outside ±15% of weekly target.
+        
+        Args:
+            daily_plans: List of DailyPlan objects
+            weekly_tss_target: Target total TSS for the week
+            
+        Returns:
+            Adjusted list of DailyPlan objects
+        """
+        total = sum(dp.estimated_tss for dp in daily_plans)
+        if weekly_tss_target <= 0 or total <= 0:
+            return daily_plans
+        
+        ratio = total / weekly_tss_target
+        if 0.85 <= ratio <= 1.15:
+            logger.info(
+                f"Weekly TSS within tolerance: {total} vs target {weekly_tss_target} "
+                f"(ratio: {ratio:.2f})"
+            )
+            return daily_plans  # Within tolerance
+        
+        # Scale non-rest days proportionally
+        scale_factor = weekly_tss_target / total
+        logger.info(
+            f"Scaling weekly TSS: {total} -> target {weekly_tss_target} "
+            f"(scale factor: {scale_factor:.2f})"
+        )
+        
+        for dp in daily_plans:
+            if dp.workout_type == "Rest" or dp.estimated_tss == 0:
+                continue
+            
+            old_tss = dp.estimated_tss
+            new_tss = int(dp.estimated_tss * scale_factor)
+            new_tss = max(20, min(150, new_tss))  # Floor 20, cap 150
+            
+            # Also scale duration proportionally
+            if dp.duration_minutes > 0:
+                dur_scale = new_tss / max(dp.estimated_tss, 1)
+                dp.duration_minutes = max(30, min(180, int(dp.duration_minutes * dur_scale)))
+                # Round to nearest 5
+                dp.duration_minutes = round(dp.duration_minutes / 5) * 5
+            
+            dp.estimated_tss = new_tss
+            logger.debug(
+                f"{dp.day_name}: TSS {old_tss} -> {new_tss}, "
+                f"duration {dp.duration_minutes}min"
+            )
+        
+        new_total = sum(dp.estimated_tss for dp in daily_plans)
+        logger.info(
+            f"Post-validation TSS scaling: {total} → {new_total} "
+            f"(target: {weekly_tss_target})"
+        )
+        return daily_plans
 
     # -----------------------------------------------------------------------
     # JSON cleaning
