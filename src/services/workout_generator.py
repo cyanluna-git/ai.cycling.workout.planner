@@ -109,6 +109,18 @@ class WorkoutGenerator:
         """
         target_date = target_date or date.today()
 
+        # Map auto intensity based on TSB (same logic as WorkoutAssembler)
+        if intensity == "auto" or not intensity:
+            if training_metrics.tsb <= -10:
+                intensity = "easy"
+                logger.debug(f"TSB {training_metrics.tsb:.1f}: Auto-selected 'easy' intensity")
+            elif training_metrics.tsb >= 10:
+                intensity = "hard"
+                logger.debug(f"TSB {training_metrics.tsb:.1f}: Auto-selected 'hard' intensity")
+            else:
+                intensity = "moderate"
+                logger.debug(f"TSB {training_metrics.tsb:.1f}: Auto-selected 'moderate' intensity")
+        
         # Build prompts
         system_prompt = SYSTEM_PROMPT.format(syntax_guide=WORKOUT_SYNTAX_GUIDE)
         user_prompt = self._build_user_prompt(
