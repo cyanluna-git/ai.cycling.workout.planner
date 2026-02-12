@@ -1,4 +1,5 @@
 {
+  "_comment": "🚨 EMOJI RULE: Only add emoji to i18n values if the code does NOT prefix emoji. Most buttons/labels have emoji in code, so keep i18n values emoji-free. Check TodayWorkoutCard.tsx, WeeklyPlanCard.tsx, etc. before adding emoji.",
   "common": {
     "loading": "Loading...",
     "saving": "Saving...",
@@ -204,8 +205,8 @@
     "intensityHard": "Hard",
     "indoor": "🏠 Indoor",
     "generate": "🎯 Create Today's Training",
-    "regenerate": "🔄 Try Different Workout",
-    "register": "📅 Add to Calendar",
+    "regenerate": "Try Different Workout",
+    "register": "Add to Calendar",
     "registerToIntervals": "✅ Save to Calendar & Sync Device",
     "regenIntensityLabel": "Select intensity for regeneration:",
     "noChartData": "Unable to load chart data.",
