@@ -33,6 +33,10 @@
   - `/clients/`: External service clients (Supabase, Intervals, LLM)
   - `/services/`: Backend-agnostic services (Workout generation logic)
 - `/frontend/`: React application code
+  - `/api/services/weekly_plan_service.py`: Weekly plan generation with TSB-based intensity selection
+  - `/frontend/src/i18n/`: Internationalization (Korean/English)
+  - Mobile-optimized UI (7-phase workout display, responsive design)
+  - PWA support (offline capability)
   - `/src/pages/`: Main views (Dashboard, Admin, Settings)
   - `/src/components/`: Reusable UI components
 - `/docs/`: Infrastructure and technical documentation
@@ -43,6 +47,8 @@
 3. **Fallback Strategy**: 모든 AI 기능은 Groq 실패 시 Gemini로 자동 전환되는 구조를 유지해야 합니다.
 4. **Data Integrity**: Intervals.icu와 Supabase 간의 데이터 동기화 시 정합성을 최우선으로 합니다.
 5. **Clean Code**: Python은 PEP8, TypeScript는 ESLint/Prettier 규칙을 준수합니다.
+6. **Internationalization**: Frontend는 i18n을 통해 Korean/English 모두 지원해야 합니다.
+7. **Mobile First**: 모든 UI는 모바일 환경에서 먼저 테스트되어야 하며, 7-phase workout display를 지원해야 합니다.
 
 ## 🔗 Key URLs
 - **Backend API**: `https://cycling-coach-backend-25085100592.asia-northeast3.run.app`
