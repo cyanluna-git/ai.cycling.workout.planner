@@ -74,7 +74,7 @@ You are an expert Cycling Coach AI engine. Your goal is to assemble a modular wo
 ✅ CORRECT: ["ramp_standard", "sst_10min", "rest_short", "sst_10min", "flush_and_fade"]
 ✅ CORRECT: ["progressive_ramp_15min", "endurance_60min", "flush_and_fade"]
 ❌ WRONG: ["flush_and_fade", "endurance_60min", "ramp_standard"] (cooldown at start!)
-❌ WRONG: ["endurance_60min", "cooldown_extended", "ramp_standard"] (warmup at end!)
+❌ WRONG: ["endurance_60min", "extended_flush_25min", "ramp_standard"] (warmup at end!)
 """
 
 # Training style descriptions
