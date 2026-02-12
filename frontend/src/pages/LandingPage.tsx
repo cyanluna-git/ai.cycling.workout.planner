@@ -93,6 +93,49 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                 </div>
             </div>
 
+            <div className="container mx-auto px-4 py-12 bg-muted/30">
+                <div className="max-w-4xl mx-auto">
+                    <h2 className="text-2xl font-bold text-center mb-8">{t('landing.faqTitle')}</h2>
+                    <div className="space-y-4">
+                        <details className="group p-4 bg-background rounded-lg border">
+                            <summary className="font-semibold cursor-pointer list-none flex items-center justify-between">
+                                <span>{t('landing.faq1Q')}</span>
+                                <span className="transition group-open:rotate-180">\u25bc</span>
+                            </summary>
+                            <p className="mt-3 text-sm text-muted-foreground">{t('landing.faq1A')}</p>
+                        </details>
+                        <details className="group p-4 bg-background rounded-lg border">
+                            <summary className="font-semibold cursor-pointer list-none flex items-center justify-between">
+                                <span>{t('landing.faq2Q')}</span>
+                                <span className="transition group-open:rotate-180">\u25bc</span>
+                            </summary>
+                            <p className="mt-3 text-sm text-muted-foreground">{t('landing.faq2A')}</p>
+                        </details>
+                        <details className="group p-4 bg-background rounded-lg border">
+                            <summary className="font-semibold cursor-pointer list-none flex items-center justify-between">
+                                <span>{t('landing.faq3Q')}</span>
+                                <span className="transition group-open:rotate-180">\u25bc</span>
+                            </summary>
+                            <p className="mt-3 text-sm text-muted-foreground">{t('landing.faq3A')}</p>
+                        </details>
+                        <details className="group p-4 bg-background rounded-lg border">
+                            <summary className="font-semibold cursor-pointer list-none flex items-center justify-between">
+                                <span>{t('landing.faq4Q')}</span>
+                                <span className="transition group-open:rotate-180">\u25bc</span>
+                            </summary>
+                            <p className="mt-3 text-sm text-muted-foreground">{t('landing.faq4A')}</p>
+                        </details>
+                        <details className="group p-4 bg-background rounded-lg border">
+                            <summary className="font-semibold cursor-pointer list-none flex items-center justify-between">
+                                <span>{t('landing.faq5Q')}</span>
+                                <span className="transition group-open:rotate-180">\u25bc</span>
+                            </summary>
+                            <p className="mt-3 text-sm text-muted-foreground">{t('landing.faq5A')}</p>
+                        </details>
+                    </div>
+                </div>
+            </div>
+
             <div className="container mx-auto px-4 py-16">
                 <div className="max-w-2xl mx-auto text-center">
                     <h2 className="text-3xl font-bold mb-4">{t('landing.ctaTitle')}</h2>
