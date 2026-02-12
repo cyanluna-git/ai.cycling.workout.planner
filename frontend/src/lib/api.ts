@@ -3,8 +3,18 @@
  */
 
 import type { WorkoutStep } from '@/types/workout';
+import i18n from '@/i18n/config';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+function getHeaders(token?: string, contentType?: string): HeadersInit {
+    const headers: HeadersInit = {
+        'Accept-Language': i18n.language || 'ko',
+    };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    if (contentType) headers['Content-Type'] = contentType;
+    return headers;
+}
 
 // --- Types ---
 
@@ -130,7 +140,7 @@ export interface SportSettings {
 export async function fetchFitness(token: string, refresh: boolean = false): Promise<FitnessData> {
     const url = refresh ? `${API_BASE}/api/fitness?refresh=true` : `${API_BASE}/api/fitness`;
     const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: getHeaders(token),
     });
     if (!res.ok) throw new Error('Failed to fetch fitness data');
     return res.json();
@@ -138,7 +148,7 @@ export async function fetchFitness(token: string, refresh: boolean = false): Pro
 
 export async function fetchSportSettings(token: string, sport: string = 'Ride'): Promise<SportSettings> {
     const res = await fetch(`${API_BASE}/api/sport-settings?sport=${sport}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: getHeaders(token),
     });
     if (!res.ok) throw new Error('Failed to fetch sport settings');
     return res.json();
@@ -147,7 +157,7 @@ export async function fetchSportSettings(token: string, sport: string = 'Ride'):
 export async function checkApiConfigured(token: string): Promise<boolean> {
     try {
         const res = await fetch(`${API_BASE}/api/settings`, {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: getHeaders(token),
         });
         if (!res.ok) return false;
         const data = await res.json();
@@ -167,10 +177,7 @@ export async function generateWorkout(
 }> {
     const res = await fetch(`${API_BASE}/api/workout/generate`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-        },
+        headers: getHeaders(token, 'application/json'),
         body: JSON.stringify(request),
     });
     if (!res.ok) throw new Error('Failed to generate workout');
@@ -197,10 +204,7 @@ export async function createWorkout(
 }> {
     const res = await fetch(`${API_BASE}/api/workout/create`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-        },
+        headers: getHeaders(token, 'application/json'),
         body: JSON.stringify(data),
     });
     if (!res.ok) throw new Error('Failed to create workout');
@@ -218,7 +222,7 @@ export async function fetchTodaysWorkout(token: string, date?: string): Promise<
     }
 
     const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: getHeaders(token),
     });
     if (!res.ok) throw new Error('Failed to fetch today\'s workout');
     return res.json();
@@ -249,7 +253,7 @@ export interface WeeklyCalendarData {
 
 export async function fetchWeeklyCalendar(token: string): Promise<WeeklyCalendarData> {
     const res = await fetch(`${API_BASE}/api/weekly-calendar`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: getHeaders(token),
     });
     if (!res.ok) throw new Error('Failed to fetch weekly calendar');
     return res.json();
@@ -296,7 +300,7 @@ export async function fetchWeeklyPlan(token: string, weekStartDate?: string): Pr
         ? `${API_BASE}/api/plans/weekly?week_start_date=${weekStartDate}`
         : `${API_BASE}/api/plans/weekly`;
     const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: getHeaders(token),
     });
     if (!res.ok) throw new Error('Failed to fetch weekly plan');
     const data = await res.json();
@@ -309,10 +313,7 @@ export async function generateWeeklyPlan(
 ): Promise<WeeklyPlan> {
     const res = await fetch(`${API_BASE}/api/plans/weekly/generate`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-        },
+        headers: getHeaders(token, 'application/json'),
         body: JSON.stringify({ week_start: weekStart }),
     });
     if (!res.ok) {
@@ -324,7 +325,7 @@ export async function generateWeeklyPlan(
 
 export async function fetchTodayPlan(token: string): Promise<TodayWorkout> {
     const res = await fetch(`${API_BASE}/api/plans/today`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: getHeaders(token),
     });
     if (!res.ok) throw new Error('Failed to fetch today plan');
     return res.json();
@@ -336,10 +337,7 @@ export async function regenerateTodayWorkout(
 ): Promise<{ success: boolean; workout?: unknown }> {
     const res = await fetch(`${API_BASE}/api/plans/today/regenerate`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-        },
+        headers: getHeaders(token, 'application/json'),
         body: JSON.stringify({ reason }),
     });
     if (!res.ok) throw new Error('Failed to regenerate workout');
@@ -352,7 +350,7 @@ export async function skipWorkout(
 ): Promise<{ success: boolean }> {
     const res = await fetch(`${API_BASE}/api/plans/daily/${workoutId}/skip`, {
         method: 'PUT',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: getHeaders(token),
     });
     if (!res.ok) throw new Error('Failed to skip workout');
     return res.json();
@@ -364,7 +362,7 @@ export async function deleteWeeklyPlan(
 ): Promise<{ success: boolean }> {
     const res = await fetch(`${API_BASE}/api/plans/weekly/${planId}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: getHeaders(token),
     });
     if (!res.ok) throw new Error('Failed to delete plan');
     return res.json();
@@ -376,7 +374,7 @@ export async function registerWeeklyPlanToIntervals(
 ): Promise<{ success: boolean; registered: number; failed: number; message: string }> {
     const res = await fetch(`${API_BASE}/api/plans/weekly/${planId}/register-all`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: getHeaders(token),
     });
     if (!res.ok) throw new Error('Failed to register plan to Intervals.icu');
     return res.json();
@@ -409,7 +407,7 @@ export async function syncWeeklyPlanWithIntervals(
 ): Promise<SyncResult> {
     const res = await fetch(`${API_BASE}/api/plans/weekly/${planId}/sync`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: getHeaders(token),
     });
     if (!res.ok) throw new Error('Failed to sync with Intervals.icu');
     return res.json();

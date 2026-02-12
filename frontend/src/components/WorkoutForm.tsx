@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -10,25 +11,26 @@ interface WorkoutFormProps {
     isLoading: boolean;
 }
 
-const INTENSITIES = [
-    { value: "auto", label: "자동", emoji: "🎯" },
-    { value: "easy", label: "쉽게", emoji: "😌" },
-    { value: "moderate", label: "적당히", emoji: "💪" },
-    { value: "hard", label: "빡세게", emoji: "🔥" },
-];
-
 export function WorkoutForm({ onGenerate, isLoading }: WorkoutFormProps) {
+    const { t } = useTranslation();
     const [duration, setDuration] = useState(60);
     const [intensity, setIntensity] = useState("auto");
     const [indoor, setIndoor] = useState(false);
+
+    const INTENSITIES = [
+        { value: "auto", label: t('workout.intensityAuto'), emoji: "🎯" },
+        { value: "easy", label: t('workout.intensityEasy'), emoji: "😌" },
+        { value: "moderate", label: t('workout.intensityModerate'), emoji: "💪" },
+        { value: "hard", label: t('workout.intensityHard'), emoji: "🔥" },
+    ];
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         onGenerate({
             duration,
-            style: "auto", // Style is now in settings for weekly plans
+            style: "auto",
             intensity,
-            notes: "", // Removed
+            notes: "",
             indoor,
         });
     };
@@ -37,7 +39,7 @@ export function WorkoutForm({ onGenerate, isLoading }: WorkoutFormProps) {
         <Card className="w-full">
             <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
-                    🚴 오늘의 워크아웃
+                    🚴 {t('workout.todayTitle')}
                 </CardTitle>
             </CardHeader>
             <CardContent>
@@ -45,8 +47,8 @@ export function WorkoutForm({ onGenerate, isLoading }: WorkoutFormProps) {
                     {/* Duration Slider - Compact */}
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                            <Label className="text-sm">시간</Label>
-                            <span className="text-sm font-medium">{duration}분</span>
+                            <Label className="text-sm">{t('workout.duration')}</Label>
+                            <span className="text-sm font-medium">{duration}{t('common.minutes')}</span>
                         </div>
                         <Slider
                             value={[duration]}
@@ -60,7 +62,7 @@ export function WorkoutForm({ onGenerate, isLoading }: WorkoutFormProps) {
 
                     {/* Intensity Buttons */}
                     <div className="space-y-2">
-                        <Label className="text-sm">강도</Label>
+                        <Label className="text-sm">{t('workout.intensity')}</Label>
                         <div className="grid grid-cols-4 gap-2">
                             {INTENSITIES.map((i) => (
                                 <Button
@@ -86,11 +88,11 @@ export function WorkoutForm({ onGenerate, isLoading }: WorkoutFormProps) {
                                 onChange={(e) => setIndoor(e.target.checked)}
                                 className="rounded"
                             />
-                            <span className="text-sm">🏠 실내</span>
+                            <span className="text-sm">{t('workout.indoor')}</span>
                         </label>
 
                         <Button type="submit" className="flex-1" disabled={isLoading}>
-                            {isLoading ? "생성 중..." : "🎯 워크아웃 생성"}
+                            {isLoading ? t('common.generating') : t('workout.generate')}
                         </Button>
                     </div>
                 </form>

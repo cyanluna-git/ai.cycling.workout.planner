@@ -6,6 +6,7 @@
  */
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -26,13 +27,6 @@ interface TodayWorkoutCardProps {
     error: string | null;
     success: string | null;
 }
-
-const INTENSITIES = [
-    { value: "auto", label: "자동", emoji: "🎯" },
-    { value: "easy", label: "쉽게", emoji: "😌" },
-    { value: "moderate", label: "적당히", emoji: "💪" },
-    { value: "hard", label: "빡세게", emoji: "🔥" },
-];
 
 function formatStepWithWatts(step: string, ftp: number): { text: string; color: string } {
     let maxPercent = 0;
@@ -63,9 +57,17 @@ export function TodayWorkoutCard({
     error,
     success,
 }: TodayWorkoutCardProps) {
+    const { t } = useTranslation();
     const [duration, setDuration] = useState(60);
     const [intensity, setIntensity] = useState("auto");
     const [indoor, setIndoor] = useState(false);
+
+    const INTENSITIES = [
+        { value: "auto", label: t('workout.intensityAuto'), emoji: "🎯" },
+        { value: "easy", label: t('workout.intensityEasy'), emoji: "😌" },
+        { value: "moderate", label: t('workout.intensityModerate'), emoji: "💪" },
+        { value: "hard", label: t('workout.intensityHard'), emoji: "🔥" },
+    ];
 
     const handleGenerate = () => {
         onGenerate({
@@ -97,7 +99,7 @@ export function TodayWorkoutCard({
                     <CardTitle className="text-lg flex items-center justify-between">
                         <span>✨ {cleanWorkoutName(workout.name)}</span>
                         <span className="text-sm font-normal text-muted-foreground">
-                            {workout.workout_type} • ~{workout.estimated_duration_minutes}분
+                            {workout.workout_type} • ~{workout.estimated_duration_minutes}{t('common.minutes')}
                             {workout.estimated_tss && ` • TSS ${workout.estimated_tss}`}
                         </span>
                     </CardTitle>
@@ -109,7 +111,7 @@ export function TodayWorkoutCard({
                             ❌ {error}
                         </div>
                     )}
-                    {success && !success.includes("등록 완료") && (
+                    {success && !success.includes(t('common.registered')) && (
                         <div className="bg-green-500/10 text-green-600 p-3 rounded-lg text-sm">
                             {success}
                         </div>
@@ -133,7 +135,7 @@ export function TodayWorkoutCard({
                         />
                     ) : (
                         <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground text-center">
-                            차트 데이터를 불러올 수 없습니다.
+                            {t('workout.noChartData')}
                         </div>
                     )}
 
@@ -201,7 +203,7 @@ export function TodayWorkoutCard({
 
                     {/* Intensity Selection for Re-generate */}
                     <div className="space-y-2">
-                        <Label className="text-sm text-muted-foreground">다시 생성 할 때 강도 선택:</Label>
+                        <Label className="text-sm text-muted-foreground">{t('workout.regenIntensityLabel')}</Label>
                         <div className="grid grid-cols-4 gap-2">
                             {INTENSITIES.map((i) => (
                                 <Button
@@ -227,11 +229,11 @@ export function TodayWorkoutCard({
                             disabled={isLoading}
                             className="flex-1"
                         >
-                            {isLoading ? "생성 중..." : "🔄 다시 생성"}
+                            {isLoading ? t('common.generating') : `🔄 ${t('workout.regenerate')}`}
                         </Button>
                         {isRegistered ? (
                             <div className="flex-1 bg-green-500/10 text-green-600 font-bold py-2 rounded-md text-center border border-green-200 dark:border-green-900 text-sm">
-                                ✅ 등록 완료
+                                ✅ {t('common.registered')}
                             </div>
                         ) : (
                             <Button
@@ -239,7 +241,7 @@ export function TodayWorkoutCard({
                                 className="flex-1"
                                 disabled={isRegistering}
                             >
-                                {isRegistering ? "등록 중..." : "📅 등록"}
+                                {isRegistering ? t('common.registering') : `📅 ${t('workout.register')}`}
                             </Button>
                         )}
                     </div>
@@ -253,7 +255,7 @@ export function TodayWorkoutCard({
         <Card className="w-full">
             <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
-                    🚴 오늘의 워크아웃
+                    🚴 {t('workout.todayTitle')}
                 </CardTitle>
             </CardHeader>
             <CardContent>
@@ -268,8 +270,8 @@ export function TodayWorkoutCard({
                     {/* Duration */}
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                            <Label className="text-sm">시간</Label>
-                            <span className="text-sm font-medium">{duration}분</span>
+                            <Label className="text-sm">{t('workout.duration')}</Label>
+                            <span className="text-sm font-medium">{duration}{t('common.minutes')}</span>
                         </div>
                         <Slider
                             value={[duration]}
@@ -282,7 +284,7 @@ export function TodayWorkoutCard({
 
                     {/* Intensity Buttons */}
                     <div className="space-y-2">
-                        <Label className="text-sm">강도</Label>
+                        <Label className="text-sm">{t('workout.intensity')}</Label>
                         <div className="grid grid-cols-4 gap-2">
                             {INTENSITIES.map((i) => (
                                 <Button
@@ -308,11 +310,11 @@ export function TodayWorkoutCard({
                                 onChange={(e) => setIndoor(e.target.checked)}
                                 className="rounded"
                             />
-                            <span className="text-sm">🏠 실내</span>
+                            <span className="text-sm">{t('workout.indoor')}</span>
                         </label>
 
                         <Button onClick={handleGenerate} className="flex-1" disabled={isLoading}>
-                            {isLoading ? "생성 중..." : "🎯 워크아웃 생성"}
+                            {isLoading ? t('common.generating') : t('workout.generate')}
                         </Button>
                     </div>
                 </div>

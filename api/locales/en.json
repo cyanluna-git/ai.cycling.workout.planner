@@ -1,0 +1,44 @@
+{
+  "auth": {
+    "invalidToken": "Invalid token",
+    "authFailed": "Authentication failed: {error}",
+    "signupFailed": "Signup failed",
+    "invalidCredentials": "Invalid credentials",
+    "invalidRefreshToken": "Invalid refresh token",
+    "loggedOut": "Logged out successfully"
+  },
+  "admin": {
+    "secretNotConfigured": "ADMIN_SECRET not configured on server",
+    "invalidSecret": "Invalid admin secret",
+    "authRequired": "Authorization required",
+    "adminRequired": "Admin access required",
+    "modelNotFound": "Model not found",
+    "modelCreated": "Model created successfully",
+    "modelUpdated": "Model updated successfully",
+    "modelDeleted": "Model deleted successfully",
+    "modelActivated": "Model activated",
+    "modelDeactivated": "Model deactivated",
+    "logsDeleted": "Deleted {count} logs older than {days} days"
+  },
+  "workout": {
+    "noWorkoutToday": "No workout found for today",
+    "fitnessDataFailed": "Failed to get current fitness data",
+    "workoutNotFound": "Workout not found",
+    "skipped": "Workout marked as skipped"
+  },
+  "plans": {
+    "notFound": "Plan not found",
+    "noWorkouts": "No workouts found in plan",
+    "deleted": "Weekly plan deleted",
+    "registered": "Successfully registered {count} workouts to Intervals.icu",
+    "intervalsNotConfigured": "Intervals.icu not configured",
+    "noRegisteredToSync": "No registered workouts to sync"
+  },
+  "settings": {
+    "updated": "Settings updated successfully",
+    "apiKeysUpdated": "API keys updated successfully"
+  },
+  "fitness": {
+    "intervalsError": "Intervals.icu API error: {error}"
+  }
+}

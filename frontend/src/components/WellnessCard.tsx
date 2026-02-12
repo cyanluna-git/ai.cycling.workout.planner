@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { WellnessMetrics } from "@/lib/api";
 
@@ -37,6 +38,7 @@ const getRatingEmoji = (value: number | null, invertScale: boolean = true) => {
 };
 
 export function WellnessCard({ wellness, className }: WellnessCardProps) {
+    const { t } = useTranslation();
     const hasSubjectiveData = wellness.soreness || wellness.fatigue || wellness.stress || wellness.mood || wellness.motivation;
     const hasHealthData = wellness.spo2 || wellness.systolic || wellness.respiration;
     const hasSleepData = wellness.sleep_hours || wellness.sleep_score;
@@ -45,7 +47,7 @@ export function WellnessCard({ wellness, className }: WellnessCardProps) {
         <Card className={className}>
             <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center gap-2">
-                    🌿 웰니스 상태
+                    {t('wellnessCard.title')}
                 </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -60,7 +62,7 @@ export function WellnessCard({ wellness, className }: WellnessCardProps) {
                     )}
                     {wellness.rhr && (
                         <div className="text-center p-2 bg-muted/50 rounded-lg">
-                            <div className="text-xs text-muted-foreground">안정 심박</div>
+                            <div className="text-xs text-muted-foreground">{t('wellnessCard.restingHR')}</div>
                             <div className="text-xl font-bold">{wellness.rhr}</div>
                             <div className="text-[10px] text-muted-foreground">bpm</div>
                         </div>
@@ -74,7 +76,7 @@ export function WellnessCard({ wellness, className }: WellnessCardProps) {
                     )}
                     {wellness.weight && (
                         <div className="text-center p-2 bg-muted/50 rounded-lg">
-                            <div className="text-xs text-muted-foreground">체중</div>
+                            <div className="text-xs text-muted-foreground">{t('wellnessCard.weight')}</div>
                             <div className="text-xl font-bold">{wellness.weight.toFixed(1)}</div>
                             <div className="text-[10px] text-muted-foreground">kg</div>
                         </div>
@@ -85,28 +87,28 @@ export function WellnessCard({ wellness, className }: WellnessCardProps) {
                 {hasSleepData && (
                     <div className="space-y-2">
                         <div className="text-sm font-medium flex items-center gap-1">
-                            😴 수면
+                            {t('wellnessCard.sleepTitle')}
                         </div>
                         <div className="flex flex-wrap gap-4">
                             {wellness.sleep_hours && (
                                 <div className="flex items-center gap-2">
-                                    <span className="text-sm text-muted-foreground">수면 시간</span>
+                                    <span className="text-sm text-muted-foreground">{t('wellnessCard.sleepHours')}</span>
                                     <span className={`font-bold ${wellness.sleep_hours >= 7 ? 'text-green-500' : wellness.sleep_hours >= 6 ? 'text-yellow-500' : 'text-red-500'}`}>
-                                        {wellness.sleep_hours.toFixed(1)}시간
+                                        {wellness.sleep_hours.toFixed(1)}{t('common.hours')}
                                     </span>
                                 </div>
                             )}
                             {wellness.sleep_score && (
                                 <div className="flex items-center gap-2">
-                                    <span className="text-sm text-muted-foreground">수면 점수</span>
+                                    <span className="text-sm text-muted-foreground">{t('wellnessCard.sleepScore')}</span>
                                     <span className={`font-bold ${wellness.sleep_score >= 80 ? 'text-green-500' : wellness.sleep_score >= 60 ? 'text-yellow-500' : 'text-red-500'}`}>
-                                        {wellness.sleep_score.toFixed(0)}점
+                                        {wellness.sleep_score.toFixed(0)}{t("common.points")}
                                     </span>
                                 </div>
                             )}
                             {wellness.sleep_quality && (
                                 <div className="flex items-center gap-2">
-                                    <span className="text-sm text-muted-foreground">수면 품질</span>
+                                    <span className="text-sm text-muted-foreground">{t('wellnessCard.sleepQuality')}</span>
                                     <span className="font-bold">{wellness.sleep_quality}/5</span>
                                 </div>
                             )}
@@ -118,12 +120,12 @@ export function WellnessCard({ wellness, className }: WellnessCardProps) {
                 {hasSubjectiveData && (
                     <div className="space-y-2">
                         <div className="text-sm font-medium flex items-center gap-1">
-                            📊 주관적 상태
+                            {t('wellnessCard.subjectiveTitle')}
                         </div>
                         <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                             {wellness.fatigue !== null && (
                                 <div className="text-center p-2 bg-muted/30 rounded">
-                                    <div className="text-[10px] text-muted-foreground">피로도</div>
+                                    <div className="text-[10px] text-muted-foreground">{t('wellnessCard.fatigue')}</div>
                                     <div className={`font-bold ${getRatingColor(wellness.fatigue)}`}>
                                         {getRatingEmoji(wellness.fatigue)} {wellness.fatigue}/5
                                     </div>
@@ -131,7 +133,7 @@ export function WellnessCard({ wellness, className }: WellnessCardProps) {
                             )}
                             {wellness.soreness !== null && (
                                 <div className="text-center p-2 bg-muted/30 rounded">
-                                    <div className="text-[10px] text-muted-foreground">근육통</div>
+                                    <div className="text-[10px] text-muted-foreground">{t('wellnessCard.soreness')}</div>
                                     <div className={`font-bold ${getRatingColor(wellness.soreness)}`}>
                                         {getRatingEmoji(wellness.soreness)} {wellness.soreness}/5
                                     </div>
@@ -139,7 +141,7 @@ export function WellnessCard({ wellness, className }: WellnessCardProps) {
                             )}
                             {wellness.stress !== null && (
                                 <div className="text-center p-2 bg-muted/30 rounded">
-                                    <div className="text-[10px] text-muted-foreground">스트레스</div>
+                                    <div className="text-[10px] text-muted-foreground">{t('wellnessCard.stress')}</div>
                                     <div className={`font-bold ${getRatingColor(wellness.stress)}`}>
                                         {getRatingEmoji(wellness.stress)} {wellness.stress}/5
                                     </div>
@@ -147,7 +149,7 @@ export function WellnessCard({ wellness, className }: WellnessCardProps) {
                             )}
                             {wellness.mood !== null && (
                                 <div className="text-center p-2 bg-muted/30 rounded">
-                                    <div className="text-[10px] text-muted-foreground">기분</div>
+                                    <div className="text-[10px] text-muted-foreground">{t('wellnessCard.mood')}</div>
                                     <div className={`font-bold ${getRatingColor(wellness.mood, false)}`}>
                                         {getRatingEmoji(wellness.mood, false)} {wellness.mood}/5
                                     </div>
@@ -155,7 +157,7 @@ export function WellnessCard({ wellness, className }: WellnessCardProps) {
                             )}
                             {wellness.motivation !== null && (
                                 <div className="text-center p-2 bg-muted/30 rounded">
-                                    <div className="text-[10px] text-muted-foreground">동기부여</div>
+                                    <div className="text-[10px] text-muted-foreground">{t('wellnessCard.motivation')}</div>
                                     <div className={`font-bold ${getRatingColor(wellness.motivation, false)}`}>
                                         {getRatingEmoji(wellness.motivation, false)} {wellness.motivation}/5
                                     </div>
@@ -169,7 +171,7 @@ export function WellnessCard({ wellness, className }: WellnessCardProps) {
                 {hasHealthData && (
                     <div className="space-y-2">
                         <div className="text-sm font-medium flex items-center gap-1">
-                            ❤️ 건강 지표
+                            {t('wellnessCard.healthTitle')}
                         </div>
                         <div className="flex flex-wrap gap-4">
                             {wellness.spo2 && (
@@ -182,21 +184,21 @@ export function WellnessCard({ wellness, className }: WellnessCardProps) {
                             )}
                             {wellness.systolic && wellness.diastolic && (
                                 <div className="flex items-center gap-2">
-                                    <span className="text-sm text-muted-foreground">혈압</span>
+                                    <span className="text-sm text-muted-foreground">{t('wellnessCard.bloodPressure')}</span>
                                     <span className="font-bold">{wellness.systolic}/{wellness.diastolic}</span>
                                     <span className="text-xs text-muted-foreground">mmHg</span>
                                 </div>
                             )}
                             {wellness.respiration && (
                                 <div className="flex items-center gap-2">
-                                    <span className="text-sm text-muted-foreground">호흡수</span>
+                                    <span className="text-sm text-muted-foreground">{t('wellnessCard.respiration')}</span>
                                     <span className="font-bold">{wellness.respiration.toFixed(1)}</span>
-                                    <span className="text-xs text-muted-foreground">/분</span>
+                                    <span className="text-xs text-muted-foreground">{t("wellnessCard.perMinute")}</span>
                                 </div>
                             )}
                             {wellness.body_fat && (
                                 <div className="flex items-center gap-2">
-                                    <span className="text-sm text-muted-foreground">체지방</span>
+                                    <span className="text-sm text-muted-foreground">{t('wellnessCard.bodyFat')}</span>
                                     <span className="font-bold">{wellness.body_fat.toFixed(1)}%</span>
                                 </div>
                             )}
@@ -207,7 +209,7 @@ export function WellnessCard({ wellness, className }: WellnessCardProps) {
                 {/* Readiness */}
                 <div className="pt-2 border-t">
                     <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">오늘의 준비도</span>
+                        <span className="text-sm text-muted-foreground">{t('wellnessCard.readiness')}</span>
                         <span className={`font-medium ${wellness.readiness.includes("Good") ? "text-green-500" :
                             wellness.readiness.includes("Poor") ? "text-red-500" :
                                 "text-yellow-500"

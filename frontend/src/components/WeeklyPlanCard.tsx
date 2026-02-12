@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 /**
  * Weekly Plan Card Component
  *
@@ -54,6 +55,7 @@ function DailyWorkoutRow({
     workout: DailyWorkout;
     onClick: () => void;
 }) {
+    const { t } = useTranslation();
     const workoutType = workout.planned_type || "Endurance";
     const colorClass = typeColors[workoutType] || typeColors.Endurance;
     const emoji = typeEmoji[workoutType] || "🚴";
@@ -85,7 +87,7 @@ function DailyWorkoutRow({
                 </div>
                 {!isRest && (
                     <div className="text-[10px] opacity-80 leading-tight">
-                        {workout.planned_duration}분 • TSS {workout.planned_tss || 0}
+                        {workout.planned_duration}{t("common.minutes")} • TSS {workout.planned_tss || 0}
                     </div>
                 )}
                 {isRest && (
@@ -116,6 +118,7 @@ export function WeeklyPlanCard({
     onRegisterAll,
     onSync,
 }: WeeklyPlanCardProps) {
+    const { t } = useTranslation();
     const [showConfirmDelete, setShowConfirmDelete] = useState(false);
     const [selectedWorkout, setSelectedWorkout] = useState<DailyWorkout | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
@@ -130,11 +133,11 @@ export function WeeklyPlanCard({
 
     // Get week label based on offset
     const getWeekLabel = () => {
-        if (currentWeekOffset === 0) return "이번 주";
-        if (currentWeekOffset === 1) return "다음 주";
-        if (currentWeekOffset === -1) return "지난 주";
-        if (currentWeekOffset > 1) return `${currentWeekOffset}주 후`;
-        return `${Math.abs(currentWeekOffset)}주 전`;
+        if (currentWeekOffset === 0) return t('weeklyPlan.thisWeek');
+        if (currentWeekOffset === 1) return t('weeklyPlan.nextWeek');
+        if (currentWeekOffset === -1) return t('weeklyPlan.lastWeek');
+        if (currentWeekOffset > 1) return t('weeklyPlan.weeksLater', { count: currentWeekOffset });
+        return t('weeklyPlan.weeksAgo', { count: Math.abs(currentWeekOffset) });
     };
 
     // Get next week's date range for display
@@ -154,12 +157,12 @@ export function WeeklyPlanCard({
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle>📅 주간 워크아웃 계획</CardTitle>
+                    <CardTitle>{t("weeklyPlan.title")}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="flex items-center justify-center py-8">
                         <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
-                        <span className="ml-2 text-muted-foreground">로딩 중...</span>
+                        <span className="ml-2 text-muted-foreground">{t("common.loading")}</span>
                     </div>
                 </CardContent>
             </Card>
@@ -179,7 +182,7 @@ export function WeeklyPlanCard({
                                 onClick={() => onWeekNavigation('prev')}
                                 disabled={isLoading}
                             >
-                                ← 지난 주
+                                {t("weeklyPlan.prevWeek")}
                             </Button>
                             <div className="text-sm font-medium px-4 py-2 bg-primary/10 rounded-md">
                                 {getWeekLabel()}
@@ -190,20 +193,20 @@ export function WeeklyPlanCard({
                                 onClick={() => onWeekNavigation('next')}
                                 disabled={isLoading}
                             >
-                                다음 주 →
+                                {t("weeklyPlan.nextWeekBtn")}
                             </Button>
                         </div>
                     )}
 
-                    <CardTitle>📅 주간 워크아웃 계획</CardTitle>
+                    <CardTitle>{t("weeklyPlan.title")}</CardTitle>
                     <CardDescription>
-                        {getWeekLabel()} ({getNextWeekRange()}) 워크아웃 계획을 생성하세요
+                        {getWeekLabel()} ({getNextWeekRange()}) - {t("weeklyPlan.createPrompt")}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="text-center py-6">
                         <p className="text-muted-foreground mb-4">
-                            아직 생성된 주간 계획이 없습니다.
+                            {t("weeklyPlan.noPlan")}
                         </p>
                         <Button
                             onClick={onGenerate}
@@ -213,10 +216,10 @@ export function WeeklyPlanCard({
                             {isGenerating ? (
                                 <>
                                     <span className="animate-spin mr-2">⏳</span>
-                                    생성 중...
+                                    {t("common.generating")}
                                 </>
                             ) : (
-                                <>🗓️ 주간 계획 생성</>
+                                <>{t("weeklyPlan.generatePlan")}</>
                             )}
                         </Button>
                     </div>
@@ -234,12 +237,12 @@ export function WeeklyPlanCard({
 
     // Training style display names
     const styleNames: Record<string, string> = {
-        auto: "자동 (TSB 기반)",
-        polarized: "양극화 (80/20)",
-        norwegian: "노르웨이식 (역치)",
-        sweetspot: "스윗스팟",
-        threshold: "역치 중심",
-        endurance: "지구력",
+        auto: t('settings.styleAuto'),
+        polarized: t('settings.stylePolarized'),
+        norwegian: t('settings.styleNorwegian'),
+        sweetspot: t('settings.styleSweetspot'),
+        threshold: t('settings.styleThreshold'),
+        endurance: t('settings.styleEndurance'),
     };
 
     return (
@@ -254,7 +257,7 @@ export function WeeklyPlanCard({
                             onClick={() => onWeekNavigation('prev')}
                             disabled={isLoading}
                         >
-                            ← 지난 주
+                            {t("weeklyPlan.prevWeek")}
                         </Button>
                         <div className="text-sm font-medium px-4 py-2 bg-primary/10 rounded-md">
                             {getWeekLabel()}
@@ -265,20 +268,20 @@ export function WeeklyPlanCard({
                             onClick={() => onWeekNavigation('next')}
                             disabled={isLoading}
                         >
-                            다음 주 →
+                            {t("weeklyPlan.nextWeekBtn")}
                         </Button>
                     </div>
                 )}
 
                 <div className="flex items-center justify-between">
                     <div>
-                        <CardTitle>📅 주간 워크아웃 계획</CardTitle>
+                        <CardTitle>{t("weeklyPlan.title")}</CardTitle>
                         <CardDescription>
                             {formatDateRange()} • {styleNames[plan.training_style || "auto"]}
                         </CardDescription>
                     </div>
                     <div className="text-right">
-                        <div className="text-sm font-medium">총 TSS</div>
+                        <div className="text-sm font-medium">{t("weeklyPlan.totalTss")}</div>
                         <div className="text-2xl font-bold text-primary">
                             {plan.total_planned_tss || 0}
                         </div>
@@ -341,7 +344,7 @@ export function WeeklyPlanCard({
                         onClick={onGenerate}
                         disabled={isGenerating}
                     >
-                        {isGenerating ? "생성 중..." : "🔄 재생성"}
+                        {isGenerating ? t("common.generating") : t("weeklyPlan.regenerate")}
                     </Button>
                     {onSync && (
                         <Button
@@ -350,7 +353,7 @@ export function WeeklyPlanCard({
                             onClick={() => onSync(plan.id)}
                             disabled={isSyncing}
                         >
-                            {isSyncing ? "동기화 중..." : "🔃 Sync"}
+                            {isSyncing ? t("weeklyPlan.syncing") : "🔃 Sync"}
                         </Button>
                     )}
                     {onRegisterAll && (
@@ -360,7 +363,7 @@ export function WeeklyPlanCard({
                             onClick={() => onRegisterAll(plan.id)}
                             disabled={isRegisteringAll}
                         >
-                            {isRegisteringAll ? "등록 중..." : "📤 Intervals.icu 등록"}
+                            {isRegisteringAll ? t("common.registering") : t("weeklyPlan.registerAll")}
                         </Button>
                     )}
                     {onDelete && (
@@ -374,25 +377,19 @@ export function WeeklyPlanCard({
                                             onDelete(plan.id);
                                             setShowConfirmDelete(false);
                                         }}
-                                    >
-                                        확인
-                                    </Button>
+                                    >{t("common.confirm")}</Button>
                                     <Button
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => setShowConfirmDelete(false)}
-                                    >
-                                        취소
-                                    </Button>
+                                    >{t("common.cancel")}</Button>
                                 </div>
                             ) : (
                                 <Button
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => setShowConfirmDelete(true)}
-                                >
-                                    🗑️ 삭제
-                                </Button>
+                                >{"🗑️ " + t("common.delete")}</Button>
                             )}
                         </>
                     )}
