@@ -12,6 +12,7 @@ i18n
       ko: { translation: ko },
       en: { translation: en },
     },
+    lng: 'ko', // Default to Korean
     fallbackLng: 'ko',
     interpolation: {
       escapeValue: false,
