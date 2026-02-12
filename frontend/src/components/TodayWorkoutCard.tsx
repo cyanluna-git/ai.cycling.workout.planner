@@ -30,7 +30,7 @@ interface TodayWorkoutCardProps {
 
 function formatStepWithWatts(step: string, ftp: number): { text: string; color: string } {
     let maxPercent = 0;
-    const percentMatches = step.match(/(\d+)%/g);
+    const percentMatches = step.match(/(\\d+)%/g);
     if (percentMatches) {
         percentMatches.forEach(p => {
             const val = parseInt(p);
@@ -38,7 +38,7 @@ function formatStepWithWatts(step: string, ftp: number): { text: string; color: 
         });
     }
     const color = maxPercent > 0 ? getZoneColor(maxPercent) : '#888';
-    const text = step.replace(/(\d+)%/g, (_match, p1) => {
+    const text = step.replace(/(\\d+)%/g, (_match, p1) => {
         const percent = parseInt(p1);
         const watts = Math.round(ftp * percent / 100);
         return `${percent}% (${watts}w)`;
@@ -96,12 +96,14 @@ export function TodayWorkoutCard({
         return (
             <Card className="w-full">
                 <CardHeader className="pb-2">
-                    <CardTitle className="text-lg flex items-center justify-between">
-                        <span>✨ {cleanWorkoutName(workout.name)}</span>
-                        <span className="text-sm font-normal text-muted-foreground">
-                            {workout.workout_type} • ~{workout.estimated_duration_minutes}{t('common.minutes')}
-                            {workout.estimated_tss && ` • TSS ${workout.estimated_tss}`}
-                        </span>
+                    <CardTitle className="text-base sm:text-lg">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                            <span className="truncate">✨ {cleanWorkoutName(workout.name)}</span>
+                            <span className="text-xs sm:text-sm font-normal text-muted-foreground whitespace-nowrap">
+                                {workout.workout_type} • ~{workout.estimated_duration_minutes}{t('common.minutes')}
+                                {workout.estimated_tss && ` • TSS ${workout.estimated_tss}`}
+                            </span>
+                        </div>
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -140,7 +142,7 @@ export function TodayWorkoutCard({
                     )}
 
                     {/* Workout Steps */}
-                    <div className="bg-muted/50 rounded-lg p-4 font-mono text-sm space-y-3 max-h-48 overflow-y-auto">
+                    <div className="bg-muted/50 rounded-lg p-4 font-mono text-xs sm:text-sm space-y-3 max-h-48 overflow-y-auto">
                         {sections ? (
                             <>
                                 {sections.warmup.length > 0 && (
@@ -204,7 +206,7 @@ export function TodayWorkoutCard({
                     {/* Intensity Selection for Re-generate */}
                     <div className="space-y-2">
                         <Label className="text-sm text-muted-foreground">{t('workout.regenIntensityLabel')}</Label>
-                        <div className="grid grid-cols-4 gap-2">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                             {INTENSITIES.map((i) => (
                                 <Button
                                     key={i.value}
@@ -221,7 +223,7 @@ export function TodayWorkoutCard({
                     </div>
 
                     {/* Actions */}
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                         <Button
                             variant="outline"
                             size="sm"
@@ -285,7 +287,7 @@ export function TodayWorkoutCard({
                     {/* Intensity Buttons */}
                     <div className="space-y-2">
                         <Label className="text-sm">{t('workout.intensity')}</Label>
-                        <div className="grid grid-cols-4 gap-2">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                             {INTENSITIES.map((i) => (
                                 <Button
                                     key={i.value}
@@ -302,7 +304,7 @@ export function TodayWorkoutCard({
                     </div>
 
                     {/* Bottom Row */}
-                    <div className="flex items-center gap-3 pt-2">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
                         <label className="flex items-center gap-2 cursor-pointer">
                             <input
                                 type="checkbox"
