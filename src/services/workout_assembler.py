@@ -118,6 +118,13 @@ class WorkoutAssembler:
         structure = []
         main_segments = []
 
+        # Validate first module is warmup
+        first_module_key = selected_modules[0] if selected_modules else None
+        if first_module_key and first_module_key not in self.warmup_modules:
+            logger.warning(f"First module '{first_module_key}' is not warmup. Prepending warmup.")
+            # Add a default warmup (ramp_standard is a gentle ramp-up)
+            selected_modules.insert(0, "ramp_standard")
+
         # Validate last module is cooldown
         last_module_key = selected_modules[-1] if selected_modules else None
         if last_module_key and last_module_key not in self.cooldown_modules:
