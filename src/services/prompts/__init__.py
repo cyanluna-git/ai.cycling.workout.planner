@@ -23,20 +23,11 @@ Power Zone Guide:
 - 115%+: Z6 (Anaerobic)
 """
 
-# Module selector prompt for AI-driven module selection
-MODULE_SELECTOR_PROMPT = """# Role
+# --- Step 1: Split MODULE_SELECTOR_PROMPT into system + user ---
+
+# System prompt: role, rules, output format (fixed per request)
+MODULE_SELECTOR_SYSTEM = """# Role
 You are an expert Cycling Coach AI engine. Your goal is to assemble a modular workout based on the user's daily condition.
-
-# Input Data: Block Library (With Cost & Metadata)
-{module_inventory}
-
-# User Context
-- **TSB (Form):** {tsb:.1f} ({form})
-- **Weekly TSS (Mon-Sun):** {weekly_tss}
-- **Yesterday's Load:** {yesterday_load}
-- **Time Available:** {duration} min
-- **Intensity Preference:** {intensity}
-- **Primary Goal:** {goal}
 
 # Logic & Rules (The "Coach's Brain")
 1. **Intensity Override (HIGHEST PRIORITY - FOLLOW STRICTLY):**
@@ -46,11 +37,11 @@ You are an expert Cycling Coach AI engine. Your goal is to assemble a modular wo
 
 2. **TSB Safety Check (Secondary):**
    - If TSB < -20: Override to easy regardless of Intensity preference
-   - If TSB is -10 to -20: Downgrade by one level (hard → moderate, moderate → easy)
+   - If TSB is -10 to -20: Downgrade by one level (hard -> moderate, moderate -> easy)
    - If TSB > -10: Follow Intensity preference as specified in Rule 1
 
 3. **Structure - CRITICAL MODULE ORDER:**
-   - **ALWAYS** follow this order: WARMUP → MAIN → COOLDOWN
+   - **ALWAYS** follow this order: WARMUP -> MAIN -> COOLDOWN
    - **WARMUP modules MUST be FIRST** (e.g., ramp_standard, progressive_ramp_15min)
    - **COOLDOWN modules MUST be LAST** (e.g., flush_and_fade, cooldown_extended)
    - **NEVER** place cooldown modules at the beginning or warmup modules at the end
@@ -62,11 +53,6 @@ You are an expert Cycling Coach AI engine. Your goal is to assemble a modular wo
 
 5. **Variety Enforcement (IMPORTANT):**
    - PRIORITIZE underused modules when they fit the training goal.
-   - Below are the least-used modules to consider:
-{balance_hints}
-
-# Task
-Generate the workout plan in JSON format.
 
 # Output Format
 {{
@@ -91,9 +77,42 @@ Generate the workout plan in JSON format.
 ❌ WRONG: ["endurance_60min", "cooldown_extended", "ramp_standard"] (warmup at end!)
 """
 
+# User prompt: variable data per request
+MODULE_SELECTOR_USER = """# Block Library (With Cost & Metadata)
+{module_inventory}
 
-# Legacy system prompt (kept for backward compatibility)
-SYSTEM_PROMPT = """You are a world-class cycling coach. Analyze the athlete's condition and prescribe an appropriate workout.
+# Athlete Profile
+- FTP: {ftp}W | Weight: {weight}kg
+- Indoor/Outdoor: {environment}
+- Day: {weekday}
+
+# Wellness
+{wellness_text}
+
+# Training Context
+- **TSB (Form):** {tsb:.1f} ({form})
+- **Weekly TSS (Mon-Sun):** {weekly_tss}
+- **Yesterday's Load:** {yesterday_load}
+- **Time Available:** {duration} min
+- **Intensity Preference:** {intensity}
+- **Primary Goal:** {goal}
+
+# Variety Hints (Underused modules to consider)
+{balance_hints}
+
+# Task
+Generate the workout plan in JSON format.
+"""
+
+# Keep original combined prompt for backward compatibility
+MODULE_SELECTOR_PROMPT = MODULE_SELECTOR_SYSTEM + "\n" + MODULE_SELECTOR_USER
+
+
+# --- Step 4: Legacy prompts (deprecated) ---
+
+# DEPRECATED: Use MODULE_SELECTOR_SYSTEM + MODULE_SELECTOR_USER instead.
+# Kept for backward compatibility with generate() method.
+LEGACY_SYSTEM_PROMPT = """You are a world-class cycling coach. Analyze the athlete's condition and prescribe an appropriate workout.
 
 Workout Intensity Guidelines:
 - TSB < -20 (Very Fatigued): Recovery only (50-65%, 30-45 mins)
@@ -129,9 +148,10 @@ Example:
 }}
 ```
 """
+SYSTEM_PROMPT = LEGACY_SYSTEM_PROMPT  # backward compat alias
 
-# Template Refinement Prompt
-TEMPLATE_REFINEMENT_PROMPT = """You are an expert cycling coach logic engine.
+# DEPRECATED: Legacy template refinement prompt.
+LEGACY_TEMPLATE_REFINEMENT_PROMPT = """You are an expert cycling coach logic engine.
 Your goal is to REFINE a pre-selected workout template to match the athlete's specific condition.
 
 **Input Context:**
@@ -159,9 +179,10 @@ The structure MUST match the Skeleton JSON format perfectly.
 }}
 ```
 """
+TEMPLATE_REFINEMENT_PROMPT = LEGACY_TEMPLATE_REFINEMENT_PROMPT  # backward compat alias
 
-# User prompt template
-USER_PROMPT_TEMPLATE = """Athlete Profile:
+# DEPRECATED: Legacy user prompt template.
+LEGACY_USER_PROMPT_TEMPLATE = """Athlete Profile:
 - FTP: {ftp}W
 - Max HR: {max_hr} bpm
 - LTHR: {lthr} bpm
@@ -192,6 +213,7 @@ Day of Week: {weekday}
 
 Based on the information above, please generate a suitable cycling workout for today.
 """
+USER_PROMPT_TEMPLATE = LEGACY_USER_PROMPT_TEMPLATE  # backward compat alias
 
 # Training style descriptions
 STYLE_DESCRIPTIONS = {
