@@ -1,19 +1,48 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code (claude.ai/code) when working with this repository.
 
 ## Project Overview
 
-AI Cycling Coach is a personalized workout generation platform that integrates with Intervals.icu. It uses LLMs (Groq, Gemini) to select optimal workout modules based on athlete fitness metrics (CTL/ATL/TSB) and wellness data.
+AI Cycling Coach — Personalized workout generation platform integrating with Intervals.icu. LLM-powered (Groq/Gemini) workout selection based on athlete fitness metrics (CTL/ATL/TSB) and wellness data. Generates ZWO (Zwift) workout files.
 
-**Deployment**: Frontend (Vercel) + Backend (Google Cloud Run, region: `asia-northeast3`)
+## Repository Structure
 
-## Tech Stack
+- `frontend/` — React 19 + TypeScript 5 + Vite 7
+- `src/` — Core Python workout logic (services, data, clients)
+- `api/` — FastAPI endpoints (routers, services)
+- `tests/` — pytest test suite
+- `supabase/` — Database migrations
+- `run.py` — Dev launcher (backend 8005 + frontend 3005)
+- `.claude/rules/` — Shared coding conventions
 
-- **Frontend**: React 19 + TypeScript + Vite 7, Tailwind CSS 4 + Shadcn UI, React Query, Recharts
-- **Backend**: FastAPI (Python 3.11+), Supabase (PostgreSQL + Auth)
-- **LLM**: Groq (primary) → Gemini 2.0/1.5 Flash (fallback) via Vercel AI Gateway
-- **External API**: Intervals.icu (athlete data sync)
+## Tech Stack & Key Dependencies
+
+**Frontend**: React 19, TypeScript, Vite, Tailwind CSS 4, Shadcn UI, React Query, Recharts  
+**Backend**: FastAPI, Python 3.11+, Pydantic, Supabase (PostgreSQL + Auth)
+- **LLM**: Groq (llama-3.3-70b) → Gemini 2.0 Flash (fallback) via Vercel AI Gateway
+- **External**: Intervals.icu API, Supabase client
+
+## Architecture
+
+```
+Browser → React (port 3005, Vite)
+       → FastAPI (port 8005, Supabase auth)
+       → Intervals.icu (athlete data)
+       → LLM via Vercel AI Gateway
+       → Supabase (user settings)
+```
+
+**System design** ("Omakase" pattern):
+1. **Library**: Pre-validated workout modules in `src/data/` (WARMUP → MAIN → COOLDOWN)
+2. **AI Selector**: LLM picks optimal module combo based on TSB + duration
+3. **Assembler**: Converts to ZWO format (Zwift XML) for Intervals.icu
+
+**Key modules:**
+- **Backend**: `api/routers/` (workout, fitness, plans), `api/services/` (caching, LLM fallback)
+- **Core**: `src/services/` (workout_generator, zwo_converter), `src/clients/` (llm, intervals, supabase)
+- **Data**: `src/data/` (workout module JSON library)
+- **Frontend**: `pages/` (Dashboard, Settings), `components/` (FitnessCard, WorkoutForm), `hooks/` (useDashboard)
 
 ## Commands
 
@@ -25,69 +54,44 @@ python run.py frontend     # Frontend only
 python run.py --docker     # Docker Compose
 ```
 
-### Frontend (from /frontend)
+### Frontend
 ```bash
-pnpm dev                   # Dev server
-pnpm build                 # TypeScript + Vite build
-pnpm lint                  # ESLint
+cd frontend
+pnpm dev && pnpm build && pnpm lint
 ```
 
 ### Testing
 ```bash
-pytest tests/ -v           # Run all tests
-pytest tests/test_validator.py -v  # Single test file
+pytest tests/ -v           # All tests
+pytest tests/test_validator.py -v  # Single file
 ```
 
-## Architecture
+## Environment Setup
 
-### "Omakase" Workout System
-The AI doesn't create workouts from scratch. Instead:
-1. **Library**: Pre-validated modules in `src/data/` (WARMUP → MAIN → COOLDOWN)
-2. **AI Selector**: LLM analyzes TSB/duration and picks optimal module combination
-3. **Assembler**: Converts selection to ZWO format (Zwift XML) for Intervals.icu
+Backend `.env`:
+- `SUPABASE_URL`, `SUPABASE_KEY`
+- `GROQ_API_KEY`
+- `GEMINI_API_KEY`
+- `INTERVALS_API_KEY`
+- `VERCEL_AI_GATEWAY_URL`
 
-### Data Flow
-```
-Frontend → FastAPI → Supabase (auth/settings)
-                  → Intervals.icu (fitness data)
-                  → LLM via Vercel AI Gateway
-                  ← ZWO XML + structured steps
-```
+Frontend `.env`:
+- `VITE_SUPABASE_URL`, `VITE_SUPABASE_KEY`
 
-### LLM Fallback Chain
-```
-Groq (llama-3.3-70b-versatile)
-  └→ Gemini 2.0 Flash
-       └→ Gemini 1.5 Flash
-```
+## API Documentation
 
-## Key Directories
+Backend running → http://localhost:8005/docs (Swagger)
 
-- `/api/routers/` - FastAPI endpoints (workout, fitness, plans, settings, admin)
-- `/api/services/` - API-level business logic (caching, model selection)
-- `/src/services/` - Core workout logic (workout_generator.py, zwo_converter.py)
-- `/src/clients/` - External service clients (llm.py, intervals.py, supabase_client.py)
-- `/src/data/` - Workout module library (JSON)
-- `/frontend/src/pages/` - React pages (Dashboard, Settings, Admin)
-- `/frontend/src/components/` - UI components (FitnessCard, WorkoutForm, etc.)
-- `/frontend/src/lib/api.ts` - All API calls
-- `/frontend/src/hooks/useDashboard.ts` - Dashboard state management
+## Deployment
 
-## Configuration
+- **Frontend**: Vercel (auto-deploy from main)
+- **Backend**: Google Cloud Run (asia-northeast3)
 
-- **Frontend path alias**: `@/` → `./src/`
-- **Environment**: All secrets in `.env` (never hardcode)
-- **CORS**: Configured for Vercel preview deployments + localhost
+## Imports
 
-## Development Rules
-
-1. **UI Aesthetics**: Premium, modern design (glassmorphism, vibrant colors, smooth transitions)
-2. **LLM calls**: Must go through Vercel AI Gateway with fallback strategy
-3. **Data integrity**: Prioritize consistency between Intervals.icu and Supabase
-4. **Code style**: Python follows PEP8, TypeScript follows ESLint/Prettier
-
-## Production URLs
-
-- Frontend: https://ai-cycling-workout-planner.vercel.app
-- Backend: https://cycling-coach-backend-25085100592.asia-northeast3.run.app
-- API Docs: Backend URL + `/docs`
+See `.claude/rules/`:
+- code-style.md — Python/TypeScript conventions
+- testing.md — pytest/React Testing patterns
+- api-conventions.md — REST API standards
+- commit-workflow.md — Git conventions
+- security.md — API keys, LLM safety
