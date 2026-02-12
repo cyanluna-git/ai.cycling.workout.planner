@@ -206,10 +206,11 @@ class WorkoutAssembler:
             preferred_types = ["SweetSpot", "Threshold", "Mixed"]
 
         # Special handling for Long Workouts (>90 min total -> available_time > ~60)
-        # Prioritize Endurance/Tempo to fill volume without burnout
-        if available_time > 60:
-            # Add longer endurance blocks to preferred types effectively
-            preferred_types.extend(["Endurance", "SweetSpot"])
+        # For easy/moderate intensity, add endurance options to avoid burnout
+        if available_time > 60 and intensity in ["easy", "moderate"]:
+            # Add longer endurance blocks for volume without excessive stress
+            if "Endurance" not in preferred_types:
+                preferred_types.append("Endurance")
 
         # Get segments matching preference
         matching_segments = [
