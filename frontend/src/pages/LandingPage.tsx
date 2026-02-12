@@ -82,6 +82,110 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                 </div>
             </div>
 
+
+            {/* Testimonials Section */}
+            <div className="container mx-auto px-4 py-12 bg-muted/30">
+                <div className="max-w-4xl mx-auto">
+                    <h2 className="text-2xl font-bold text-center mb-2">{t('landing.testimonialsTitle')}</h2>
+                    <p className="text-center text-sm text-muted-foreground mb-8">{t('landing.testimonialsNote')}</p>
+                    
+                    <div className="grid md:grid-cols-3 gap-6">
+                        {/* Testimonial Card 1 */}
+                        <Card className="bg-gradient-to-br from-blue-500/5 to-blue-500/10">
+                            <CardContent className="p-6">
+                                <div className="text-4xl mb-3">💬</div>
+                                <p className="text-sm mb-4 italic">"{t('landing.testimonial1')}"</p>
+                                <p className="text-xs text-muted-foreground">- {t('landing.testimonial1Author')}</p>
+                            </CardContent>
+                        </Card>
+                        
+                        {/* Testimonial Card 2 */}
+                        <Card className="bg-gradient-to-br from-green-500/5 to-green-500/10">
+                            <CardContent className="p-6">
+                                <div className="text-4xl mb-3">💬</div>
+                                <p className="text-sm mb-4 italic">"{t('landing.testimonial2')}"</p>
+                                <p className="text-xs text-muted-foreground">- {t('landing.testimonial2Author')}</p>
+                            </CardContent>
+                        </Card>
+                        
+                        {/* Testimonial Card 3 */}
+                        <Card className="bg-gradient-to-br from-purple-500/5 to-purple-500/10">
+                            <CardContent className="p-6">
+                                <div className="text-4xl mb-3">💬</div>
+                                <p className="text-sm mb-4 italic">"{t('landing.testimonial3')}"</p>
+                                <p className="text-xs text-muted-foreground">- {t('landing.testimonial3Author')}</p>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+            </div>
+
+            {/* Before/After Comparison Section */}
+            <div className="container mx-auto px-4 py-12">
+                <div className="max-w-4xl mx-auto">
+                    <h2 className="text-2xl font-bold text-center mb-8">{t('landing.beforeAfterTitle')}</h2>
+                    
+                    <div className="grid md:grid-cols-2 gap-6">
+                        {/* Before Card */}
+                        <Card className="border-red-200 bg-red-50/50 dark:bg-red-950/20">
+                            <CardContent className="p-6">
+                                <h3 className="font-bold mb-4 text-lg">{t('landing.beforeTitle')}</h3>
+                                <div className="space-y-3">
+                                    <div className="flex items-start gap-2">
+                                        <span className="text-red-500 mt-1">❌</span>
+                                        <p className="text-sm">{t('landing.before1')}</p>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                        <span className="text-red-500 mt-1">❌</span>
+                                        <p className="text-sm">{t('landing.before2')}</p>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                        <span className="text-red-500 mt-1">❌</span>
+                                        <p className="text-sm">{t('landing.before3')}</p>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                        <span className="text-red-500 mt-1">❌</span>
+                                        <p className="text-sm">{t('landing.before4')}</p>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                        <span className="text-red-500 mt-1">❌</span>
+                                        <p className="text-sm">{t('landing.before5')}</p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                        
+                        {/* After Card */}
+                        <Card className="border-green-200 bg-green-50/50 dark:bg-green-950/20">
+                            <CardContent className="p-6">
+                                <h3 className="font-bold mb-4 text-lg">{t('landing.afterTitle')}</h3>
+                                <div className="space-y-3">
+                                    <div className="flex items-start gap-2">
+                                        <span className="text-green-500 mt-1">✅</span>
+                                        <p className="text-sm">{t('landing.after1')}</p>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                        <span className="text-green-500 mt-1">✅</span>
+                                        <p className="text-sm">{t('landing.after2')}</p>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                        <span className="text-green-500 mt-1">✅</span>
+                                        <p className="text-sm">{t('landing.after3')}</p>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                        <span className="text-green-500 mt-1">✅</span>
+                                        <p className="text-sm">{t('landing.after4')}</p>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                        <span className="text-green-500 mt-1">✅</span>
+                                        <p className="text-sm">{t('landing.after5')}</p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+            </div>
             <div className="container mx-auto px-4 py-12 bg-muted/50">
                 <div className="max-w-3xl mx-auto text-center">
                     <h2 className="text-2xl font-bold mb-6">{t('landing.targetTitle')}</h2>
