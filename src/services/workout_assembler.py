@@ -186,10 +186,10 @@ class WorkoutAssembler:
         """
         # [HOTFIX] Determine intensity based on TSB if auto
         if intensity == "auto" or not intensity:
-            if self.tsb < -10:  # Fatigued state
+            if self.tsb <= -10:  # Fatigued state
                 intensity = "easy"
                 logger.debug(f"TSB {self.tsb:.1f}: Auto-selected 'easy' intensity (fatigued)")
-            elif self.tsb > 10:  # Fresh state
+            elif self.tsb >= 10:  # Fresh state
                 intensity = "hard"
                 logger.debug(f"TSB {self.tsb:.1f}: Auto-selected 'hard' intensity (fresh)")
             else:  # Neutral state
