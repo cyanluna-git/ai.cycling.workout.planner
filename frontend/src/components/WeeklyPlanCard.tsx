@@ -12,6 +12,15 @@ import { WorkoutThumbnailChart } from "@/components/WorkoutThumbnailChart";
 import { WorkoutDetailModal } from "@/components/WorkoutDetailModal";
 import type { WeeklyPlan, DailyWorkout } from "@/lib/api";
 
+interface TssProgress {
+    target: number;
+    accumulated: number;
+    remaining: number;
+    daysRemaining: number;
+    achievable: boolean;
+    warning?: string;
+}
+
 interface WeeklyPlanCardProps {
     plan: WeeklyPlan | null;
     isLoading: boolean;
@@ -19,6 +28,7 @@ interface WeeklyPlanCardProps {
     isRegisteringAll?: boolean;
     isSyncing?: boolean;
     currentWeekOffset: number;
+    tssProgress?: TssProgress | null;
     onGenerate: () => void;
     onDelete?: (planId: string) => void;
     onWeekNavigation?: (direction: 'prev' | 'next') => void;
@@ -117,6 +127,7 @@ export function WeeklyPlanCard({
     onWeekNavigation,
     onRegisterAll,
     onSync,
+    tssProgress,
 }: WeeklyPlanCardProps) {
     const { t } = useTranslation();
     const [showConfirmDelete, setShowConfirmDelete] = useState(false);
@@ -287,10 +298,72 @@ export function WeeklyPlanCard({
                         <div className="text-2xl font-bold text-primary">
                             {plan.total_planned_tss || 0}
                         </div>
+                        {plan.achievement_status && plan.achievement_status !== "no_target" && (
+                            <div className={`text-xs mt-0.5 px-1.5 py-0.5 rounded-full inline-block ${
+                                plan.achievement_status === "exceeded" ? "bg-yellow-100 text-yellow-700" :
+                                plan.achievement_status === "achieved" ? "bg-green-100 text-green-700" :
+                                plan.achievement_status === "partial" ? "bg-orange-100 text-orange-700" :
+                                plan.achievement_status === "missed" ? "bg-red-100 text-red-700" :
+                                "bg-blue-100 text-blue-700"
+                            }`}>
+                                {plan.achievement_status === "exceeded" ? "🏆" :
+                                 plan.achievement_status === "achieved" ? "✅" :
+                                 plan.achievement_status === "partial" ? "🔶" :
+                                 plan.achievement_status === "missed" ? "❌" : "⏳"}
+                                {" "}{plan.achievement_pct != null ? `${plan.achievement_pct}%` : ""}
+                            </div>
+                        )}
                     </div>
                 </div>
             </CardHeader>
             <CardContent>
+                {/* TSS Progress Bar */}
+                {tssProgress && tssProgress.target > 0 && (
+                    <div className="mb-4 p-3 rounded-lg bg-muted/50">
+                        <div className="flex justify-between text-xs mb-1.5">
+                            <span className="font-medium">
+                                {t('weeklyPlan.tssProgress', { accumulated: tssProgress.accumulated, target: tssProgress.target })}
+                            </span>
+                            <span className="text-muted-foreground">
+                                {Math.round((tssProgress.accumulated / tssProgress.target) * 100)}%
+                            </span>
+                        </div>
+                        <div className="w-full h-2.5 bg-muted rounded-full overflow-hidden">
+                            <div
+                                className={`h-full rounded-full transition-all duration-500 ${
+                                    !tssProgress.achievable ? 'bg-red-500' :
+                                    (tssProgress.accumulated / tssProgress.target) >= 0.8 ? 'bg-green-500' :
+                                    'bg-primary'
+                                }`}
+                                style={{ width: `${Math.min((tssProgress.accumulated / tssProgress.target) * 100, 100)}%` }}
+                            />
+                        </div>
+                        <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                            <span>{t('weeklyPlan.tssRemaining', { remaining: tssProgress.remaining })}</span>
+                            <span>{t('weeklyPlan.daysRemaining', { days: tssProgress.daysRemaining })}</span>
+                        </div>
+                        {tssProgress.warning && (() => {
+                            try {
+                                const w = JSON.parse(tssProgress.warning);
+                                return (
+                                    <div className="mt-2 p-2 bg-red-100 text-red-700 rounded text-xs">
+                                        {t('weeklyPlan.tssWarningUnachievable', {
+                                            days: w.days, target: w.target,
+                                            accumulated: w.accumulated, pct: w.pct,
+                                        })}
+                                    </div>
+                                );
+                            } catch {
+                                return (
+                                    <div className="mt-2 p-2 bg-red-100 text-red-700 rounded text-xs">
+                                        {tssProgress.warning}
+                                    </div>
+                                );
+                            }
+                        })()}
+                    </div>
+                )}
+
                 {/* Vertical list - group by date for double sessions */}
                 <div className="space-y-2 mb-4">
                     {(() => {

@@ -288,6 +288,7 @@ class WeeklyPlanGenerator:
         indoor_outdoor_pref: Optional[str] = None,
         week_start: Optional[date] = None,
         exclude_barcode: bool = False,
+        weekly_tss_target: Optional[int] = None,
     ) -> WeeklyPlan:
         """Generate a complete 7-day workout plan.
 
@@ -328,15 +329,23 @@ class WeeklyPlanGenerator:
         tsb_key = FORM_STATUS_TO_TSB_KEY.get(form_status, "optimal")
         allowed_types = TSB_INTENSITY_MAP.get(tsb_key, TSB_INTENSITY_MAP["optimal"])
 
-        # Calculate weekly TSS target based on CTL and training focus
-        base_tss = int(ctl * 7)
-        focus_multipliers = {
-            "recovery": 0.7,
-            "maintain": 1.0,
-            "build": 1.1,
-        }
-        multiplier = focus_multipliers.get(training_focus, 1.0)
-        weekly_tss_target = int(base_tss * multiplier)
+        # Calculate weekly TSS target
+        # Priority: parameter > user_settings > auto-calculated from CTL
+        if weekly_tss_target is not None:
+            logger.info(f"Using parameter weekly_tss_target: {weekly_tss_target}")
+        elif self.profile.get("weekly_tss_target"):
+            weekly_tss_target = int(self.profile["weekly_tss_target"])
+            logger.info(f"Using user_settings weekly_tss_target: {weekly_tss_target}")
+        else:
+            base_tss = int(ctl * 7)
+            focus_multipliers = {
+                "recovery": 0.7,
+                "maintain": 1.0,
+                "build": 1.1,
+            }
+            multiplier = focus_multipliers.get(training_focus, 1.0)
+            weekly_tss_target = int(base_tss * multiplier)
+            logger.info(f"Auto-calculated weekly_tss_target: {weekly_tss_target} (CTL={ctl}, focus={training_focus})")
 
         # Get module inventory
         from src.services.workout_modules import get_module_inventory_text

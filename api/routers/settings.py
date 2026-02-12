@@ -34,6 +34,7 @@ class UserSettings(BaseModel):
     )
     training_focus: str = "maintain"  # recovery, maintain, build
     preferred_duration: int = 60  # Default workout duration in minutes
+    weekly_tss_target: Optional[int] = None  # Manual weekly TSS target (300-700), None=auto
     weekly_plan_enabled: bool = False  # Opt-in for weekly plan auto-generation
     weekly_plan_day: int = 0  # Day to generate (0=Sunday)
 
@@ -90,6 +91,7 @@ async def get_settings(user: dict = Depends(get_current_user)):
             training_style=settings_data.get("training_style", "auto"),
             training_focus=settings_data.get("training_focus", "maintain"),
             preferred_duration=settings_data.get("preferred_duration", 60),
+            weekly_tss_target=settings_data.get("weekly_tss_target"),
             weekly_plan_enabled=settings_data.get("weekly_plan_enabled", False),
             weekly_plan_day=settings_data.get("weekly_plan_day", 0),
         ),
@@ -119,6 +121,7 @@ async def update_settings(
                 "training_style": settings.training_style,
                 "training_focus": settings.training_focus,
                 "preferred_duration": settings.preferred_duration,
+                "weekly_tss_target": settings.weekly_tss_target,
                 "weekly_plan_enabled": settings.weekly_plan_enabled,
                 "weekly_plan_day": settings.weekly_plan_day,
             },

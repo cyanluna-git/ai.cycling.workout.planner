@@ -25,13 +25,26 @@ import {
     deleteWeeklyPlan,
     registerWeeklyPlanToIntervals,
     syncWeeklyPlanWithIntervals,
+    fetchAchievements,
     type FitnessData,
     type GeneratedWorkout,
     type WorkoutGenerateRequest,
+    type AchievementsData,
     type WeeklyCalendarData,
     type WeeklyPlan,
     type SyncResult,
+
+    fetchTodayPlan,
 } from "@/lib/api";
+
+interface TssProgressData {
+    target: number;
+    accumulated: number;
+    remaining: number;
+    daysRemaining: number;
+    achievable: boolean;
+    warning?: string;
+}
 
 interface DashboardState {
     isApiConfigured: boolean | null;
@@ -50,6 +63,9 @@ interface DashboardState {
     isRegistering: boolean;
     error: string | null;
     success: string | null;
+    tssProgress: TssProgressData | null;
+    achievements: AchievementsData | null;
+    isLoadingAchievements: boolean;
 }
 
 interface DashboardActions {
@@ -146,6 +162,26 @@ export function useDashboard(): UseDashboardReturn {
         enabled: !!session?.access_token && isApiConfigured === true,
         staleTime: 1 * 60 * 60 * 1000, // 1 hour
     });
+
+    // Fetch today's plan (for TSS tracking)
+    const { data: todayPlanData } = useQuery({
+        queryKey: [...queryKeys.weeklyPlan("today-plan")],
+        queryFn: () => fetchTodayPlan(session?.access_token || ''),
+        enabled: !!session?.access_token && isApiConfigured === true,
+        staleTime: 30 * 60 * 1000, // 30 minutes
+    });
+
+    // Build TSS progress from todayPlanData
+    const tssProgress: TssProgressData | null = todayPlanData?.weekly_tss_target
+        ? {
+            target: todayPlanData.weekly_tss_target,
+            accumulated: todayPlanData.weekly_tss_accumulated || 0,
+            remaining: todayPlanData.weekly_tss_remaining || 0,
+            daysRemaining: todayPlanData.days_remaining_in_week || 0,
+            achievable: todayPlanData.target_achievable !== false,
+            warning: todayPlanData.achievement_warning || undefined,
+        }
+        : null;
 
     // Mutations
     const generateMutation = useMutation({
@@ -371,6 +407,14 @@ export function useDashboard(): UseDashboardReturn {
         setSyncResult(null);
     }, []);
 
+    // Achievements query
+    const { data: achievements = null, isLoading: isLoadingAchievements } = useQuery<AchievementsData | null>({
+        queryKey: ["achievements", session?.access_token],
+        queryFn: () => session?.access_token ? fetchAchievements(session.access_token) : null,
+        enabled: !!session?.access_token && isApiConfigured === true,
+        staleTime: 1000 * 60 * 30, // 30 min
+    });
+
     return {
         // State
         isApiConfigured,
@@ -378,6 +422,8 @@ export function useDashboard(): UseDashboardReturn {
         workout,
         weeklyCalendar,
         weeklyPlan,
+        achievements,
+        isLoadingAchievements,
         currentWeekOffset,
         isLoadingCalendar,
         isLoadingPlan,
@@ -389,6 +435,7 @@ export function useDashboard(): UseDashboardReturn {
         isRegistering,
         error,
         success,
+        tssProgress,
         // Actions
         handleGenerate,
         handleRegister,

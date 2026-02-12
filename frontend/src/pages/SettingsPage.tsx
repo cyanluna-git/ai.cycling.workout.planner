@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Slider } from '@/components/ui/slider'
 import { useAuth } from '@/contexts/AuthContext'
 
 const API_BASE = import.meta.env.VITE_API_URL || ''
@@ -12,6 +13,7 @@ interface Settings {
     ftp: number; max_hr: number; lthr: number; training_goal: string;
     exclude_barcode_workouts?: boolean; training_style?: string;
     preferred_duration?: number; training_focus?: string;
+    weekly_tss_target?: number | null;
 }
 
 interface ApiKeysCheck { intervals_configured: boolean; }
@@ -23,6 +25,7 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
         ftp: 200, max_hr: 190, lthr: 170, training_goal: '',
         exclude_barcode_workouts: false, training_style: 'auto',
         preferred_duration: 60, training_focus: 'maintain',
+        weekly_tss_target: null,
     })
     const [apiKeys, setApiKeys] = useState({ intervals_api_key: '', athlete_id: '' })
     const [apiKeysCheck, setApiKeysCheck] = useState<ApiKeysCheck | null>(null)
@@ -89,6 +92,27 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                                 <button type="button" onClick={() => setSettings({ ...settings, training_focus: 'build' })} className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${settings.training_focus === 'build' ? 'bg-orange-500 text-white' : 'bg-muted hover:bg-muted/80'}`}>{t('settings.build')}</button>
                             </div>
                             <p className="text-xs text-muted-foreground">{t('settings.focusDescription')}</p>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>{t('settings.weeklyTssTarget')}</Label>
+                            <div className="flex items-center gap-4">
+                                <div className="flex-1">
+                                    <Slider
+                                        min={200}
+                                        max={800}
+                                        step={25}
+                                        value={[settings.weekly_tss_target || 0]}
+                                        onValueChange={([v]) => setSettings({ ...settings, weekly_tss_target: v === 0 ? null : v })}
+                                    />
+                                </div>
+                                <span className="text-sm font-medium w-24 text-right">
+                                    {settings.weekly_tss_target ? `${settings.weekly_tss_target} TSS` : t('settings.tssAuto')}
+                                </span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">{t('settings.weeklyTssHint')}</p>
+                            {settings.weekly_tss_target && (
+                                <button type="button" onClick={() => setSettings({ ...settings, weekly_tss_target: null })} className="text-xs text-primary hover:underline">{t('settings.tssReset')}</button>
+                            )}
                         </div>
                         <div className="space-y-2">
                             <Label>{t('settings.trainingStyle')}</Label>
