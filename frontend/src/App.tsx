@@ -5,6 +5,7 @@ import { FitnessCard } from "@/components/FitnessCard";
 import { TodayWorkoutCard } from "@/components/TodayWorkoutCard";
 import { WeeklyCalendarCard } from "@/components/WeeklyCalendarCard";
 import { WeeklyPlanCard } from "@/components/WeeklyPlanCard";
+import { AchievementBadges } from "@/components/AchievementBadges";
 import { FitnessCardSkeleton, WeeklyCalendarSkeleton, WeeklyPlanSkeleton, TodayWorkoutSkeleton } from '@/components/LoadingSkeletons';
 import { UpdateAnnouncementModal } from "@/components/UpdateAnnouncementModal";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -60,6 +61,7 @@ function Dashboard() {
 
   const {
     isApiConfigured, fitness, workout, weeklyCalendar, weeklyPlan,
+    achievements, isLoadingAchievements,
     currentWeekOffset, isLoadingCalendar, isLoadingPlan, isGeneratingPlan,
     isRegisteringPlanAll, isSyncingPlan, isLoading, isRegistering, error, success,
     handleGenerate, handleRegister, handleSelectDate, handleOnboardingComplete,
@@ -140,6 +142,7 @@ function Dashboard() {
           </div>
           <div className="space-y-4">
             {isLoadingPlan ? <WeeklyPlanSkeleton /> : <WeeklyPlanCard plan={weeklyPlan} isLoading={isLoadingPlan} isGenerating={isGeneratingPlan} isRegisteringAll={isRegisteringPlanAll} isSyncing={isSyncingPlan} currentWeekOffset={currentWeekOffset} tssProgress={tssProgress} onGenerate={handleGenerateWeeklyPlan} onDelete={handleDeleteWeeklyPlan} onRegisterAll={handleRegisterWeeklyPlanAll} onSync={handleSyncWeeklyPlan} onWeekNavigation={handleWeekNavigation} />}
+            {weeklyPlan && <AchievementBadges data={achievements} isLoading={isLoadingAchievements} />}
           </div>
         </div>
       </main>

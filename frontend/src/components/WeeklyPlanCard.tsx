@@ -298,6 +298,21 @@ export function WeeklyPlanCard({
                         <div className="text-2xl font-bold text-primary">
                             {plan.total_planned_tss || 0}
                         </div>
+                        {plan.achievement_status && plan.achievement_status !== "no_target" && (
+                            <div className={`text-xs mt-0.5 px-1.5 py-0.5 rounded-full inline-block ${
+                                plan.achievement_status === "exceeded" ? "bg-yellow-100 text-yellow-700" :
+                                plan.achievement_status === "achieved" ? "bg-green-100 text-green-700" :
+                                plan.achievement_status === "partial" ? "bg-orange-100 text-orange-700" :
+                                plan.achievement_status === "missed" ? "bg-red-100 text-red-700" :
+                                "bg-blue-100 text-blue-700"
+                            }`}>
+                                {plan.achievement_status === "exceeded" ? "🏆" :
+                                 plan.achievement_status === "achieved" ? "✅" :
+                                 plan.achievement_status === "partial" ? "🔶" :
+                                 plan.achievement_status === "missed" ? "❌" : "⏳"}
+                                {" "}{plan.achievement_pct != null ? `${plan.achievement_pct}%` : ""}
+                            </div>
+                        )}
                     </div>
                 </div>
             </CardHeader>
@@ -327,11 +342,25 @@ export function WeeklyPlanCard({
                             <span>{t('weeklyPlan.tssRemaining', { remaining: tssProgress.remaining })}</span>
                             <span>{t('weeklyPlan.daysRemaining', { days: tssProgress.daysRemaining })}</span>
                         </div>
-                        {tssProgress.warning && (
-                            <div className="mt-2 p-2 bg-red-100 text-red-700 rounded text-xs">
-                                {tssProgress.warning}
-                            </div>
-                        )}
+                        {tssProgress.warning && (() => {
+                            try {
+                                const w = JSON.parse(tssProgress.warning);
+                                return (
+                                    <div className="mt-2 p-2 bg-red-100 text-red-700 rounded text-xs">
+                                        {t('weeklyPlan.tssWarningUnachievable', {
+                                            days: w.days, target: w.target,
+                                            accumulated: w.accumulated, pct: w.pct,
+                                        })}
+                                    </div>
+                                );
+                            } catch {
+                                return (
+                                    <div className="mt-2 p-2 bg-red-100 text-red-700 rounded text-xs">
+                                        {tssProgress.warning}
+                                    </div>
+                                );
+                            }
+                        })()}
                     </div>
                 )}
 

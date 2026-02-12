@@ -25,9 +25,11 @@ import {
     deleteWeeklyPlan,
     registerWeeklyPlanToIntervals,
     syncWeeklyPlanWithIntervals,
+    fetchAchievements,
     type FitnessData,
     type GeneratedWorkout,
     type WorkoutGenerateRequest,
+    type AchievementsData,
     type WeeklyCalendarData,
     type WeeklyPlan,
     type SyncResult,
@@ -62,6 +64,8 @@ interface DashboardState {
     error: string | null;
     success: string | null;
     tssProgress: TssProgressData | null;
+    achievements: AchievementsData | null;
+    isLoadingAchievements: boolean;
 }
 
 interface DashboardActions {
@@ -403,6 +407,14 @@ export function useDashboard(): UseDashboardReturn {
         setSyncResult(null);
     }, []);
 
+    // Achievements query
+    const { data: achievements = null, isLoading: isLoadingAchievements } = useQuery<AchievementsData | null>({
+        queryKey: ["achievements", session?.access_token],
+        queryFn: () => session?.access_token ? fetchAchievements(session.access_token) : null,
+        enabled: !!session?.access_token && isApiConfigured === true,
+        staleTime: 1000 * 60 * 30, // 30 min
+    });
+
     return {
         // State
         isApiConfigured,
@@ -410,6 +422,8 @@ export function useDashboard(): UseDashboardReturn {
         workout,
         weeklyCalendar,
         weeklyPlan,
+        achievements,
+        isLoadingAchievements,
         currentWeekOffset,
         isLoadingCalendar,
         isLoadingPlan,

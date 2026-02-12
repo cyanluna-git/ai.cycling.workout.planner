@@ -286,7 +286,37 @@ export interface WeeklyPlan {
     training_style?: string;
     total_planned_tss?: number;
     weekly_tss_target?: number;
+    total_actual_tss?: number;
+    achievement_status?: string;  // achieved/exceeded/partial/missed/in_progress/no_target
+    achievement_pct?: number;
     daily_workouts: DailyWorkout[];
+}
+
+export interface AchievementBadge {
+    id: string;
+    name: string;
+    icon: string;
+    desc_key: string;
+    type: string;
+    requirement: number;
+    remaining?: number;
+}
+
+export interface AchievementsData {
+    current_streak: number;
+    best_streak: number;
+    total_achieved_weeks: number;
+    total_exceeded_weeks: number;
+    earned_badges: AchievementBadge[];
+    next_badge: AchievementBadge | null;
+    weekly_history: Array<{
+        week_start: string;
+        week_end: string;
+        weekly_tss_target: number | null;
+        total_actual_tss: number | null;
+        achievement_status: string;
+        achievement_pct: number;
+    }>;
 }
 
 export interface TodayWorkout {
@@ -421,5 +451,22 @@ export async function syncWeeklyPlanWithIntervals(
         headers: getHeaders(token),
     });
     if (!res.ok) throw new Error('Failed to sync with Intervals.icu');
+    return res.json();
+}
+
+export async function fetchAchievements(token: string): Promise<AchievementsData> {
+    const res = await fetch(`${API_BASE}/api/plans/achievements`, {
+        headers: getHeaders(token),
+    });
+    if (!res.ok) throw new Error('Failed to fetch achievements');
+    return res.json();
+}
+
+export async function finalizeWeeklyPlan(token: string, planId: string): Promise<{ success: boolean; achievement_status: string; achievement_pct: number }> {
+    const res = await fetch(`${API_BASE}/api/plans/weekly/${planId}/finalize`, {
+        method: 'POST',
+        headers: getHeaders(token, 'application/json'),
+    });
+    if (!res.ok) throw new Error('Failed to finalize plan');
     return res.json();
 }

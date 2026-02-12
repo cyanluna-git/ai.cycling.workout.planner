@@ -255,7 +255,9 @@
     "emptyDesc": "Generate your entire week's training plan at once. AI creates a 7-day plan aligned with recovery/build rhythm.",
     "tssProgress": "{{accumulated}}/{{target}} TSS",
     "tssRemaining": "Remaining: {{remaining}} TSS",
-    "daysRemaining": "{{days}} days left"
+    "daysRemaining": "{{days}} days left",
+    "tssAchievementStatus": "{{status}}",
+    "tssWarningUnachievable": "Reaching TSS target {{target}} is unlikely with {{days}} days remaining. Currently {{accumulated}}/{{target}} ({{pct}}%). Adjust target?"
   },
   "admin": {
     "back": "← Back",
@@ -379,5 +381,21 @@
     "announcement": "Update",
     "newFeatures": "Introducing new features:",
     "dismiss": "Got it"
+  },
+  "achievements": {
+    "streakLabel": "{{count}} week streak!",
+    "bestStreak": "Best: {{count}} weeks",
+    "totalAchieved": "Total achieved: {{count}} weeks",
+    "noStreak": "No achievement records yet",
+    "statusAchieved": "Achieved",
+    "statusExceeded": "Exceeded",
+    "statusPartial": "Partial",
+    "statusMissed": "Missed",
+    "statusInProgress": "In Progress",
+    "statusNoTarget": "No Target",
+    "achievementPct": "{{pct}}% achieved",
+    "nextBadge": "{{remaining}} weeks to next badge",
+    "earnedBadges": "Earned Badges",
+    "noBadges": "No badges earned yet"
   }
 }
