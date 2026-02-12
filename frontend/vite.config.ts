@@ -22,4 +22,28 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Core React libraries
+          'vendor-react': ['react', 'react-dom'],
+          // Charts library (heavy)
+          'vendor-charts': ['recharts'],
+          // UI components
+          'vendor-ui': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-label',
+            '@radix-ui/react-select',
+            '@radix-ui/react-slider',
+            '@radix-ui/react-slot',
+          ],
+          // i18n
+          'vendor-i18n': ['i18next', 'react-i18next', 'i18next-browser-languagedetector'],
+          // Supabase & TanStack Query
+          'vendor-data': ['@supabase/supabase-js', '@tanstack/react-query'],
+        },
+      },
+    },
+  },
 })
