@@ -3,6 +3,8 @@
 REST API endpoints for the React frontend.
 """
 
+import subprocess
+from datetime import datetime
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -62,6 +64,29 @@ app.include_router(plans.router, prefix="/api", tags=["plans"])
 app.include_router(admin.router, prefix="/api", tags=["admin"])
 
 
+def _get_git_info():
+    """Get git commit information at startup."""
+    try:
+        commit = subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"],
+            text=True,
+            stderr=subprocess.DEVNULL
+        ).strip()
+        commit_date = subprocess.check_output(
+            ["git", "log", "-1", "--format=%ci"],
+            text=True,
+            stderr=subprocess.DEVNULL
+        ).strip()
+        return {"commit": commit, "commit_date": commit_date}
+    except Exception:
+        return {"commit": "unknown", "commit_date": "unknown"}
+
+
+# Cache git info at startup
+_git_info = _get_git_info()
+_start_time = datetime.utcnow().isoformat() + "Z"
+
+
 @app.get("/")
 async def root():
     """Health check endpoint."""
@@ -71,4 +96,10 @@ async def root():
 @app.get("/api/health")
 async def health():
     """Health check for deployment."""
-    return {"status": "healthy"}
+    return {
+        "status": "healthy",
+        "version": app.version,
+        "git_commit": _git_info["commit"],
+        "git_commit_date": _git_info["commit_date"],
+        "started_at": _start_time,
+    }

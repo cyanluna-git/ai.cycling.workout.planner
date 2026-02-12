@@ -11,6 +11,9 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  define: {
+    __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+  },
   server: {
     proxy: {
       '/api': {

@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { CURRENT_VERSION } from '@/lib/version';
 
 // Types
 interface OverviewStats {
@@ -40,6 +41,15 @@ interface AuditLog {
     created_at: string;
 }
 
+interface DeploymentInfo {
+    frontend_version: string;
+    frontend_build_time: string;
+    backend_version: string;
+    backend_git_commit: string;
+    backend_git_commit_date: string;
+    backend_started_at: string;
+}
+
 interface AdminPageProps {
     onBack: () => void;
 }
@@ -53,6 +63,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
 
     // Overview stats
     const [stats, setStats] = useState<OverviewStats | null>(null);
+    const [deployInfo, setDeployInfo] = useState<DeploymentInfo | null>(null);
     const [statsLoading, setStatsLoading] = useState(true);
 
     // API logs
@@ -108,6 +119,20 @@ export function AdminPage({ onBack }: AdminPageProps) {
                 setUserStats(workoutData.user_stats || []);
                 setTopUser(workoutData.top_user || null);
                 setUniqueUsers(workoutData.unique_users || 0);
+            }
+
+            // Fetch backend health info
+            const healthResponse = await fetch(`${API_BASE}/api/health`);
+            if (healthResponse.ok) {
+                const healthData = await healthResponse.json();
+                setDeployInfo({
+                    frontend_version: CURRENT_VERSION,
+                    frontend_build_time: __BUILD_TIME__,
+                    backend_version: healthData.version || 'unknown',
+                    backend_git_commit: healthData.git_commit || 'unknown',
+                    backend_git_commit_date: healthData.git_commit_date || 'unknown',
+                    backend_started_at: healthData.started_at || 'unknown',
+                });
             }
         } catch (error) {
             console.error('Failed to fetch stats:', error);
@@ -252,6 +277,35 @@ export function AdminPage({ onBack }: AdminPageProps) {
                 {activeTab === 'overview' && (
                     <div className="space-y-6">
                         {/* Stats Cards */}
+                        {/* Deployment Info */}
+                        {deployInfo && (
+                            <Card>
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-lg">🚀 Deployment Info</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                        <div>
+                                            <h4 className="font-semibold mb-2">Frontend</h4>
+                                            <div className="space-y-1 text-muted-foreground">
+                                                <p>Version: <span className="font-mono text-foreground">{deployInfo.frontend_version}</span></p>
+                                                <p>Built: <span className="font-mono text-foreground">{new Date(deployInfo.frontend_build_time).toLocaleString('ko-KR')}</span></p>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 className="font-semibold mb-2">Backend</h4>
+                                            <div className="space-y-1 text-muted-foreground">
+                                                <p>Version: <span className="font-mono text-foreground">{deployInfo.backend_version}</span></p>
+                                                <p>Commit: <span className="font-mono text-foreground">{deployInfo.backend_git_commit}</span></p>
+                                                <p>Commit Date: <span className="font-mono text-foreground">{new Date(deployInfo.backend_git_commit_date).toLocaleString('ko-KR')}</span></p>
+                                                <p>Started: <span className="font-mono text-foreground">{new Date(deployInfo.backend_started_at).toLocaleString('ko-KR')}</span></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             <Card>
                                 <CardHeader className="pb-2">
