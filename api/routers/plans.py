@@ -54,12 +54,17 @@ class WeeklyPlanResponse(BaseModel):
     training_style: Optional[str] = None
     total_planned_tss: Optional[int] = None
     daily_workouts: List[DailyWorkoutResponse]
+    used_modules: Optional[List[str]] = None
 
 
 class GenerateWeeklyPlanRequest(BaseModel):
     """Request to generate a weekly plan."""
 
     week_start: Optional[str] = None  # YYYY-MM-DD, default: next Monday
+    ftp: Optional[float] = None  # Override profile FTP (watts)
+    weight: Optional[float] = None  # Override profile weight (kg)
+    wellness_score: Optional[float] = None  # Daily wellness 0-10
+    indoor_outdoor_pref: Optional[str] = None  # indoor|outdoor|mixed
 
 
 class TodayWorkoutResponse(BaseModel):
@@ -573,6 +578,10 @@ async def generate_weekly_plan(
         atl=atl,
         tsb=tsb,
         form_status=form_status,
+        ftp=request.ftp,
+        weight=request.weight,
+        wellness_score=request.wellness_score,
+        indoor_outdoor_pref=request.indoor_outdoor_pref,
         week_start=week_start,
         exclude_barcode=user_settings.get("exclude_barcode_workouts", False),
     )
