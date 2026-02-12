@@ -184,12 +184,24 @@ class WorkoutAssembler:
         Returns:
             List of selected segment dicts.
         """
+        # [HOTFIX] Determine intensity based on TSB if auto
+        if intensity == "auto" or not intensity:
+            if self.tsb < -10:  # Fatigued state
+                intensity = "easy"
+                logger.debug(f"TSB {self.tsb:.1f}: Auto-selected 'easy' intensity (fatigued)")
+            elif self.tsb > 10:  # Fresh state
+                intensity = "hard"
+                logger.debug(f"TSB {self.tsb:.1f}: Auto-selected 'hard' intensity (fresh)")
+            else:  # Neutral state
+                intensity = "moderate"
+                logger.debug(f"TSB {self.tsb:.1f}: Auto-selected 'moderate' intensity (neutral)")
+
         # Filter segments by intensity preference
         if intensity == "easy":
             preferred_types = ["Endurance", "SweetSpot"]
         elif intensity == "hard":
             preferred_types = ["VO2max", "Threshold"]
-        else:
+        else:  # moderate
             # For moderate, mix widely
             preferred_types = ["SweetSpot", "Threshold", "Mixed"]
 
