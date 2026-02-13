@@ -140,10 +140,9 @@
     "tssReset": "Reset to auto",
     "weeklyAvailability": {
       "title": "Weekly Availability",
-      "description": "Set your available days for workouts. Unavailable days will be automatically set as rest days.",
-      "available": "Available",
-      "unavailable": "Unavailable",
-      "rest": "Rest (Active Choice)",
+      "description": "Set your available days for workouts. Rest days will not have workouts.",
+      "available": "Ride On!",
+      "rest": "Rest Day",
       "days": {
         "monday": "Monday",
         "tuesday": "Tuesday",

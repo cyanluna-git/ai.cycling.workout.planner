@@ -140,10 +140,9 @@
     "tssReset": "자동으로 되돌리기",
     "weeklyAvailability": {
       "title": "주간 운동 가능 요일",
-      "description": "매주 운동 가능한 요일을 설정하세요. 불가능한 날은 자동으로 휴식일이 됩니다.",
-      "available": "운동 가능",
-      "unavailable": "일정상 불가",
-      "rest": "휴식 (능동적 선택)",
+      "description": "매주 운동 가능한 요일을 설정하세요. 휴식일은 워크아웃이 생성되지 않습니다.",
+      "available": "Ride On!",
+      "rest": "Rest Day",
       "days": {
         "monday": "월요일",
         "tuesday": "화요일",
