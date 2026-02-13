@@ -113,6 +113,8 @@ export function AdminPage({ onBack }: AdminPageProps) {
     const deployInfo = healthData ? {
         frontend_version: CURRENT_VERSION,
         frontend_build_time: __BUILD_TIME__,
+        frontend_git_commit: __GIT_COMMIT__,
+        frontend_git_commit_date: __GIT_COMMIT_DATE__,
         backend_version: healthData.version || 'unknown',
         backend_git_commit: healthData.git_commit || 'unknown',
         backend_git_commit_date: healthData.git_commit_date || 'unknown',
@@ -217,7 +219,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
                                         <div>
                                             <h4 className="font-semibold mb-2">Frontend</h4>
                                             <div className="space-y-1 text-muted-foreground">
-                                                <p>Version: <span className="font-mono text-foreground">{deployInfo.frontend_version}</span></p>
+                                                <p>Version: <span className="font-mono text-foreground">{deployInfo.frontend_version}</span> <span className="font-mono text-xs text-muted-foreground">({deployInfo.frontend_git_commit})</span></p>
                                                 <p>Built: <span className="font-mono text-foreground">{new Date(deployInfo.frontend_build_time).toLocaleString('ko-KR')}</span></p>
                                             </div>
                                         </div>
@@ -225,8 +227,8 @@ export function AdminPage({ onBack }: AdminPageProps) {
                                             <h4 className="font-semibold mb-2">Backend</h4>
                                             <div className="space-y-1 text-muted-foreground">
                                                 <p>Version: <span className="font-mono text-foreground">{deployInfo.backend_version}</span></p>
-                                                <p>Commit: <span className="font-mono text-foreground">{deployInfo.backend_git_commit}</span></p>
-                                                <p>Commit Date: <span className="font-mono text-foreground">{new Date(deployInfo.backend_git_commit_date).toLocaleString('ko-KR')}</span></p>
+                                                <p>Commit: <span className="font-mono text-foreground">{deployInfo.backend_git_commit?.slice(0, 7)}</span></p>
+                                                <p>Commit: <span className="font-mono text-foreground">{deployInfo.backend_git_commit_date !== 'unknown' ? new Date(deployInfo.backend_git_commit_date).toLocaleString('ko-KR') : '-'}</span></p>
                                                 <p>Started: <span className="font-mono text-foreground">{new Date(deployInfo.backend_started_at).toLocaleString('ko-KR')}</span></p>
                                             </div>
                                         </div>

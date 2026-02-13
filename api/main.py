@@ -65,7 +65,12 @@ app.include_router(admin.router, prefix="/api", tags=["admin"])
 
 
 def _get_git_info():
-    """Get git commit information at startup."""
+    """Get git commit information at startup (env var > git command)."""
+    import os
+    commit = os.environ.get("GIT_COMMIT")
+    commit_date = os.environ.get("GIT_COMMIT_DATE")
+    if commit and commit != "unknown":
+        return {"commit": commit, "commit_date": commit_date or "unknown"}
     try:
         commit = subprocess.check_output(
             ["git", "rev-parse", "--short", "HEAD"],
