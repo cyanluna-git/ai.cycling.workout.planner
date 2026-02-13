@@ -14,6 +14,7 @@ sys.path.insert(
 
 from src.clients.supabase_client import get_supabase_client, get_supabase_admin_client
 from .auth import get_current_user
+from api.constants import DEFAULT_WEEKLY_AVAILABILITY
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -37,11 +38,7 @@ class UserSettings(BaseModel):
     weekly_tss_target: Optional[int] = None  # Manual weekly TSS target (300-700), None=auto
     weekly_plan_enabled: bool = False  # Opt-in for weekly plan auto-generation
     weekly_plan_day: int = 0  # Day to generate (0=Sunday)
-    weekly_availability: Dict[str, str] = {
-        "0": "available", "1": "available", "2": "available",
-        "3": "available", "4": "available", "5": "available",
-        "6": "available",
-    }  # Day availability: available | unavailable | rest
+    weekly_availability: Dict[str, str] = DEFAULT_WEEKLY_AVAILABILITY  # Day availability: available | unavailable | rest
 
 
 class UserApiKeys(BaseModel):
@@ -99,11 +96,7 @@ async def get_settings(user: dict = Depends(get_current_user)):
             weekly_tss_target=settings_data.get("weekly_tss_target"),
             weekly_plan_enabled=settings_data.get("weekly_plan_enabled", False),
             weekly_plan_day=settings_data.get("weekly_plan_day", 0),
-            weekly_availability=settings_data.get("weekly_availability", {
-                "0": "available", "1": "available", "2": "available",
-                "3": "available", "4": "available", "5": "available",
-                "6": "available",
-            }),
+            weekly_availability=settings_data.get("weekly_availability", DEFAULT_WEEKLY_AVAILABILITY),
         ),
         api_keys_configured=bool(
             api_keys_data.get("intervals_api_key") and api_keys_data.get("athlete_id")

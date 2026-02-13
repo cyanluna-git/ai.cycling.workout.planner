@@ -7,6 +7,7 @@ current fitness metrics, and training goals.
 import json
 import logging
 import re
+from api.constants import DEFAULT_WEEKLY_AVAILABILITY
 from datetime import date, timedelta
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
@@ -59,15 +60,8 @@ DAILY_TSS_RATIOS = {
 
 
 # Default weekly availability (all days available)
-DEFAULT_AVAILABILITY = {
-    "0": "available",
-    "1": "available",
-    "2": "available",
-    "3": "available",
-    "4": "available",
-    "5": "available",
-    "6": "available",
-}
+# Alias for backward compatibility
+DEFAULT_AVAILABILITY = DEFAULT_WEEKLY_AVAILABILITY
 
 
 # ---------------------------------------------------------------------------
