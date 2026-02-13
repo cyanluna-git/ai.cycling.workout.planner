@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAuth } from '@/contexts/AuthContext'
 
 const API_BASE = import.meta.env.VITE_API_URL || ''
@@ -14,6 +15,7 @@ interface Settings {
     exclude_barcode_workouts?: boolean; training_style?: string;
     preferred_duration?: number; training_focus?: string;
     weekly_tss_target?: number | null;
+    weekly_availability?: Record<string, "available" | "unavailable" | "rest">;
 }
 
 interface ApiKeysCheck { intervals_configured: boolean; }
@@ -26,6 +28,15 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
         exclude_barcode_workouts: false, training_style: 'auto',
         preferred_duration: 60, training_focus: 'maintain',
         weekly_tss_target: null,
+        weekly_availability: {
+            "0": "available",
+            "1": "available",
+            "2": "available",
+            "3": "available",
+            "4": "available",
+            "5": "available",
+            "6": "available",
+        },
     })
     const [apiKeys, setApiKeys] = useState({ intervals_api_key: '', athlete_id: '' })
     const [apiKeysCheck, setApiKeysCheck] = useState<ApiKeysCheck | null>(null)
@@ -39,7 +50,21 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
     const fetchSettings = async () => {
         try {
             const res = await fetch(`${API_BASE}/api/settings`, { headers: { Authorization: `Bearer ${session?.access_token}` } });
-            if (res.ok) { const data = await res.json(); setSettings(data.settings); }
+            if (res.ok) { 
+                const data = await res.json(); 
+                setSettings({
+                    ...data.settings,
+                    weekly_availability: data.settings.weekly_availability || {
+                        "0": "available",
+                        "1": "available",
+                        "2": "available",
+                        "3": "available",
+                        "4": "available",
+                        "5": "available",
+                        "6": "available",
+                    }
+                });
+            }
         } catch (e) { console.error('Failed to fetch settings', e); }
     }
 
@@ -71,6 +96,48 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
             if (res.ok) { setMessage(t('settings.apiKeySaved')); checkApiKeys(); setApiKeys({ ...apiKeys, intervals_api_key: '' }); }
         } catch (e) { setMessage(t('common.saveFailed')); } finally { setSaving(false); }
     }
+
+    // Weekly Availability handlers
+    const dayKeys = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+
+    const handleAvailabilityChange = (dayIndex: number, value: string) => {
+        setSettings(prev => ({
+            ...prev,
+            weekly_availability: {
+                ...prev.weekly_availability,
+                [dayIndex.toString()]: value as "available" | "unavailable" | "rest"
+            }
+        }));
+    };
+
+    const validateAvailability = (availability: Record<string, string>) => {
+        const hasAvailable = Object.values(availability).some(v => v === "available");
+        if (!hasAvailable) {
+            setMessage(t("settings.weeklyAvailability.validation.atLeastOne"));
+            return false;
+        }
+        return true;
+    };
+
+    const handleSaveAvailability = async () => {
+        if (!validateAvailability(settings.weekly_availability || {})) return;
+        
+        setSaving(true); setMessage(null);
+        try {
+            const res = await fetch(`${API_BASE}/api/settings`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+                body: JSON.stringify(settings),
+            });
+            if (res.ok) {
+                setMessage(t("settings.weeklyAvailability.saveSuccess"));
+            } else {
+                setMessage(t("settings.weeklyAvailability.saveError"));
+            }
+        } catch (error) {
+            setMessage(t("settings.weeklyAvailability.saveError"));
+        } finally { setSaving(false); }
+    };
 
     return (
         <div className="min-h-screen bg-background p-4">
@@ -133,6 +200,43 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                             </div>
                         </div>
                         <Button onClick={saveSettings} disabled={saving}>{saving ? t('common.saving') : t('settings.saveSettings')}</Button>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader><CardTitle>📅 {t('settings.weeklyAvailability.title')}</CardTitle></CardHeader>
+                    <CardContent className="space-y-4">
+                        <p className="text-sm text-muted-foreground">{t('settings.weeklyAvailability.description')}</p>
+                        <div className="space-y-3">
+                            {dayKeys.map((dayKey, index) => (
+                                <div key={index} className="flex items-center gap-4">
+                                    <span className="w-24 text-sm font-medium">
+                                        {t(`settings.weeklyAvailability.days.${dayKey}`)}
+                                    </span>
+                                    <Select
+                                        value={settings.weekly_availability?.[index.toString()] || "available"}
+                                        onValueChange={(value) => handleAvailabilityChange(index, value)}
+                                    >
+                                        <SelectTrigger className="w-56">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="available">
+                                                ✅ {t("settings.weeklyAvailability.available")}
+                                            </SelectItem>
+                                            <SelectItem value="unavailable">
+                                                🚫 {t("settings.weeklyAvailability.unavailable")}
+                                            </SelectItem>
+                                            <SelectItem value="rest">
+                                                😴 {t("settings.weeklyAvailability.rest")}
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            ))}
+                        </div>
+                        <Button onClick={handleSaveAvailability} disabled={saving} className="mt-4">
+                            {saving ? t('common.saving') : t('common.confirm')}
+                        </Button>
                     </CardContent>
                 </Card>
                 <Card>
