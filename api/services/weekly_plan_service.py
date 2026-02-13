@@ -590,7 +590,12 @@ class WeeklyPlanGenerator:
             daily_tss[day] = 0
 
         # available days get TSS redistribution
-        available_ratios = {day: ratios[day] for day in available_days}
+        # If original ratio is 0 but day is available, assign minimum ratio
+        MIN_RATIO = 0.08  # 8% minimum allocation for available days with 0 ratio
+        available_ratios = {}
+        for day in available_days:
+            r = ratios[day]
+            available_ratios[day] = r if r > 0 else MIN_RATIO
         total_ratio = sum(available_ratios.values())
 
         if total_ratio == 0:
