@@ -4,7 +4,7 @@ import os
 import logging
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Dict, List
 
 import sys
 
@@ -37,6 +37,11 @@ class UserSettings(BaseModel):
     weekly_tss_target: Optional[int] = None  # Manual weekly TSS target (300-700), None=auto
     weekly_plan_enabled: bool = False  # Opt-in for weekly plan auto-generation
     weekly_plan_day: int = 0  # Day to generate (0=Sunday)
+    weekly_availability: Dict[str, str] = {
+        "0": "available", "1": "available", "2": "available",
+        "3": "available", "4": "available", "5": "available",
+        "6": "available",
+    }  # Day availability: available | unavailable | rest
 
 
 class UserApiKeys(BaseModel):
@@ -94,6 +99,11 @@ async def get_settings(user: dict = Depends(get_current_user)):
             weekly_tss_target=settings_data.get("weekly_tss_target"),
             weekly_plan_enabled=settings_data.get("weekly_plan_enabled", False),
             weekly_plan_day=settings_data.get("weekly_plan_day", 0),
+            weekly_availability=settings_data.get("weekly_availability", {
+                "0": "available", "1": "available", "2": "available",
+                "3": "available", "4": "available", "5": "available",
+                "6": "available",
+            }),
         ),
         api_keys_configured=bool(
             api_keys_data.get("intervals_api_key") and api_keys_data.get("athlete_id")
@@ -106,6 +116,17 @@ async def update_settings(
     settings: UserSettings, user: dict = Depends(get_current_user)
 ):
     """Update user settings."""
+    # Validate weekly_availability
+    valid_statuses = {"available", "unavailable", "rest"}
+    valid_keys = {str(i) for i in range(7)}
+    for key, val in settings.weekly_availability.items():
+        if key not in valid_keys:
+            raise HTTPException(status_code=422, detail=f"Invalid day key: {key}. Must be '0'-'6'.")
+        if val not in valid_statuses:
+            raise HTTPException(status_code=422, detail=f"Invalid status: {val}. Must be available|unavailable|rest.")
+    if not any(v == "available" for v in settings.weekly_availability.values()):
+        raise HTTPException(status_code=422, detail="At least one day must be 'available'.")
+
     supabase = get_supabase_admin_client()
 
     try:
@@ -124,6 +145,7 @@ async def update_settings(
                 "weekly_tss_target": settings.weekly_tss_target,
                 "weekly_plan_enabled": settings.weekly_plan_enabled,
                 "weekly_plan_day": settings.weekly_plan_day,
+                "weekly_availability": settings.weekly_availability,
             },
             on_conflict="user_id",
         ).execute()

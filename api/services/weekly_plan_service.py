@@ -58,6 +58,18 @@ DAILY_TSS_RATIOS = {
 }
 
 
+# Default weekly availability (all days available)
+DEFAULT_AVAILABILITY = {
+    "0": "available",
+    "1": "available",
+    "2": "available",
+    "3": "available",
+    "4": "available",
+    "5": "available",
+    "6": "available",
+}
+
+
 # ---------------------------------------------------------------------------
 # Per-style weekly structure templates
 # ---------------------------------------------------------------------------
@@ -213,6 +225,9 @@ WEEKLY_PLAN_USER_PROMPT = """# Athlete Context
 - **Current ATL (Fatigue):** {atl:.1f}
 - **Current TSB (Form):** {tsb:.1f} ({form_status})
 - **Weekly TSS Target:** {weekly_tss_target}
+
+# Weekly Availability
+{weekly_availability}
 
 # Daily TSS Targets
 Each day has a target TSS. Stay within ±15% of each day\'s target.
@@ -389,10 +404,29 @@ class WeeklyPlanGenerator:
             indoor_outdoor_pref=indoor_outdoor_pref,
         )
 
-        # Predict daily TSS targets
-        daily_tss_targets = self._predict_daily_tss(
-            weekly_tss_target, training_style, allowed_types
+        # Load weekly availability
+        weekly_availability = self.profile.get("weekly_availability", DEFAULT_AVAILABILITY)
+
+        # Pre-filter unavailable/rest days
+        unavailable_days = [
+            int(day) for day, status in weekly_availability.items()
+            if status in ["unavailable", "rest"]
+        ]
+        available_days = [
+            int(day) for day, status in weekly_availability.items()
+            if status == "available"
+        ]
+
+        # Predict daily TSS targets with availability
+        daily_tss_targets = self._predict_daily_tss_with_availability(
+            weekly_tss_target=weekly_tss_target,
+            training_style=training_style,
+            available_days=available_days,
+            unavailable_days=unavailable_days,
         )
+
+        # Format availability for prompt
+        availability_text = self._format_availability_for_prompt(weekly_availability)
         
         # Format daily TSS targets for prompt
         day_names = [
@@ -427,6 +461,7 @@ class WeeklyPlanGenerator:
             module_inventory=module_inventory,
             athlete_context=athlete_context,
             daily_tss_targets=daily_tss_targets_formatted,
+            weekly_availability=availability_text,
         )
 
         logger.info(f"Generating weekly plan for {week_start} to {week_end}")
@@ -526,6 +561,92 @@ class WeeklyPlanGenerator:
             lines.append(f"- **Wellness Score:** {wellness_score:.0f}/10")
         if indoor_outdoor_pref:
             lines.append(f"- **Preference:** {indoor_outdoor_pref}")
+        return "\n".join(lines)
+
+
+    # -----------------------------------------------------------------------
+    # Daily TSS prediction with availability
+    # -----------------------------------------------------------------------
+    def _predict_daily_tss_with_availability(
+        self,
+        weekly_tss_target: int,
+        training_style: str,
+        available_days: List[int],
+        unavailable_days: List[int],
+    ) -> Dict[int, int]:
+        """Availability를 고려한 일별 TSS 배분.
+
+        Args:
+            weekly_tss_target: 주간 목표 TSS
+            training_style: 트레이닝 스타일
+            available_days: 운동 가능 요일 인덱스 리스트 (0-6)
+            unavailable_days: 불가능/휴식 요일 인덱스 리스트
+
+        Returns:
+            Dict[int, int]: day_index -> target_tss
+
+        Raises:
+            ValueError: 모든 요일이 불가능한 경우
+        """
+        ratios = DAILY_TSS_RATIOS.get(training_style, DAILY_TSS_RATIOS["sweetspot"])
+        daily_tss = {}
+
+        # unavailable days get 0
+        for day in unavailable_days:
+            daily_tss[day] = 0
+
+        # available days get TSS redistribution
+        available_ratios = {day: ratios[day] for day in available_days}
+        total_ratio = sum(available_ratios.values())
+
+        if total_ratio == 0:
+            raise ValueError("At least one day must be available for workouts")
+
+        for day in available_days:
+            adjusted_ratio = available_ratios[day] / total_ratio
+            tss = int(round(weekly_tss_target * adjusted_ratio / 5) * 5)
+            max_tss = 180 if (training_style == "endurance" and day in [5, 6]) else 150
+            daily_tss[day] = min(tss, max_tss)
+
+        logger.info(
+            f"Predicted daily TSS with availability for {training_style}: {daily_tss} "
+            f"(total: {sum(daily_tss.values())})"
+        )
+        return daily_tss
+
+    # -----------------------------------------------------------------------
+    # Format availability for prompt
+    # -----------------------------------------------------------------------
+    def _format_availability_for_prompt(
+        self,
+        availability: Dict[str, str],
+    ) -> str:
+        """프롬프트용 availability 텍스트 생성."""
+        day_names = [
+            "Monday", "Tuesday", "Wednesday", "Thursday",
+            "Friday", "Saturday", "Sunday",
+        ]
+
+        lines = ["# User's Weekly Availability"]
+        for day_idx, day_name in enumerate(day_names):
+            status = availability.get(str(day_idx), "available")
+
+            if status == "unavailable":
+                icon = "🚫"
+                desc = "UNAVAILABLE - External constraint (work event, travel, etc.)"
+            elif status == "rest":
+                icon = "😴"
+                desc = "REST - User's active choice for recovery"
+            else:
+                icon = "✅"
+                desc = "Available for workout"
+
+            lines.append(f"- {day_name}: {icon} {desc}")
+
+        lines.append("\nConstraints:")
+        lines.append("- NO workouts on UNAVAILABLE or REST days (assign Rest Day)")
+        lines.append("- Distribute workouts only across AVAILABLE days")
+
         return "\n".join(lines)
 
     # -----------------------------------------------------------------------
