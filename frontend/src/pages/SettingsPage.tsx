@@ -221,12 +221,9 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="available">
-                                                ✅ {t("settings.weeklyAvailability.available")}
+                                                🚴 {t("settings.weeklyAvailability.available")}
                                             </SelectItem>
-                                            <SelectItem value="unavailable">
-                                                🚫 {t("settings.weeklyAvailability.unavailable")}
-                                            </SelectItem>
-                                            <SelectItem value="rest">
+<SelectItem value="rest">
                                                 😴 {t("settings.weeklyAvailability.rest")}
                                             </SelectItem>
                                         </SelectContent>
