@@ -3,6 +3,12 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
+# Git info injected at build time
+ARG GIT_COMMIT=unknown
+ARG GIT_COMMIT_DATE=unknown
+ENV GIT_COMMIT=${GIT_COMMIT}
+ENV GIT_COMMIT_DATE=${GIT_COMMIT_DATE}
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     curl \
