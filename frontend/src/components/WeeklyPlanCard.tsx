@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
  * Displays weekly workout plan with vertical list and power profile charts
  */
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { WorkoutThumbnailChart } from "@/components/WorkoutThumbnailChart";
@@ -115,7 +115,7 @@ function DailyWorkoutRow({
     );
 }
 
-export function WeeklyPlanCard({
+export const WeeklyPlanCard = memo(function WeeklyPlanCard({
     plan,
     isLoading,
     isGenerating,
@@ -479,4 +479,4 @@ export function WeeklyPlanCard({
             />
         </Card>
     );
-}
+});

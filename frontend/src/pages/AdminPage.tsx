@@ -2,14 +2,18 @@
  * Admin Dashboard Page
  * 
  * Protected page for admin users to view statistics, API logs, and system monitoring.
+ * Uses SWR for data fetching with automatic caching and deduplication.
+ * (Vercel Best Practice: client-swr-dedup)
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useMemo } from 'react';
+import useSWR from 'swr';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CURRENT_VERSION } from '@/lib/version';
+import { createAuthFetcher, publicFetcher, defaultSWRConfig } from '@/lib/swr';
 
 // Types
 interface OverviewStats {
@@ -41,165 +45,91 @@ interface AuditLog {
     created_at: string;
 }
 
-interface DeploymentInfo {
-    frontend_version: string;
-    frontend_build_time: string;
-    backend_version: string;
-    backend_git_commit: string;
-    backend_git_commit_date: string;
-    backend_started_at: string;
-}
-
 interface AdminPageProps {
     onBack: () => void;
 }
-
-const API_BASE = import.meta.env.VITE_API_URL || '';
 
 export function AdminPage({ onBack }: AdminPageProps) {
     const { session } = useAuth();
     const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState<'overview' | 'api-logs' | 'audit-logs'>('overview');
-
-    // Overview stats
-    const [stats, setStats] = useState<OverviewStats | null>(null);
-    const [deployInfo, setDeployInfo] = useState<DeploymentInfo | null>(null);
-    const [statsLoading, setStatsLoading] = useState(true);
-
-    // API logs
-    const [apiLogs, setApiLogs] = useState<ApiLog[]>([]);
-    const [apiLogsLoading, setApiLogsLoading] = useState(false);
-    const [apiLogsPage, setApiLogsPage] = useState(1);
-    const [apiLogsTotal, setApiLogsTotal] = useState(0);
-
-    // Audit logs
-    const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
-    const [auditLogsLoading, setAuditLogsLoading] = useState(false);
-    const [auditLogsPage, setAuditLogsPage] = useState(1);
-    const [auditLogsTotal, setAuditLogsTotal] = useState(0);
-
-    // Weekly workout stats
-    const [weeklyWorkouts, setWeeklyWorkouts] = useState<Record<string, number>>({});
-
-    // User workout stats
-    const [userStats, setUserStats] = useState<{ user_id: string; email: string; count: number }[]>([]);
-    const [topUser, setTopUser] = useState<{ user_id: string; email: string; count: number } | null>(null);
-    const [uniqueUsers, setUniqueUsers] = useState(0);
     const [userStatsDays, setUserStatsDays] = useState<1 | 7 | 30>(7);
+    const [apiLogsPage, setApiLogsPage] = useState(1);
+    const [auditLogsPage, setAuditLogsPage] = useState(1);
 
-    const getHeaders = useCallback(() => ({
-        'Authorization': `Bearer ${session?.access_token}`,
-        'Content-Type': 'application/json',
-    }), [session?.access_token]);
+    // Memoize the authenticated fetcher to prevent unnecessary re-renders
+    const authFetcher = useMemo(
+        () => createAuthFetcher(session?.access_token),
+        [session?.access_token]
+    );
 
-    // Fetch overview stats
-    const fetchStats = useCallback(async () => {
-        if (!session?.access_token) return;
+    // --- SWR Hooks: Parallel data fetching with automatic caching & dedup ---
 
-        setStatsLoading(true);
-        try {
-            // Fetch overview stats
-            const response = await fetch(`${API_BASE}/api/admin/stats/overview`, {
-                headers: getHeaders(),
-            });
+    // Overview stats (Vercel Best Practice: async-parallel - SWR fires all hooks in parallel automatically)
+    const { data: stats, isLoading: statsLoading, mutate: mutateStats } = useSWR<OverviewStats>(
+        session?.access_token ? '/api/admin/stats/overview' : null,
+        authFetcher,
+        defaultSWRConfig
+    );
 
-            if (response.ok) {
-                const data = await response.json();
-                setStats(data);
-            }
+    // Workout stats (re-fetches when userStatsDays changes)
+    const { data: workoutData, mutate: mutateWorkouts } = useSWR(
+        session?.access_token ? `/api/admin/stats/workouts?days=${userStatsDays}` : null,
+        authFetcher,
+        defaultSWRConfig
+    );
 
-            // Fetch weekly workout stats (with user stats)
-            const workoutResponse = await fetch(`${API_BASE}/api/admin/stats/workouts?days=${userStatsDays}`, {
-                headers: getHeaders(),
-            });
+    // Health/deployment info (public endpoint, no auth needed)
+    const { data: healthData, mutate: mutateHealth } = useSWR(
+        '/api/health',
+        publicFetcher,
+        defaultSWRConfig
+    );
 
-            if (workoutResponse.ok) {
-                const workoutData = await workoutResponse.json();
-                setWeeklyWorkouts(workoutData.daily_workouts || {});
-                setUserStats(workoutData.user_stats || []);
-                setTopUser(workoutData.top_user || null);
-                setUniqueUsers(workoutData.unique_users || 0);
-            }
+    // API logs (only fetched when tab is active)
+    const { data: apiLogsData, isLoading: apiLogsLoading } = useSWR(
+        session?.access_token && activeTab === 'api-logs'
+            ? `/api/admin/api-logs?page=${apiLogsPage}&page_size=20`
+            : null,
+        authFetcher,
+        defaultSWRConfig
+    );
 
-            // Fetch backend health info
-            const healthResponse = await fetch(`${API_BASE}/api/health`);
-            if (healthResponse.ok) {
-                const healthData = await healthResponse.json();
-                setDeployInfo({
-                    frontend_version: CURRENT_VERSION,
-                    frontend_build_time: __BUILD_TIME__,
-                    backend_version: healthData.version || 'unknown',
-                    backend_git_commit: healthData.git_commit || 'unknown',
-                    backend_git_commit_date: healthData.git_commit_date || 'unknown',
-                    backend_started_at: healthData.started_at || 'unknown',
-                });
-            }
-        } catch (error) {
-            console.error('Failed to fetch stats:', error);
-        } finally {
-            setStatsLoading(false);
-        }
-    }, [session?.access_token, getHeaders, userStatsDays]);
+    // Audit logs (only fetched when tab is active)
+    const { data: auditLogsData, isLoading: auditLogsLoading } = useSWR(
+        session?.access_token && activeTab === 'audit-logs'
+            ? `/api/admin/audit-logs?page=${auditLogsPage}&page_size=20`
+            : null,
+        authFetcher,
+        defaultSWRConfig
+    );
 
-    // Fetch API logs
-    const fetchApiLogs = useCallback(async (page: number = 1) => {
-        if (!session?.access_token) return;
+    // --- Derived data ---
+    const weeklyWorkouts: Record<string, number> = workoutData?.daily_workouts || {};
+    const userStats: { user_id: string; email: string; count: number }[] = workoutData?.user_stats || [];
+    const topUser = workoutData?.top_user || null;
+    const uniqueUsers: number = workoutData?.unique_users || 0;
 
-        setApiLogsLoading(true);
-        try {
-            const response = await fetch(`${API_BASE}/api/admin/api-logs?page=${page}&page_size=20`, {
-                headers: getHeaders(),
-            });
+    const deployInfo = healthData ? {
+        frontend_version: CURRENT_VERSION,
+        frontend_build_time: __BUILD_TIME__,
+        backend_version: healthData.version || 'unknown',
+        backend_git_commit: healthData.git_commit || 'unknown',
+        backend_git_commit_date: healthData.git_commit_date || 'unknown',
+        backend_started_at: healthData.started_at || 'unknown',
+    } : null;
 
-            if (response.ok) {
-                const data = await response.json();
-                setApiLogs(data.logs);
-                setApiLogsTotal(data.total);
-                setApiLogsPage(page);
-            }
-        } catch (error) {
-            console.error('Failed to fetch API logs:', error);
-        } finally {
-            setApiLogsLoading(false);
-        }
-    }, [session?.access_token, getHeaders]);
+    const apiLogs: ApiLog[] = apiLogsData?.logs || [];
+    const apiLogsTotal: number = apiLogsData?.total || 0;
+    const auditLogs: AuditLog[] = auditLogsData?.logs || [];
+    const auditLogsTotal: number = auditLogsData?.total || 0;
 
-    // Fetch Audit logs
-    const fetchAuditLogs = useCallback(async (page: number = 1) => {
-        if (!session?.access_token) return;
-
-        setAuditLogsLoading(true);
-        try {
-            const response = await fetch(`${API_BASE}/api/admin/audit-logs?page=${page}&page_size=20`, {
-                headers: getHeaders(),
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                setAuditLogs(data.logs);
-                setAuditLogsTotal(data.total);
-                setAuditLogsPage(page);
-            }
-        } catch (error) {
-            console.error('Failed to fetch audit logs:', error);
-        } finally {
-            setAuditLogsLoading(false);
-        }
-    }, [session?.access_token, getHeaders]);
-
-    // Initial load
-    useEffect(() => {
-        fetchStats();
-    }, [fetchStats]);
-
-    // Load data when tab changes
-    useEffect(() => {
-        if (activeTab === 'api-logs' && apiLogs.length === 0) {
-            fetchApiLogs(1);
-        } else if (activeTab === 'audit-logs' && auditLogs.length === 0) {
-            fetchAuditLogs(1);
-        }
-    }, [activeTab, apiLogs.length, auditLogs.length, fetchApiLogs, fetchAuditLogs]);
+    // Refresh all data
+    const handleRefresh = () => {
+        mutateStats();
+        mutateWorkouts();
+        mutateHealth();
+    };
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleString('ko-KR', {
@@ -244,7 +174,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
                             <p className="text-muted-foreground text-sm">{t('admin.subtitle')}</p>
                         </div>
                     </div>
-                    <Button variant="outline" onClick={fetchStats}>
+                    <Button variant="outline" onClick={handleRefresh}>
                         {t("admin.refresh")}
                     </Button>
                 </div>
@@ -276,7 +206,6 @@ export function AdminPage({ onBack }: AdminPageProps) {
                 {/* Overview Tab */}
                 {activeTab === 'overview' && (
                     <div className="space-y-6">
-                        {/* Stats Cards */}
                         {/* Deployment Info */}
                         {deployInfo && (
                             <Card>
@@ -582,7 +511,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
                                             variant="outline"
                                             size="sm"
                                             disabled={apiLogsPage <= 1}
-                                            onClick={() => fetchApiLogs(apiLogsPage - 1)}
+                                            onClick={() => setApiLogsPage(p => p - 1)}
                                         >
                                             {t("admin.prevPage")}
                                         </Button>
@@ -593,7 +522,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
                                             variant="outline"
                                             size="sm"
                                             disabled={apiLogsPage * 20 >= apiLogsTotal}
-                                            onClick={() => fetchApiLogs(apiLogsPage + 1)}
+                                            onClick={() => setApiLogsPage(p => p + 1)}
                                         >
                                             {t("admin.nextPage")}
                                         </Button>
@@ -657,7 +586,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
                                             variant="outline"
                                             size="sm"
                                             disabled={auditLogsPage <= 1}
-                                            onClick={() => fetchAuditLogs(auditLogsPage - 1)}
+                                            onClick={() => setAuditLogsPage(p => p - 1)}
                                         >
                                             {t("admin.prevPage")}
                                         </Button>
@@ -668,7 +597,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
                                             variant="outline"
                                             size="sm"
                                             disabled={auditLogsPage * 20 >= auditLogsTotal}
-                                            onClick={() => fetchAuditLogs(auditLogsPage + 1)}
+                                            onClick={() => setAuditLogsPage(p => p + 1)}
                                         >
                                             {t("admin.nextPage")}
                                         </Button>
