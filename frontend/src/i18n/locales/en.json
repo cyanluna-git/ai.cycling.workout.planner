@@ -137,7 +137,28 @@
     "weeklyTssTarget": "Weekly TSS Target",
     "weeklyTssHint": "Set your weekly TSS target. Leave empty for auto-calculation based on CTL.",
     "tssAuto": "Auto",
-    "tssReset": "Reset to auto"
+    "tssReset": "Reset to auto",
+    "weeklyAvailability": {
+      "title": "Weekly Availability",
+      "description": "Set your available days for workouts. Unavailable days will be automatically set as rest days.",
+      "available": "Available",
+      "unavailable": "Unavailable",
+      "rest": "Rest (Active Choice)",
+      "days": {
+        "monday": "Monday",
+        "tuesday": "Tuesday",
+        "wednesday": "Wednesday",
+        "thursday": "Thursday",
+        "friday": "Friday",
+        "saturday": "Saturday",
+        "sunday": "Sunday"
+      },
+      "validation": {
+        "atLeastOne": "At least one day must be set as 'Available'."
+      },
+      "saveSuccess": "Weekly availability saved successfully.",
+      "saveError": "Failed to save settings."
+    }
   },
   "fitness": {
     "title": "📊 Today's Condition",
