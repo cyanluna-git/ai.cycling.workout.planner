@@ -6,7 +6,8 @@ import { TodayWorkoutCard } from "@/components/TodayWorkoutCard";
 import { WeeklyCalendarCard } from "@/components/WeeklyCalendarCard";
 import { WeeklyPlanCard } from "@/components/WeeklyPlanCard";
 import { AchievementBadges } from "@/components/AchievementBadges";
-import { FitnessCardSkeleton, WeeklyCalendarSkeleton, WeeklyPlanSkeleton, TodayWorkoutSkeleton } from '@/components/LoadingSkeletons';
+import { FitnessCardSkeleton, WeeklyCalendarSkeleton, WeeklyPlanSkeleton } from '@/components/LoadingSkeletons';
+import { CoachLoadingAnimation } from "@/components/CoachLoadingAnimation";
 import { UpdateAnnouncementModal } from "@/components/UpdateAnnouncementModal";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Button } from "@/components/ui/button";
@@ -138,7 +139,7 @@ function Dashboard() {
           <div className="space-y-6">
             {fitness ? <FitnessCard training={fitness.training} wellness={fitness.wellness} profile={fitness.profile} /> : <FitnessCardSkeleton />}
             {isLoadingCalendar ? <WeeklyCalendarSkeleton /> : <WeeklyCalendarCard calendar={weeklyCalendar} isLoading={false} onSelectDate={handleSelectDate} />}
-            {(!workout && isLoading) ? <TodayWorkoutSkeleton /> : <TodayWorkoutCard workout={workout} onGenerate={handleGenerate} onRegister={handleRegister} isLoading={isLoading} isRegistering={isRegistering} isRegistered={!!success && (success.includes(t('common.registered')) || success.includes("Registered"))} ftp={fitness?.profile?.ftp ?? 250} error={error} success={success} />}
+            {(!workout && isLoading) ? <CoachLoadingAnimation /> : <TodayWorkoutCard workout={workout} onGenerate={handleGenerate} onRegister={handleRegister} isLoading={isLoading} isRegistering={isRegistering} isRegistered={!!success && (success.includes(t('common.registered')) || success.includes("Registered"))} ftp={fitness?.profile?.ftp ?? 250} error={error} success={success} />}
           </div>
           <div className="space-y-4">
             {isLoadingPlan ? <WeeklyPlanSkeleton /> : <WeeklyPlanCard plan={weeklyPlan} isLoading={isLoadingPlan} isGenerating={isGeneratingPlan} isRegisteringAll={isRegisteringPlanAll} isSyncing={isSyncingPlan} currentWeekOffset={currentWeekOffset} tssProgress={tssProgress} onGenerate={handleGenerateWeeklyPlan} onDelete={handleDeleteWeeklyPlan} onRegisterAll={handleRegisterWeeklyPlanAll} onSync={handleSyncWeeklyPlan} onWeekNavigation={handleWeekNavigation} />}
