@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { WorkoutThumbnailChart } from "@/components/WorkoutThumbnailChart";
 import { WorkoutDetailModal } from "@/components/WorkoutDetailModal";
 import type { WeeklyPlan, DailyWorkout } from "@/lib/api";
+import { WeeklyPlanLoadingAnimation } from "@/components/CoachLoadingAnimation";
 
 interface TssProgress {
     target: number;
@@ -164,20 +165,8 @@ export const WeeklyPlanCard = memo(function WeeklyPlanCard({
         return `${formatDate(nextMonday)} ~ ${formatDate(nextSunday)}`;
     };
 
-    if (isLoading) {
-        return (
-            <Card>
-                <CardHeader>
-                    <CardTitle>{t("weeklyPlan.title")}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex items-center justify-center py-8">
-                        <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
-                        <span className="ml-2 text-muted-foreground">{t("common.loading")}</span>
-                    </div>
-                </CardContent>
-            </Card>
-        );
+    if (isLoading || isGenerating) {
+        return <WeeklyPlanLoadingAnimation />;
     }
 
     if (!plan) {
@@ -226,14 +215,7 @@ export const WeeklyPlanCard = memo(function WeeklyPlanCard({
                             disabled={isGenerating}
                             className="w-full sm:w-auto"
                         >
-                            {isGenerating ? (
-                                <>
-                                    <span className="animate-spin mr-2">⏳</span>
-                                    {t("common.generating")}
-                                </>
-                            ) : (
-                                t("weeklyPlan.generatePlan")
-                            )}
+                            {t("weeklyPlan.generatePlan")}
                         </Button>
                     </div>
                 </CardContent>

@@ -15,6 +15,7 @@ import type { GeneratedWorkout, WorkoutGenerateRequest } from "@/lib/api";
 import { WorkoutChart, getZoneColor } from "./WorkoutChart";
 import { cleanWorkoutName } from "@/lib/workout-utils";
 import { formatWorkoutSections } from "@/lib/format-workout-steps";
+import { CoachLoadingAnimation } from "./CoachLoadingAnimation";
 
 interface TodayWorkoutCardProps {
     workout: GeneratedWorkout | null;
@@ -78,6 +79,11 @@ export function TodayWorkoutCard({
             indoor,
         });
     };
+
+    // Show coach loading animation during generation
+    if (isLoading) {
+        return <CoachLoadingAnimation />;
+    }
 
     // Show preview if workout exists
     if (workout) {
@@ -230,14 +236,7 @@ export function TodayWorkoutCard({
                             disabled={isLoading}
                             className="flex-1 h-11 sm:h-9 transition-all active:scale-95"
                         >
-                            {isLoading ? (
-                                <>
-                                    <span className="animate-spin">⏳</span>
-                                    {t('common.generating')}
-                                </>
-                            ) : (
-                                `🔄 ${t('workout.regenerate')}`
-                            )}
+                            🔄 {t('workout.regenerate')}
                         </Button>
                         {isRegistered ? (
                             <div className="flex-1 bg-green-500/10 text-green-600 font-bold py-2 rounded-md text-center border border-green-200 dark:border-green-900 text-sm min-h-[44px] flex items-center justify-center">
@@ -338,14 +337,7 @@ export function TodayWorkoutCard({
                             disabled={isLoading}
                             className="flex-1 h-11 sm:h-9 transition-all active:scale-95"
                         >
-                            {isLoading ? (
-                                <>
-                                    <span className="animate-spin">⏳</span>
-                                    {t("common.generating")}
-                                </>
-                            ) : (
-                                t("workout.generate")
-                            )}
+                            {t("workout.generate")}
                         </Button>
                     </div>
                 </div>
