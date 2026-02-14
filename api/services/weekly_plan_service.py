@@ -404,6 +404,8 @@ class WeeklyPlanGenerator:
             )
             profile_candidates = "(Using legacy module system - no profiles available)"
         else:
+            import random
+            random.shuffle(candidates)
             profile_candidates = profile_service.format_candidates_for_prompt(candidates)
             module_inventory = ""  # Not used in profile mode
 
