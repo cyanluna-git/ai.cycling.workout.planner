@@ -59,7 +59,7 @@ def parse_zwo_element(elem):
             'type': 'warmup',
             'start_power': int(float(elem.get('PowerLow', '0.5')) * 100),
             'end_power': int(float(elem.get('PowerHigh', '0.75')) * 100),
-            'duration_sec': int(elem.get('Duration', '600'))
+            'duration_sec': int(float(elem.get('Duration', '600')))
         }
     
     elif tag == 'cooldown':
@@ -67,14 +67,14 @@ def parse_zwo_element(elem):
             'type': 'cooldown',
             'start_power': int(float(elem.get('PowerLow', '0.65')) * 100),
             'end_power': int(float(elem.get('PowerHigh', '0.4')) * 100),
-            'duration_sec': int(elem.get('Duration', '300'))
+            'duration_sec': int(float(elem.get('Duration', '300')))
         }
     
     elif tag == 'steadystate':
         return {
             'type': 'steady',
             'power': int(float(elem.get('Power', '1.0')) * 100),
-            'duration_sec': int(elem.get('Duration', '300'))
+            'duration_sec': int(float(elem.get('Duration', '300')))
         }
     
     elif tag == 'ramp':
@@ -82,14 +82,14 @@ def parse_zwo_element(elem):
             'type': 'ramp',
             'start_power': int(float(elem.get('PowerLow', '0.85')) * 100),
             'end_power': int(float(elem.get('PowerHigh', '0.95')) * 100),
-            'duration_sec': int(elem.get('Duration', '600'))
+            'duration_sec': int(float(elem.get('Duration', '600')))
         }
     
     elif tag == 'intervalst':
         # Zwift intervals
-        repeat = int(elem.get('Repeat', '1'))
-        on_duration = int(elem.get('OnDuration', '60'))
-        off_duration = int(elem.get('OffDuration', '60'))
+        repeat = int(float(elem.get('Repeat', '1')))
+        on_duration = int(float(elem.get('OnDuration', '60')))
+        off_duration = int(float(elem.get('OffDuration', '60')))
         on_power = int(float(elem.get('OnPower', '1.05')) * 100)
         off_power = int(float(elem.get('OffPower', '0.55')) * 100)
         
@@ -106,7 +106,7 @@ def parse_zwo_element(elem):
         return {
             'type': 'steady',
             'power': 60,
-            'duration_sec': int(elem.get('Duration', '300'))
+            'duration_sec': int(float(elem.get('Duration', '300')))
         }
     
     return None
@@ -339,12 +339,17 @@ def main():
         
         print(f"Found {len(zwo_files)} .zwo files\n")
         success_count = 0
+        failed_count = 0
         for zwo_file in zwo_files:
-            if import_zwo_to_db(zwo_file, db_path, args.category, args.difficulty):
-                success_count += 1
+            try:
+                if import_zwo_to_db(zwo_file, db_path, args.category, args.difficulty):
+                    success_count += 1
+            except Exception as e:
+                failed_count += 1
+                print(f"❌ Failed to import {zwo_file.name}: {str(e)[:100]}")
             print()
         
-        print(f"\n✅ Imported {success_count}/{len(zwo_files)} workouts")
+        print(f"\n✅ Imported {success_count}/{len(zwo_files)} workouts ({failed_count} failed)")
     else:
         print(f"❌ Path not found: {zwo_path}")
 
