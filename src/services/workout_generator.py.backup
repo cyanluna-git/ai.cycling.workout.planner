@@ -12,7 +12,6 @@ from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 from typing import Optional
-from pydantic import BaseModel
 
 from ..clients.llm import LLMClient
 from ..config import UserProfile
@@ -34,15 +33,6 @@ from .prompts import (
 logger = logging.getLogger(__name__)
 
 
-
-class CoachingNote(BaseModel):
-    """Structured coaching guidance for workout selection."""
-    selection_reason: str
-    focus_points: list[str] = []
-    warnings: list[str] = []
-    motivation: Optional[str] = None
-
-
 @dataclass
 class GeneratedWorkout:
     """Generated workout with metadata."""
@@ -54,7 +44,6 @@ class GeneratedWorkout:
     estimated_tss: Optional[int]
     workout_type: str  # Endurance, Threshold, VO2max, Recovery
     design_goal: Optional[str] = None
-    coaching: Optional[CoachingNote] = None  # Structured coaching note
     steps: Optional[list] = None  # Structured steps for API
     source: Optional[str] = None  # "profile_db" or "module_assembly"
 
@@ -331,7 +320,7 @@ You will receive:
 - Athlete's current training state (TSB, form, recent load)
 - Context (weekday, wellness, preferences)
 
-Respond with JSON only (in Korean):
+Respond with JSON only:
 {
   "profile_id": <selected profile ID>,
   "customization": {
@@ -341,22 +330,8 @@ Respond with JSON only (in Korean):
     "cooldown_adjust": <-5 to +10 minutes, default 0>
   },
   "workout_name": "<descriptive workout name>",
-  "coaching": {
-    "selection_reason": "<TSB 기반 피로도 분석 및 선택 이유 설명>",
-    "focus_points": ["<집중 포인트 1>", "<집중 포인트 2>"],
-    "warnings": ["<주의사항 1>", "<주의사항 2 if any>"],
-    "motivation": "<경쾌하고 격려적인 메시지>"
-  }
+  "design_goal": "<brief explanation of why this profile fits>"
 }
-
-**Coaching Guidelines (한국어로 작성):**
-1. **selection_reason**:
-   - TSB 음수 (-10 이하) → 어제 부하, 피로 누적 상태, 회복 운동 권장
-   - TSB 양수 (+5 이상) → 컸디션 좋음, 고강도 가능, 자신감 부여
-   - 웰니스 데이터 반영 (수면, 스트레스, 근육통)
-2. **focus_points**: 2-3개 구체적 지침 (페달링, 심박수, 호흡 등)
-3. **warnings**: TSB 매우 낮음 / 어제 고강도 후 회복 부족 시 경고
-4. **motivation**: 간결하고 격려적인 메시지, emoji 활용 OK
 
 Guidelines:
 - Match profile difficulty to athlete's TSB and form
@@ -602,22 +577,6 @@ Select the best profile and provide customization if needed.
                     # Convert to frontend format (keeps power in %FTP)
                     steps = profile_service.profile_to_frontend_steps(profile, self.profile.ftp)
                     
-                    # Extract coaching data
-                    coaching_data = profile_selection.get("coaching")
-                    coaching = None
-                    if coaching_data and isinstance(coaching_data, dict):
-                        try:
-                            coaching = CoachingNote(**coaching_data)
-                        except Exception as e:
-                            logger.warning(f"Failed to parse coaching note: {e}")
-                    
-                    # Backward compatibility: use design_goal if coaching not provided
-                    design_goal_text = None
-                    if coaching:
-                        design_goal_text = coaching.selection_reason
-                    elif profile_selection.get("design_goal"):
-                        design_goal_text = profile_selection.get("design_goal")
-                    
                     profile_based_workout = GeneratedWorkout(
                         name=f"{WORKOUT_PREFIX} {profile_selection.get('workout_name', profile['name'])}",
                         description=workout_text,
@@ -625,8 +584,7 @@ Select the best profile and provide customization if needed.
                         estimated_duration_minutes=profile["duration_minutes"],
                         estimated_tss=int(profile["estimated_tss"]),
                         workout_type=profile["category"].capitalize(),
-                        design_goal=design_goal_text,
-                        coaching=coaching,
+                        design_goal=profile_selection.get("design_goal"),
                         steps=steps,
                         source="profile_db",
                     )

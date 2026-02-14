@@ -44,8 +44,6 @@ class DailyWorkoutResponse(BaseModel):
     actual_type: Optional[str] = None
     status: str = "planned"
     workout_source: Optional[str] = None  # "profile_db" or "module_assembly"
-    design_goal: Optional[str] = None  # Backward compatibility
-    coaching: Optional[dict] = None  # Structured coaching note
 
 
 class WeeklyPlanResponse(BaseModel):
@@ -1008,16 +1006,6 @@ async def regenerate_today_workout(
         f"Cleared cache for user {user['id'][:8]}... after workout regeneration"
     )
 
-    # Prepare coaching dict for response
-    coaching_dict = None
-    if new_workout.coaching:
-        coaching_dict = {
-            "selection_reason": new_workout.coaching.selection_reason,
-            "focus_points": new_workout.coaching.focus_points,
-            "warnings": new_workout.coaching.warnings,
-            "motivation": new_workout.coaching.motivation,
-        }
-    
     return {
         "success": True,
         "workout": {
@@ -1027,8 +1015,6 @@ async def regenerate_today_workout(
             "tss": new_workout.estimated_tss,
             "description": new_workout.description,
             "source": new_workout.source or "unknown",
-            "design_goal": new_workout.design_goal,
-            "coaching": coaching_dict,
         },
     }
 
