@@ -329,6 +329,9 @@ class WorkoutGenerator:
                 logger.info("No profile candidates found, will use module assembly fallback")
                 return {}
             
+            # Shuffle candidates for variety (different order each time)
+            import random
+            random.shuffle(candidates)
             profile_candidates = profile_service.format_candidates_for_prompt(candidates)
             
             # Build LLM prompt for profile selection
@@ -357,8 +360,12 @@ Guidelines:
 - Consider recent load and weekly TSS
 - Use customization to fine-tune (keep adjustments minimal unless needed)
 - Choose variety when multiple profiles fit equally well
+- IMPORTANT: Do NOT always pick the same profile. Vary your selection across the candidates.
+- The profiles are shuffled randomly — pick from the first few that match well.
+- Prefer profiles you haven't suggested before for this athlete.
 """
             
+            variety_seed = random.randint(1, 1000)
             user_prompt = f"""**Available Workout Profiles:**
 {profile_candidates}
 
@@ -378,6 +385,7 @@ Guidelines:
 {wellness_text}
 
 Select the best profile and provide customization if needed.
+(Variety seed: {variety_seed} — use this to vary your selection)
 """
             
             response = self.llm.generate(
