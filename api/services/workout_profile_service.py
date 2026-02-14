@@ -6,6 +6,7 @@ Supports querying by category, duration, difficulty, and TSS range.
 
 import json
 import logging
+import random
 import sqlite3
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
@@ -39,7 +40,8 @@ class WorkoutProfileService:
         duration_range: Optional[Tuple[int, int]] = None,
         tss_range: Optional[Tuple[int, int]] = None,
         difficulty_max: Optional[str] = None,
-        limit: int = 30,
+        limit: int = 50,
+        exclude_profile_ids: Optional[List[int]] = None,
     ) -> List[Dict[str, Any]]:
         """Query workout profiles by filters.
 
@@ -49,7 +51,8 @@ class WorkoutProfileService:
             duration_range: (min_minutes, max_minutes)
             tss_range: (min_tss, max_tss)
             difficulty_max: Maximum difficulty ("beginner", "intermediate", "advanced")
-            limit: Maximum number of results
+            limit: Maximum number of results (default: 50 for better variety)
+            exclude_profile_ids: List of profile IDs to exclude (recently used)
 
         Returns:
             List of profile dictionaries
@@ -93,8 +96,14 @@ class WorkoutProfileService:
             query += f" AND difficulty IN ({placeholders})"
             params.extend(allowed_difficulties)
 
-        # Order by category and duration for better variety
-        query += " ORDER BY category, duration_minutes LIMIT ?"
+        # Exclude recently used profiles
+        if exclude_profile_ids:
+            placeholders = ",".join(["?" for _ in exclude_profile_ids])
+            query += f" AND id NOT IN ({placeholders})"
+            params.extend(exclude_profile_ids)
+
+        # Use RANDOM() for variety and avoid bias
+        query += " ORDER BY RANDOM() LIMIT ?"
         params.append(limit)
 
         try:
@@ -326,3 +335,93 @@ class WorkoutProfileService:
 
         logger.info(f"Converted profile {profile['id']} to {len(workout_steps)} workout steps")
         return workout_steps
+
+
+# ---------------------------------------------------------------------------
+# Shared Helper for LLM Profile Selection
+# ---------------------------------------------------------------------------
+
+# Training style to category mapping (shared constant)
+STYLE_CATEGORIES = {
+    "endurance": ["endurance", "recovery", "tempo"],
+    "sweetspot": ["sweetspot", "endurance", "threshold", "recovery"],
+    "threshold": ["threshold", "sweetspot", "vo2max", "endurance", "recovery"],
+    "polarized": ["endurance", "vo2max", "recovery"],
+    "vo2max": ["vo2max", "threshold", "endurance", "recovery"],
+    "sprint": ["sprint", "anaerobic", "endurance", "recovery"],
+    "climbing": ["climbing", "threshold", "sweetspot", "endurance", "recovery"],
+    "norwegian": ["threshold", "vo2max", "endurance", "recovery"],
+}
+
+
+def get_max_difficulty_from_tsb(tsb: float) -> str:
+    """Map TSB to maximum difficulty level.
+    
+    Args:
+        tsb: Training Stress Balance
+        
+    Returns:
+        Maximum difficulty: "beginner", "intermediate", or "advanced"
+    """
+    if tsb < -20:
+        return "beginner"
+    elif tsb < -10:
+        return "intermediate"
+    else:
+        return "advanced"
+
+
+def get_profile_candidates_for_llm(
+    tsb: float,
+    training_style: str,
+    duration: int,
+    duration_buffer: int = 30,
+    limit: int = 50,
+    exclude_profile_ids: Optional[List[int]] = None,
+    db_path: str = "data/workout_profiles.db",
+) -> Tuple[str, List[Dict[str, Any]]]:
+    """Get profile candidates formatted for LLM selection.
+    
+    This is a shared helper used by both daily workout generation
+    and weekly plan generation to ensure consistent candidate selection.
+    
+    Args:
+        tsb: Training Stress Balance
+        training_style: Training style ("polarized", "threshold", etc.)
+        duration: Target duration in minutes
+        duration_buffer: Buffer around target duration (default: 30min)
+        limit: Maximum number of candidates (default: 50)
+        exclude_profile_ids: List of profile IDs to exclude (recently used)
+        db_path: Path to workout profiles database
+        
+    Returns:
+        Tuple of (formatted_text_for_llm, raw_candidates_list)
+    """
+    # Initialize service
+    profile_service = WorkoutProfileService(db_path=db_path)
+    
+    # Calculate max difficulty from TSB
+    max_difficulty = get_max_difficulty_from_tsb(tsb)
+    
+    # Map training style to categories
+    categories = STYLE_CATEGORIES.get(training_style, None)
+    
+    # Get candidates with exclusions
+    candidates = profile_service.get_candidates(
+        categories=categories,
+        duration_range=(max(20, duration - duration_buffer), duration + duration_buffer),
+        difficulty_max=max_difficulty,
+        limit=limit,
+        exclude_profile_ids=exclude_profile_ids,
+    )
+    
+    if not candidates:
+        return "(No profiles available - fallback to legacy module system)", []
+    
+    # Shuffle for additional variety (on top of RANDOM())
+    random.shuffle(candidates)
+    
+    # Format for LLM prompt
+    formatted_text = profile_service.format_candidates_for_prompt(candidates)
+    
+    return formatted_text, candidates
