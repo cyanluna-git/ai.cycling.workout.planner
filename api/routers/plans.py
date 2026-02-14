@@ -491,10 +491,63 @@ async def get_current_weekly_plan(
         workout_date = datetime.strptime(workout["workout_date"], "%Y-%m-%d").date()
         day_index = (workout_date - week_start).days
 
-        # Convert planned_modules to planned_steps for chart rendering
+        # Convert to planned_steps for chart rendering
+        # Priority: profile_id (new) > planned_modules (legacy)
         planned_modules = workout.get("planned_modules", [])
         planned_steps = None
-        if planned_modules and len(planned_modules) > 0:
+        profile_id = workout.get("profile_id")
+        
+        if profile_id:
+            try:
+                from api.services.workout_profile_service import WorkoutProfileService
+                profile_service = WorkoutProfileService()
+                profile = profile_service.get_profile_by_id(profile_id)
+                if profile:
+                    customization = workout.get("customization") or {}
+                    if customization:
+                        profile = profile_service.apply_customization(profile, customization, ftp)
+                    raw_steps = profile_service.profile_to_steps(profile, ftp)
+                    # Convert to frontend WorkoutStep format
+                    planned_steps = []
+                    for step in raw_steps:
+                        st = step.get("type", "steady")
+                        if st == "warmup":
+                            fs = {"duration": step.get("duration_sec", 0), "warmup": True}
+                            if "start_power" in step and "end_power" in step:
+                                fs["ramp"] = True
+                                fs["power"] = {"start": round(step["start_power"] * 100 / ftp) if ftp else 0, "end": round(step["end_power"] * 100 / ftp) if ftp else 0, "units": "%ftp"}
+                            elif "power" in step:
+                                fs["power"] = {"value": round(step["power"] * 100 / ftp) if ftp else 0, "units": "%ftp"}
+                            planned_steps.append(fs)
+                        elif st == "cooldown":
+                            fs = {"duration": step.get("duration_sec", 0), "cooldown": True}
+                            if "start_power" in step and "end_power" in step:
+                                fs["ramp"] = True
+                                fs["power"] = {"start": round(step["start_power"] * 100 / ftp) if ftp else 0, "end": round(step["end_power"] * 100 / ftp) if ftp else 0, "units": "%ftp"}
+                            elif "power" in step:
+                                fs["power"] = {"value": round(step["power"] * 100 / ftp) if ftp else 0, "units": "%ftp"}
+                            planned_steps.append(fs)
+                        elif st == "intervals" and "repeat" in step:
+                            on_s = {"duration": step.get("on_sec", 0), "power": {"value": round(step.get("on_power", 0) * 100 / ftp) if ftp else 0, "units": "%ftp"}}
+                            off_s = {"duration": step.get("off_sec", 0), "power": {"value": round(step.get("off_power", 0) * 100 / ftp) if ftp else 0, "units": "%ftp"}}
+                            planned_steps.append({"repeat": step["repeat"], "steps": [on_s, off_s]})
+                        elif st == "ramp":
+                            fs = {"duration": step.get("duration_sec", 0), "ramp": True}
+                            if "start_power" in step and "end_power" in step:
+                                fs["power"] = {"start": round(step["start_power"] * 100 / ftp) if ftp else 0, "end": round(step["end_power"] * 100 / ftp) if ftp else 0, "units": "%ftp"}
+                            planned_steps.append(fs)
+                        else:
+                            fs = {"duration": step.get("duration_sec", 0)}
+                            if "power" in step:
+                                fs["power"] = {"value": round(step["power"] * 100 / ftp) if ftp else 0, "units": "%ftp"}
+                            elif "start_power" in step and "end_power" in step:
+                                fs["ramp"] = True
+                                fs["power"] = {"start": round(step["start_power"] * 100 / ftp) if ftp else 0, "end": round(step["end_power"] * 100 / ftp) if ftp else 0, "units": "%ftp"}
+                            planned_steps.append(fs)
+            except Exception as e:
+                logger.error(f"Failed to convert profile {profile_id} to steps: {e}")
+        
+        if not planned_steps and planned_modules and len(planned_modules) > 0:
             try:
                 planned_steps = convert_structure_to_steps(planned_modules, ftp)
             except Exception as e:
