@@ -566,12 +566,14 @@ Select the best profile and provide customization if needed.
                             profile, customization, self.profile.ftp
                         )
                     
-                    # Convert to steps with FTP
-                    workout_steps = profile_service.profile_to_steps(profile, self.profile.ftp)
+                    # Convert to steps for text format (uses watts)
+                    workout_steps_watts = profile_service.profile_to_steps(profile, self.profile.ftp)
                     
-                    # Convert steps to Intervals.icu text format
-                    workout_text = self._convert_profile_steps_to_text(workout_steps, self.profile.ftp)
-                    steps = self._convert_profile_steps_to_frontend_format(workout_steps, self.profile.ftp)
+                    # Convert steps to Intervals.icu text format (needs watts)
+                    workout_text = self._convert_profile_steps_to_text(workout_steps_watts, self.profile.ftp)
+                    
+                    # Convert to frontend format (keeps power in %FTP)
+                    steps = profile_service.profile_to_frontend_steps(profile, self.profile.ftp)
                     
                     profile_based_workout = GeneratedWorkout(
                         name=f"{WORKOUT_PREFIX} {profile_selection.get('workout_name', profile['name'])}",
