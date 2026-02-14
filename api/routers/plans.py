@@ -865,6 +865,8 @@ async def get_today_workout(user: dict = Depends(get_current_user)):
             actual_type=workout.get("actual_type"),
             status=workout.get("status", "planned"),
             workout_source="profile_db" if workout.get("profile_id") else "module_assembly",
+            design_goal=workout.get("actual_design_goal"),
+            coaching=workout.get("actual_coaching"),
         ),
         wellness_hint=wellness_hint,
         can_regenerate=workout.get("status") not in ["completed", "skipped"],
@@ -981,6 +983,16 @@ async def regenerate_today_workout(
         duration=user_settings.get("preferred_duration", 60),
     )
 
+    # Prepare coaching dict for DB storage
+    coaching_dict = None
+    if new_workout.coaching:
+        coaching_dict = {
+            "selection_reason": new_workout.coaching.selection_reason,
+            "focus_points": new_workout.coaching.focus_points,
+            "warnings": new_workout.coaching.warnings,
+            "motivation": new_workout.coaching.motivation,
+        }
+    
     # Update the daily workout with actual values
     supabase.table("daily_workouts").update(
         {
@@ -991,6 +1003,8 @@ async def regenerate_today_workout(
             "actual_description": new_workout.description,
             "actual_steps": new_workout.steps,
             "workout_source": new_workout.source or "unknown",
+            "actual_design_goal": new_workout.design_goal,
+            "actual_coaching": coaching_dict,
             "actual_generated_at": datetime.now().isoformat(),
             "regeneration_reason": request.reason or "Condition-based regeneration",
             "status": "regenerated",
