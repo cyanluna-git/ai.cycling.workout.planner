@@ -136,14 +136,10 @@ WEEKLY_PLAN_SYSTEM_PROMPT = """# Role
 You are an expert Cycling Coach creating a structured 7-day training plan.
 
 # Rules
-1. **Structure - CRITICAL MODULE ORDER:**
-   - **ALWAYS** follow this order: WARMUP modules -> MAIN modules -> COOLDOWN modules
-   - **WARMUP modules MUST be FIRST** (e.g., ramp_standard, progressive_ramp_15min)
-   - **COOLDOWN modules MUST be LAST** (e.g., flush_and_fade, extended_flush_25min)
-   - **NEVER** place cooldown modules at the beginning or warmup modules at the end
-   - Example CORRECT order: ["ramp_standard", "endurance_60min", "flush_and_fade"]
-   - Example WRONG order: ["flush_and_fade", "endurance_60min", "ramp_standard"]
-2. **Rest Days:** Include 1-2 complete rest days per week. For rest days, set type to "Rest" and modules to empty array.
+1. **Profile Selection:** Choose ONE workout profile per training day from the provided candidates.
+   - Each profile is a COMPLETE workout (warmup + main + cooldown included).
+   - You do NOT need to assemble modules.
+2. **Rest Days:** Include 1-2 complete rest days per week. For rest days, set profile_id to null.
 3. **TSB Management:**
    - If TSB < -20: Prioritize recovery, reduce intensity
    - If TSB -10 to -20: Moderate volume, limit high intensity
@@ -165,18 +161,13 @@ You are an expert Cycling Coach creating a structured 7-day training plan.
    - VO2max (110-120%% FTP): 30min intervals only = ~60-80 TSS total
    - NEVER exceed TSS 100 for 60min workout unless it's pure threshold
    - Long endurance rides: 120min at 70%% = ~100 TSS, 180min = ~150 TSS
-
-## Module Length Categories
-- **SHORT** (<15min): Quick intervals, short blocks
-- **MID** (15-45min): Standard interval sessions
-- **LONG** (45-75min): Extended steady-state or long interval sets
-- **VERYLONG** (75min+): Long endurance blocks (FatMax, Zone 2, Tempo)
-
-## Building Long Workouts (120min+)
-For 2-hour+ Zone 2/FatMax rides, use LONG/VERYLONG modules or combine multiple modules:
-- Example 120min Z2: [ramp_standard, endurance_60min, endurance_45min, flush_and_fade]
-- Example 150min Z2: [progressive_ramp_15min, endurance_60min, endurance_60min, flush_and_fade]
-- Example 180min Z2: [ramp_standard, endurance_60min, endurance_60min, endurance_60min, flush_and_fade]
+9. **Customization (Optional):** You may adjust selected profiles within allowed ranges shown in each profile:
+   - repeat_adjust: Change interval repetitions (e.g., -1 = one fewer set)
+   - power_adjust: Change power targets in percentage points (e.g., -5 = 5%% lower)
+   - warmup_adjust: Change warmup duration in minutes
+   - cooldown_adjust: Change cooldown duration in minutes
+   Only customize when athlete condition warrants it (high fatigue, recovery week, etc.)
+   Set customization to null if no changes needed.
 
 # Output Format
 Generate a JSON array with daily plans. For Norwegian style with double sessions, you may have more than 7 entries:
@@ -187,24 +178,24 @@ Generate a JSON array with daily plans. For Norwegian style with double sessions
     "day_index": 0,
     "day_name": "Monday",
     "date": "2026-01-13",
-    "session": "AM|PM|null",
+    "session": null,
     "workout_type": "Recovery|Endurance|Tempo|SweetSpot|Threshold|VO2max|Rest",
-    "workout_name": "Creative descriptive name",
-    "duration_minutes": 60,
-    "estimated_tss": 45,
+    "profile_id": 77,
+    "workout_name": "Active Recovery 30min",
+    "duration_minutes": 30,
+    "estimated_tss": 15,
     "intensity": "easy|moderate|hard|rest",
-    "selected_modules": ["warmup_key", "main_key", "rest_key", "main_key", "cooldown_key"],
-    "rationale": "Brief explanation of why this workout on this day"
+    "customization": null,
+    "rationale": "Brief explanation"
   }}
 ]
 ```
 
-**CRITICAL for selected_modules - ORDER MATTERS:**
-- **FIRST:** Always start with WARMUP module
-- **MIDDLE:** Main workout modules
-- **LAST:** Always end with COOLDOWN module
-- Use ONLY module keys from the inventory provided
-- DO NOT invent or modify module names
+**CRITICAL:**
+- Use ONLY profile IDs from the candidates list
+- For Rest days: set profile_id to null, duration_minutes to 0, estimated_tss to 0
+- customization must be null or an object with allowed keys (repeat_adjust, power_adjust, warmup_adjust, cooldown_adjust)
+- selected_modules is now optional (for backward compatibility with legacy module system)
 """
 
 
@@ -224,7 +215,7 @@ WEEKLY_PLAN_USER_PROMPT = """# Athlete Context
 {weekly_availability}
 
 # Daily TSS Targets
-Each day has a target TSS. Stay within ±15% of each day\'s target.
+Each day has a target TSS. Stay within ±15%% of each day's target.
 {daily_tss_targets}
 {athlete_context}
 
@@ -237,12 +228,12 @@ Do NOT use any workout type not in this list.
 ## Weekly Structure Guidelines
 {weekly_structure}
 
-# Available Workout Modules
-Below is the COMPLETE library of workout modules you MUST use.
-**CRITICAL:** You can ONLY use module keys from this list. Do NOT create, invent, or modify module names.
-If a module you want doesn't exist, choose the closest alternative from this list.
+# Available Workout Profiles
+Below are pre-built COMPLETE workout profiles (warmup + main + cooldown included).
+Select ONE profile per training day using its ID.
+**Use ONLY profile IDs from this list. Do NOT invent profile IDs.**
 
-{module_inventory}
+{profile_candidates}
 
 Generate the 7-day workout plan now. Output ONLY valid JSON array, no markdown or extra text.
 """
@@ -372,12 +363,49 @@ class WeeklyPlanGenerator:
             weekly_tss_target = int(base_tss * multiplier)
             logger.info(f"Auto-calculated weekly_tss_target: {weekly_tss_target} (CTL={ctl}, focus={training_focus})")
 
-        # Get module inventory
-        from src.services.workout_modules import get_module_inventory_text
-
-        module_inventory = get_module_inventory_text(
-            exclude_barcode=exclude_barcode, training_style=training_style
+        # Get profile candidates from DB
+        from api.services.workout_profile_service import WorkoutProfileService
+        profile_service = WorkoutProfileService()
+        
+        # TSB-based difficulty filter
+        if tsb < -20:
+            max_difficulty = "beginner"
+        elif tsb < -10:
+            max_difficulty = "intermediate"
+        else:
+            max_difficulty = "advanced"
+        
+        # Style-based category mapping
+        style_categories = {
+            "endurance": ["endurance", "recovery", "tempo"],
+            "sweetspot": ["sweetspot", "endurance", "threshold", "recovery"],
+            "threshold": ["threshold", "sweetspot", "vo2max", "endurance", "recovery"],
+            "polarized": ["endurance", "vo2max", "recovery"],
+            "vo2max": ["vo2max", "threshold", "endurance", "recovery"],
+            "sprint": ["sprint", "anaerobic", "endurance", "recovery"],
+            "climbing": ["climbing", "threshold", "sweetspot", "endurance", "recovery"],
+            "norwegian": ["threshold", "vo2max", "endurance", "recovery"],
+        }
+        categories = style_categories.get(training_style, None)
+        
+        candidates = profile_service.get_candidates(
+            categories=categories,
+            duration_range=(20, int(self.profile.get("preferred_duration", 60)) + 60),
+            difficulty_max=max_difficulty,
+            limit=30,
         )
+        
+        # Fallback to legacy module system if no profiles available
+        if not candidates:
+            logger.warning("No profile candidates found, falling back to legacy module system")
+            from src.services.workout_modules import get_module_inventory_text
+            module_inventory = get_module_inventory_text(
+                exclude_barcode=exclude_barcode, training_style=training_style
+            )
+            profile_candidates = "(Using legacy module system - no profiles available)"
+        else:
+            profile_candidates = profile_service.format_candidates_for_prompt(candidates)
+            module_inventory = ""  # Not used in profile mode
 
         # Get style-specific weekly structure template
         weekly_structure = WEEKLY_STRUCTURE_TEMPLATES.get(
@@ -454,7 +482,7 @@ class WeeklyPlanGenerator:
             week_start=week_start.strftime("%Y-%m-%d"),
             week_end=week_end.strftime("%Y-%m-%d"),
             weekly_structure=weekly_structure,
-            module_inventory=module_inventory,
+            profile_candidates=profile_candidates,
             athlete_context=athlete_context,
             daily_tss_targets=daily_tss_targets_formatted,
             weekly_availability=availability_text,
