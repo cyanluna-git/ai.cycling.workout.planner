@@ -45,6 +45,7 @@ class GeneratedWorkout:
     workout_type: str  # Endurance, Threshold, VO2max, Recovery
     design_goal: Optional[str] = None
     steps: Optional[list] = None  # Structured steps for API
+    source: Optional[str] = None  # "profile_db" or "module_assembly"
 
 
 class WorkoutGenerator:
@@ -585,6 +586,7 @@ Select the best profile and provide customization if needed.
                         workout_type=profile["category"].capitalize(),
                         design_goal=profile_selection.get("design_goal"),
                         steps=steps,
+                        source="profile_db",
                     )
                     logger.info(f"✓ Generated workout from Profile DB: {profile['name']}")
         except Exception as e:
@@ -684,6 +686,7 @@ Select the best profile and provide customization if needed.
             workout_type=skeleton.workout_type,
             design_goal=design_goal,
             steps=steps,
+            source="module_assembly",
         )
 
     def _validate_steps(self, steps: list) -> list:
