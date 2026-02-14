@@ -284,6 +284,106 @@ class WorkoutProfileService:
         logger.info(f"Applied customization to profile {profile['id']}: {customization}")
         return profile_copy
 
+    def profile_to_frontend_steps(self, profile: Dict[str, Any], ftp: int) -> List[Dict[str, Any]]:
+        """Convert profile steps to frontend WorkoutStep format (power in %FTP).
+        
+        This method reads raw steps from profile's steps_json and converts them
+        to the frontend format while keeping power values as %FTP (not watts).
+        
+        Args:
+            profile: Profile dictionary with steps_json
+            ftp: User's FTP in watts (used for metadata, not conversion)
+            
+        Returns:
+            List of frontend-format workout steps with power in %FTP
+        """
+        steps_data = profile.get("steps_json", {}).get("steps", [])
+        frontend_steps = []
+        
+        for step in steps_data:
+            step_type = step.get("type", "steady")
+            
+            if step_type == "warmup":
+                fs = {"duration": step.get("duration_sec", 0), "warmup": True}
+                if "start_power" in step and "end_power" in step:
+                    fs["ramp"] = True
+                    fs["power"] = {
+                        "start": round(step["start_power"]),
+                        "end": round(step["end_power"]),
+                        "units": "%ftp"
+                    }
+                elif "power" in step:
+                    fs["power"] = {
+                        "value": round(step["power"]),
+                        "units": "%ftp"
+                    }
+                frontend_steps.append(fs)
+                
+            elif step_type == "cooldown":
+                fs = {"duration": step.get("duration_sec", 0), "cooldown": True}
+                if "start_power" in step and "end_power" in step:
+                    fs["ramp"] = True
+                    fs["power"] = {
+                        "start": round(step["start_power"]),
+                        "end": round(step["end_power"]),
+                        "units": "%ftp"
+                    }
+                elif "power" in step:
+                    fs["power"] = {
+                        "value": round(step["power"]),
+                        "units": "%ftp"
+                    }
+                frontend_steps.append(fs)
+                
+            elif step_type == "intervals" and "repeat" in step:
+                on_step = {
+                    "duration": step.get("on_sec", 0),
+                    "power": {
+                        "value": round(step.get("on_power", 0)),
+                        "units": "%ftp"
+                    }
+                }
+                off_step = {
+                    "duration": step.get("off_sec", 0),
+                    "power": {
+                        "value": round(step.get("off_power", 0)),
+                        "units": "%ftp"
+                    }
+                }
+                frontend_steps.append({
+                    "repeat": step["repeat"],
+                    "steps": [on_step, off_step]
+                })
+                
+            elif step_type == "ramp":
+                fs = {"duration": step.get("duration_sec", 0), "ramp": True}
+                if "start_power" in step and "end_power" in step:
+                    fs["power"] = {
+                        "start": round(step["start_power"]),
+                        "end": round(step["end_power"]),
+                        "units": "%ftp"
+                    }
+                frontend_steps.append(fs)
+                
+            else:  # steady
+                fs = {"duration": step.get("duration_sec", 0)}
+                if "start_power" in step and "end_power" in step:
+                    fs["ramp"] = True
+                    fs["power"] = {
+                        "start": round(step["start_power"]),
+                        "end": round(step["end_power"]),
+                        "units": "%ftp"
+                    }
+                elif "power" in step:
+                    fs["power"] = {
+                        "value": round(step["power"]),
+                        "units": "%ftp"
+                    }
+                frontend_steps.append(fs)
+        
+        logger.info(f"Converted profile {profile['id']} to {len(frontend_steps)} frontend steps (power in %FTP)")
+        return frontend_steps
+
     def profile_to_steps(self, profile: Dict[str, Any], ftp: int) -> List[Dict[str, Any]]:
         """Convert profile steps to workout steps with FTP applied.
 
