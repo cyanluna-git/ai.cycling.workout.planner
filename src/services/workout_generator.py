@@ -6,6 +6,7 @@ and user profile.
 
 import json
 import logging
+import random
 import re
 from dataclasses import dataclass
 from datetime import date
