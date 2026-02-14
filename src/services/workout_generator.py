@@ -107,12 +107,12 @@ class WorkoutGenerator:
                 duration_min = step.get("duration_sec", 0) // 60
                 if "start_power" in step and "end_power" in step:
                     # Ramp
-                    start_pct = int(step["start_power"] * 100 / ftp)
-                    end_pct = int(step["end_power"] * 100 / ftp)
+                    start_pct = int(step["start_power"])
+                    end_pct = int(step["end_power"])
                     lines.append(f"- {duration_min}m {start_pct}% -> {end_pct}%")
                 else:
                     # Steady
-                    power_pct = int(step.get("power", 0) * 100 / ftp)
+                    power_pct = int(step.get("power", 0))
                     lines.append(f"- {duration_min}m {power_pct}%")
             
             # Cooldown section
@@ -125,11 +125,11 @@ class WorkoutGenerator:
                 
                 duration_min = step.get("duration_sec", 0) // 60
                 if "start_power" in step and "end_power" in step:
-                    start_pct = int(step["start_power"] * 100 / ftp)
-                    end_pct = int(step["end_power"] * 100 / ftp)
+                    start_pct = int(step["start_power"])
+                    end_pct = int(step["end_power"])
                     lines.append(f"- {duration_min}m {start_pct}% -> {end_pct}%")
                 else:
-                    power_pct = int(step.get("power", 0) * 100 / ftp)
+                    power_pct = int(step.get("power", 0))
                     lines.append(f"- {duration_min}m {power_pct}%")
             
             # Main set (intervals or steady)
@@ -147,8 +147,8 @@ class WorkoutGenerator:
                     off_sec = step.get("off_sec", 0)
                     on_min = on_sec // 60
                     off_min = off_sec // 60
-                    on_pct = int(step.get("on_power", 0) * 100 / ftp)
-                    off_pct = int(step.get("off_power", 0) * 100 / ftp)
+                    on_pct = int(step.get("on_power", 0))
+                    off_pct = int(step.get("off_power", 0))
                     
                     if on_sec % 60 != 0 or off_sec % 60 != 0:
                         # Use seconds if not exact minutes
@@ -161,11 +161,11 @@ class WorkoutGenerator:
                     duration_min = step["duration_sec"] // 60
                     if "start_power" in step and "end_power" in step:
                         # Ramp in main set
-                        start_pct = int(step["start_power"] * 100 / ftp)
-                        end_pct = int(step["end_power"] * 100 / ftp)
+                        start_pct = int(step["start_power"])
+                        end_pct = int(step["end_power"])
                         lines.append(f"- {duration_min}m {start_pct}% -> {end_pct}%")
                     else:
-                        power_pct = int(step.get("power", 0) * 100 / ftp)
+                        power_pct = int(step.get("power", 0))
                         lines.append(f"- {duration_min}m {power_pct}%")
         
         return "\n".join(lines)
@@ -188,13 +188,13 @@ class WorkoutGenerator:
                 if "start_power" in step and "end_power" in step:
                     fs["ramp"] = True
                     fs["power"] = {
-                        "start": round(step["start_power"] * 100 / ftp) if ftp else 0,
-                        "end": round(step["end_power"] * 100 / ftp) if ftp else 0,
+                        "start": round(step["start_power"]),
+                        "end": round(step["end_power"]),
                         "units": "%ftp"
                     }
                 elif "power" in step:
                     fs["power"] = {
-                        "value": round(step["power"] * 100 / ftp) if ftp else 0,
+                        "value": round(step["power"]),
                         "units": "%ftp"
                     }
                 frontend_steps.append(fs)
@@ -204,13 +204,13 @@ class WorkoutGenerator:
                 if "start_power" in step and "end_power" in step:
                     fs["ramp"] = True
                     fs["power"] = {
-                        "start": round(step["start_power"] * 100 / ftp) if ftp else 0,
-                        "end": round(step["end_power"] * 100 / ftp) if ftp else 0,
+                        "start": round(step["start_power"]),
+                        "end": round(step["end_power"]),
                         "units": "%ftp"
                     }
                 elif "power" in step:
                     fs["power"] = {
-                        "value": round(step["power"] * 100 / ftp) if ftp else 0,
+                        "value": round(step["power"]),
                         "units": "%ftp"
                     }
                 frontend_steps.append(fs)
@@ -219,14 +219,14 @@ class WorkoutGenerator:
                 on_step = {
                     "duration": step.get("on_sec", 0),
                     "power": {
-                        "value": round(step.get("on_power", 0) * 100 / ftp) if ftp else 0,
+                        "value": round(step.get("on_power", 0)),
                         "units": "%ftp"
                     }
                 }
                 off_step = {
                     "duration": step.get("off_sec", 0),
                     "power": {
-                        "value": round(step.get("off_power", 0) * 100 / ftp) if ftp else 0,
+                        "value": round(step.get("off_power", 0)),
                         "units": "%ftp"
                     }
                 }
@@ -239,8 +239,8 @@ class WorkoutGenerator:
                 fs = {"duration": step.get("duration_sec", 0), "ramp": True}
                 if "start_power" in step and "end_power" in step:
                     fs["power"] = {
-                        "start": round(step["start_power"] * 100 / ftp) if ftp else 0,
-                        "end": round(step["end_power"] * 100 / ftp) if ftp else 0,
+                        "start": round(step["start_power"]),
+                        "end": round(step["end_power"]),
                         "units": "%ftp"
                     }
                 frontend_steps.append(fs)
@@ -250,13 +250,13 @@ class WorkoutGenerator:
                 if "start_power" in step and "end_power" in step:
                     fs["ramp"] = True
                     fs["power"] = {
-                        "start": round(step["start_power"] * 100 / ftp) if ftp else 0,
-                        "end": round(step["end_power"] * 100 / ftp) if ftp else 0,
+                        "start": round(step["start_power"]),
+                        "end": round(step["end_power"]),
                         "units": "%ftp"
                     }
                 elif "power" in step:
                     fs["power"] = {
-                        "value": round(step["power"] * 100 / ftp) if ftp else 0,
+                        "value": round(step["power"]),
                         "units": "%ftp"
                     }
                 frontend_steps.append(fs)

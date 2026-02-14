@@ -31,6 +31,28 @@ function getZoneColor(power: number): string {
  * Format a single step to text with watts
  */
 function formatStepText(step: WorkoutStep, ftp: number): FormattedStep {
+    // Handle repeat blocks FIRST (they don't have duration)
+    if (step.repeat && step.steps) {
+        const nestedTexts = step.steps.map(s => formatStepText(s, ftp).text);
+        const nestedStr = nestedTexts.join(' / ');
+
+        // Find max power for color
+        let maxPower = 0;
+        step.steps.forEach(s => {
+            if (s.ramp && s.power?.end !== undefined) {
+                maxPower = Math.max(maxPower, s.power.end);
+            } else if (s.power?.value !== undefined) {
+                maxPower = Math.max(maxPower, s.power.value);
+            }
+        });
+        const color = getZoneColor(maxPower);
+
+        return {
+            text: `${step.repeat}x (${nestedStr})`,
+            color
+        };
+    }
+
     const duration_min = Math.round(step.duration / 60);
 
     // Handle ramp steps
@@ -57,28 +79,6 @@ function formatStepText(step: WorkoutStep, ftp: number): FormattedStep {
 
         return {
             text: `${duration_min}m ${power}% (${watts}w)`,
-            color
-        };
-    }
-
-    // Handle repeat blocks
-    if (step.repeat && step.steps) {
-        const nestedTexts = step.steps.map(s => formatStepText(s, ftp).text);
-        const nestedStr = nestedTexts.join(' / ');
-
-        // Find max power for color
-        let maxPower = 0;
-        step.steps.forEach(s => {
-            if (s.ramp && s.power?.end !== undefined) {
-                maxPower = Math.max(maxPower, s.power.end);
-            } else if (s.power?.value !== undefined) {
-                maxPower = Math.max(maxPower, s.power.value);
-            }
-        });
-        const color = getZoneColor(maxPower);
-
-        return {
-            text: `${step.repeat}x (${nestedStr})`,
             color
         };
     }
