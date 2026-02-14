@@ -43,6 +43,7 @@ class DailyWorkoutResponse(BaseModel):
     actual_name: Optional[str] = None
     actual_type: Optional[str] = None
     status: str = "planned"
+    workout_source: Optional[str] = None  # "profile_db" or "module_assembly"
 
 
 class WeeklyPlanResponse(BaseModel):
@@ -535,6 +536,7 @@ async def get_current_weekly_plan(
                 actual_name=workout.get("actual_name"),
                 actual_type=workout.get("actual_type"),
                 status=workout.get("status", "planned"),
+                workout_source="profile_db" if workout.get("profile_id") else "module_assembly",
             )
         )
 
@@ -860,6 +862,7 @@ async def get_today_workout(user: dict = Depends(get_current_user)):
             actual_name=workout.get("actual_name"),
             actual_type=workout.get("actual_type"),
             status=workout.get("status", "planned"),
+            workout_source="profile_db" if workout.get("profile_id") else "module_assembly",
         ),
         wellness_hint=wellness_hint,
         can_regenerate=workout.get("status") not in ["completed", "skipped"],
@@ -985,6 +988,7 @@ async def regenerate_today_workout(
             "actual_tss": new_workout.estimated_tss,
             "actual_description": new_workout.description,
             "actual_steps": new_workout.steps,
+            "workout_source": new_workout.source or "unknown",
             "actual_generated_at": datetime.now().isoformat(),
             "regeneration_reason": request.reason or "Condition-based regeneration",
             "status": "regenerated",
@@ -1010,6 +1014,7 @@ async def regenerate_today_workout(
             "duration": new_workout.estimated_duration_minutes,
             "tss": new_workout.estimated_tss,
             "description": new_workout.description,
+            "source": new_workout.source or "unknown",
         },
     }
 
