@@ -14,12 +14,12 @@ steps:
     args:
       - '-c'
       - |
-        COMMIT_DATE=$(cat /workspace/_commit_date.txt)
+        COMMIT_DATE=$$(cat /workspace/_commit_date.txt)
         docker build \
           -t asia-northeast3-docker.pkg.dev/$PROJECT_ID/cycling-coach/backend:$COMMIT_SHA \
           -t asia-northeast3-docker.pkg.dev/$PROJECT_ID/cycling-coach/backend:latest \
           --build-arg GIT_COMMIT=$SHORT_SHA \
-          --build-arg "GIT_COMMIT_DATE=$COMMIT_DATE" \
+          --build-arg "GIT_COMMIT_DATE=$$COMMIT_DATE" \
           -f Dockerfile.backend .
 
   # Push the image
