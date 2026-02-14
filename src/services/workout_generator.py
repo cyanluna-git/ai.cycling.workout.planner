@@ -9,6 +9,7 @@ import logging
 import re
 from dataclasses import dataclass
 from datetime import date
+from pathlib import Path
 from typing import Optional
 
 from ..clients.llm import LLMClient
@@ -78,6 +79,231 @@ class WorkoutGenerator:
         self.profile = user_profile
         self.max_duration = max_duration_minutes
         self.validator = WorkoutValidator(max_duration_minutes=max_duration_minutes * 2)
+
+    def _convert_profile_steps_to_text(self, steps: list, ftp: int) -> str:
+        """Convert profile steps (in watts) to Intervals.icu text format.
+        
+        Args:
+            steps: List of step dicts with power in watts, duration in seconds
+            ftp: User's FTP for converting watts to %FTP
+        
+        Returns:
+            Formatted workout text string
+        """
+        lines = []
+        current_section = None
+        
+        for step in steps:
+            step_type = step.get("type")
+            
+            # Warmup section
+            if step_type == "warmup":
+                if current_section != "warmup":
+                    if lines:  # Add blank line before new section
+                        lines.append("")
+                    lines.append("Warmup")
+                    current_section = "warmup"
+                
+                duration_min = step.get("duration_sec", 0) // 60
+                if "start_power" in step and "end_power" in step:
+                    # Ramp
+                    start_pct = int(step["start_power"] * 100 / ftp)
+                    end_pct = int(step["end_power"] * 100 / ftp)
+                    lines.append(f"- {duration_min}m {start_pct}% -> {end_pct}%")
+                else:
+                    # Steady
+                    power_pct = int(step.get("power", 0) * 100 / ftp)
+                    lines.append(f"- {duration_min}m {power_pct}%")
+            
+            # Cooldown section
+            elif step_type == "cooldown":
+                if current_section != "cooldown":
+                    if lines:
+                        lines.append("")
+                    lines.append("Cooldown")
+                    current_section = "cooldown"
+                
+                duration_min = step.get("duration_sec", 0) // 60
+                if "start_power" in step and "end_power" in step:
+                    start_pct = int(step["start_power"] * 100 / ftp)
+                    end_pct = int(step["end_power"] * 100 / ftp)
+                    lines.append(f"- {duration_min}m {start_pct}% -> {end_pct}%")
+                else:
+                    power_pct = int(step.get("power", 0) * 100 / ftp)
+                    lines.append(f"- {duration_min}m {power_pct}%")
+            
+            # Main set (intervals or steady)
+            else:
+                if current_section != "main":
+                    if lines:
+                        lines.append("")
+                    lines.append("Main Set")
+                    current_section = "main"
+                
+                if step_type == "intervals" and "repeat" in step:
+                    # Classic intervals
+                    repeats = step["repeat"]
+                    on_sec = step.get("on_sec", 0)
+                    off_sec = step.get("off_sec", 0)
+                    on_min = on_sec // 60
+                    off_min = off_sec // 60
+                    on_pct = int(step.get("on_power", 0) * 100 / ftp)
+                    off_pct = int(step.get("off_power", 0) * 100 / ftp)
+                    
+                    if on_sec % 60 != 0 or off_sec % 60 != 0:
+                        # Use seconds if not exact minutes
+                        lines.append(f"- {repeats}x {on_sec}s {on_pct}%, {off_sec}s {off_pct}%")
+                    else:
+                        lines.append(f"- {repeats}x {on_min}m {on_pct}%, {off_min}m {off_pct}%")
+                
+                elif "duration_sec" in step:
+                    # Steady effort
+                    duration_min = step["duration_sec"] // 60
+                    if "start_power" in step and "end_power" in step:
+                        # Ramp in main set
+                        start_pct = int(step["start_power"] * 100 / ftp)
+                        end_pct = int(step["end_power"] * 100 / ftp)
+                        lines.append(f"- {duration_min}m {start_pct}% -> {end_pct}%")
+                    else:
+                        power_pct = int(step.get("power", 0) * 100 / ftp)
+                        lines.append(f"- {duration_min}m {power_pct}%")
+        
+        return "\n".join(lines)
+
+    def _select_profile_with_llm(
+        self,
+        tsb: float,
+        form: str,
+        duration: int,
+        goal: str,
+        intensity: str = "moderate",
+        weekly_tss: int = 0,
+        yesterday_load: int = 0,
+        ftp: int = 0,
+        weight: float = 0,
+        indoor: bool = False,
+        weekday: str = "",
+        wellness_text: str = "",
+        training_style: str = "auto",
+    ) -> dict:
+        """Use LLM to select a profile from Profile DB candidates.
+        
+        Returns:
+            Dict with 'profile_id', 'customization', and 'workout_name'
+            Or empty dict if Profile DB not available
+        """
+        try:
+            # Check if Profile DB exists
+            db_path = Path("data/workout_profiles.db")
+            if not db_path.exists():
+                logger.info("Profile DB not found, will use module assembly fallback")
+                return {}
+            
+            from api.services.workout_profile_service import WorkoutProfileService
+            profile_service = WorkoutProfileService()
+            
+            # TSB-based difficulty filter
+            if tsb < -20:
+                max_difficulty = "beginner"
+            elif tsb < -10:
+                max_difficulty = "intermediate"
+            else:
+                max_difficulty = "advanced"
+            
+            # Style-based category mapping
+            style_categories = {
+                "endurance": ["endurance", "recovery", "tempo"],
+                "sweetspot": ["sweetspot", "endurance", "threshold", "recovery"],
+                "threshold": ["threshold", "sweetspot", "vo2max", "endurance", "recovery"],
+                "polarized": ["endurance", "vo2max", "recovery"],
+                "vo2max": ["vo2max", "threshold", "endurance", "recovery"],
+                "sprint": ["sprint", "anaerobic", "endurance", "recovery"],
+                "climbing": ["climbing", "threshold", "sweetspot", "endurance", "recovery"],
+                "norwegian": ["threshold", "vo2max", "endurance", "recovery"],
+            }
+            categories = style_categories.get(training_style, None)
+            
+            candidates = profile_service.get_candidates(
+                categories=categories,
+                duration_range=(20, duration + 30),
+                difficulty_max=max_difficulty,
+                limit=30,
+            )
+            
+            if not candidates:
+                logger.info("No profile candidates found, will use module assembly fallback")
+                return {}
+            
+            profile_candidates = profile_service.format_candidates_for_prompt(candidates)
+            
+            # Build LLM prompt for profile selection
+            system_prompt = """You are an expert cycling coach. Select the best workout profile from the database.
+
+You will receive:
+- List of available workout profiles with ID, name, category, duration, TSS, difficulty
+- Athlete's current training state (TSB, form, recent load)
+- Context (weekday, wellness, preferences)
+
+Respond with JSON only:
+{
+  "profile_id": <selected profile ID>,
+  "customization": {
+    "repeat_adjust": <-2 to +2, default 0>,
+    "power_adjust": <-10 to +10 percentage points, default 0>,
+    "warmup_adjust": <-5 to +10 minutes, default 0>,
+    "cooldown_adjust": <-5 to +10 minutes, default 0>
+  },
+  "workout_name": "<descriptive workout name>",
+  "design_goal": "<brief explanation of why this profile fits>"
+}
+
+Guidelines:
+- Match profile difficulty to athlete's TSB and form
+- Consider recent load and weekly TSS
+- Use customization to fine-tune (keep adjustments minimal unless needed)
+- Choose variety when multiple profiles fit equally well
+"""
+            
+            user_prompt = f"""**Available Workout Profiles:**
+{profile_candidates}
+
+**Athlete Context:**
+- FTP: {ftp}W
+- Weight: {weight}kg
+- Environment: {'Indoor Trainer' if indoor else 'Outdoor'}
+- Weekday: {weekday}
+- TSB: {tsb:.1f} (Form: {form})
+- Weekly TSS so far: {weekly_tss}
+- Yesterday's load: {yesterday_load} TSS
+- Target duration: ~{duration} minutes
+- Training goal: {goal}
+- Intensity preference: {intensity}
+
+**Wellness:**
+{wellness_text}
+
+Select the best profile and provide customization if needed.
+"""
+            
+            response = self.llm.generate(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt
+            )
+            
+            # Parse JSON response
+            match = re.search(r"\{.*\}", response, re.DOTALL)
+            if match:
+                json_str = match.group(0)
+                selection = json.loads(json_str)
+                logger.info(f"AI selected profile: {selection.get('profile_id')} - {selection.get('workout_name')}")
+                return selection
+            else:
+                logger.warning("Failed to parse profile selection from LLM")
+                return {}
+                
+        except Exception as e:
+            logger.warning(f"Profile selection with LLM failed: {e}")
+            return {}
 
     def _select_modules_with_llm(
         self,
@@ -168,10 +394,11 @@ class WorkoutGenerator:
         weekly_tss: int = 0,
         yesterday_load: int = 0,
     ) -> GeneratedWorkout:
-        """Generate a workout using enhanced skeleton-based approach.
+        """Generate a workout using Profile DB (preferred) or module assembly (fallback).
 
-        Uses protocol types (ramp warmup, classic intervals, step-up, etc.)
-        for more varied and structured workouts.
+        Flow:
+        1. Try Profile DB: get candidates → LLM selects profile → apply customization → convert to steps
+        2. Fallback to module assembly if Profile DB unavailable or selection fails
 
         Args:
             training_metrics: Current CTL/ATL/TSB metrics.
@@ -182,6 +409,8 @@ class WorkoutGenerator:
             intensity: Intensity preference (auto, easy, moderate, hard).
             indoor: If True, generate indoor trainer workout.
             duration: Target duration in minutes (default: 60).
+            weekly_tss: Weekly TSS accumulated so far.
+            yesterday_load: Yesterday's training load (TSS).
 
         Returns:
             GeneratedWorkout with name, description, and workout text.
@@ -205,7 +434,86 @@ class WorkoutGenerator:
         # Use passed duration
         target_duration = duration
 
-        # Use new modular assembler
+        # Collect athlete context for LLM
+        weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        weekday_str = weekdays[target_date.weekday()]
+
+        wellness_lines = []
+        if wellness_metrics.hrv:
+            wellness_lines.append(f"- HRV: {wellness_metrics.hrv}")
+        if wellness_metrics.rhr:
+            wellness_lines.append(f"- RHR: {wellness_metrics.rhr} bpm")
+        if wellness_metrics.sleep_hours:
+            wellness_lines.append(f"- Sleep: {wellness_metrics.sleep_hours:.1f} hours")
+        if wellness_metrics.readiness:
+            wellness_lines.append(f"- Readiness: {wellness_metrics.readiness}")
+        wellness_text = "\n".join(wellness_lines) if wellness_lines else "No data available"
+
+        goal_desc = self.profile.training_goal or "General Fitness"
+        if intensity and intensity != "auto":
+            goal_desc += f" (Preference: {intensity})"
+
+        # ==== NEW: Try Profile DB first ====
+        profile_based_workout = None
+        try:
+            logger.info("Attempting to generate workout from Profile DB...")
+            profile_selection = self._select_profile_with_llm(
+                tsb=tsb,
+                form=training_metrics.form_status,
+                duration=target_duration,
+                goal=goal_desc,
+                weekly_tss=weekly_tss,
+                yesterday_load=yesterday_load,
+                intensity=intensity,
+                ftp=self.profile.ftp,
+                weight=getattr(self.profile, "weight", 0),
+                indoor=indoor,
+                weekday=weekday_str,
+                wellness_text=wellness_text,
+                training_style=style,
+            )
+
+            if profile_selection and "profile_id" in profile_selection:
+                from api.services.workout_profile_service import WorkoutProfileService
+                profile_service = WorkoutProfileService()
+                
+                # Get selected profile
+                profile = profile_service.get_profile_by_id(profile_selection["profile_id"])
+                if profile:
+                    # Apply customization
+                    customization = profile_selection.get("customization", {})
+                    if customization:
+                        profile = profile_service.apply_customization(
+                            profile, customization, self.profile.ftp
+                        )
+                    
+                    # Convert to steps with FTP
+                    workout_steps = profile_service.profile_to_steps(profile, self.profile.ftp)
+                    
+                    # Convert steps to Intervals.icu text format
+                    workout_text = self._convert_profile_steps_to_text(workout_steps, self.profile.ftp)
+                    steps = workout_steps
+                    
+                    profile_based_workout = GeneratedWorkout(
+                        name=f"{WORKOUT_PREFIX} {profile_selection.get('workout_name', profile['name'])}",
+                        description=workout_text,
+                        workout_text=workout_text,
+                        estimated_duration_minutes=profile["duration_minutes"],
+                        estimated_tss=int(profile["estimated_tss"]),
+                        workout_type=profile["category"].capitalize(),
+                        design_goal=profile_selection.get("design_goal"),
+                        steps=steps,
+                    )
+                    logger.info(f"✓ Generated workout from Profile DB: {profile['name']}")
+        except Exception as e:
+            logger.warning(f"Profile DB generation failed, falling back to module assembly: {e}")
+
+        # If profile-based generation succeeded, return it
+        if profile_based_workout:
+            return profile_based_workout
+
+        # ==== FALLBACK: Module Assembly ====
+        logger.info("Using module assembly fallback...")
         from .workout_assembler import WorkoutAssembler
 
         assembler = WorkoutAssembler(
@@ -216,27 +524,7 @@ class WorkoutGenerator:
 
         # AI-Driven Selection with Fallback
         try:
-            # We treat 'intensity' as 'goal' hint if provided, otherwise use profile goal
-            goal_desc = self.profile.training_goal or "General Fitness"
-            if intensity and intensity != "auto":
-                goal_desc += f" (Preference: {intensity})"
-
-            # Collect athlete context for LLM (Step 3)
-            weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-            weekday_str = weekdays[target_date.weekday()]
-
-            wellness_lines = []
-            if wellness_metrics.hrv:
-                wellness_lines.append(f"- HRV: {wellness_metrics.hrv}")
-            if wellness_metrics.rhr:
-                wellness_lines.append(f"- RHR: {wellness_metrics.rhr} bpm")
-            if wellness_metrics.sleep_hours:
-                wellness_lines.append(f"- Sleep: {wellness_metrics.sleep_hours:.1f} hours")
-            if wellness_metrics.readiness:
-                wellness_lines.append(f"- Readiness: {wellness_metrics.readiness}")
-            wellness_text = "\n".join(wellness_lines) if wellness_lines else "No data available"
-
-            logger.info("Requesting workout plan from AI...")
+            logger.info("Requesting workout plan from AI (module mode)...")
             selection = self._select_modules_with_llm(
                 tsb=tsb,
                 form=training_metrics.form_status,
