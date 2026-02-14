@@ -170,6 +170,101 @@ class WorkoutGenerator:
         
         return "\n".join(lines)
 
+
+    def _convert_profile_steps_to_frontend_format(self, steps: list, ftp: int) -> list:
+        """Convert profile steps to frontend WorkoutStep format.
+        
+        Backend profile steps: {type, start_power, end_power, power, duration_sec, ...}
+        Frontend WorkoutStep: {duration, power: {value/start/end, units}, ramp, warmup, cooldown, repeat, steps}
+        """
+        frontend_steps = []
+        i = 0
+        while i < len(steps):
+            step = steps[i]
+            step_type = step.get("type", "steady")
+            
+            if step_type == "warmup":
+                fs = {"duration": step.get("duration_sec", 0), "warmup": True}
+                if "start_power" in step and "end_power" in step:
+                    fs["ramp"] = True
+                    fs["power"] = {
+                        "start": round(step["start_power"] * 100 / ftp) if ftp else 0,
+                        "end": round(step["end_power"] * 100 / ftp) if ftp else 0,
+                        "units": "%ftp"
+                    }
+                elif "power" in step:
+                    fs["power"] = {
+                        "value": round(step["power"] * 100 / ftp) if ftp else 0,
+                        "units": "%ftp"
+                    }
+                frontend_steps.append(fs)
+                
+            elif step_type == "cooldown":
+                fs = {"duration": step.get("duration_sec", 0), "cooldown": True}
+                if "start_power" in step and "end_power" in step:
+                    fs["ramp"] = True
+                    fs["power"] = {
+                        "start": round(step["start_power"] * 100 / ftp) if ftp else 0,
+                        "end": round(step["end_power"] * 100 / ftp) if ftp else 0,
+                        "units": "%ftp"
+                    }
+                elif "power" in step:
+                    fs["power"] = {
+                        "value": round(step["power"] * 100 / ftp) if ftp else 0,
+                        "units": "%ftp"
+                    }
+                frontend_steps.append(fs)
+                
+            elif step_type == "intervals" and "repeat" in step:
+                on_step = {
+                    "duration": step.get("on_sec", 0),
+                    "power": {
+                        "value": round(step.get("on_power", 0) * 100 / ftp) if ftp else 0,
+                        "units": "%ftp"
+                    }
+                }
+                off_step = {
+                    "duration": step.get("off_sec", 0),
+                    "power": {
+                        "value": round(step.get("off_power", 0) * 100 / ftp) if ftp else 0,
+                        "units": "%ftp"
+                    }
+                }
+                frontend_steps.append({
+                    "repeat": step["repeat"],
+                    "steps": [on_step, off_step]
+                })
+                
+            elif step_type == "ramp":
+                fs = {"duration": step.get("duration_sec", 0), "ramp": True}
+                if "start_power" in step and "end_power" in step:
+                    fs["power"] = {
+                        "start": round(step["start_power"] * 100 / ftp) if ftp else 0,
+                        "end": round(step["end_power"] * 100 / ftp) if ftp else 0,
+                        "units": "%ftp"
+                    }
+                frontend_steps.append(fs)
+                
+            else:  # steady
+                fs = {"duration": step.get("duration_sec", 0)}
+                if "start_power" in step and "end_power" in step:
+                    fs["ramp"] = True
+                    fs["power"] = {
+                        "start": round(step["start_power"] * 100 / ftp) if ftp else 0,
+                        "end": round(step["end_power"] * 100 / ftp) if ftp else 0,
+                        "units": "%ftp"
+                    }
+                elif "power" in step:
+                    fs["power"] = {
+                        "value": round(step["power"] * 100 / ftp) if ftp else 0,
+                        "units": "%ftp"
+                    }
+                frontend_steps.append(fs)
+            
+            i += 1
+        
+        return frontend_steps
+
     def _select_profile_with_llm(
         self,
         tsb: float,
@@ -492,7 +587,7 @@ Select the best profile and provide customization if needed.
                     
                     # Convert steps to Intervals.icu text format
                     workout_text = self._convert_profile_steps_to_text(workout_steps, self.profile.ftp)
-                    steps = workout_steps
+                    steps = self._convert_profile_steps_to_frontend_format(workout_steps, self.profile.ftp)
                     
                     profile_based_workout = GeneratedWorkout(
                         name=f"{WORKOUT_PREFIX} {profile_selection.get('workout_name', profile['name'])}",
