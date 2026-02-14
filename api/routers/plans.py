@@ -515,34 +515,34 @@ async def get_current_weekly_plan(
                             fs = {"duration": step.get("duration_sec", 0), "warmup": True}
                             if "start_power" in step and "end_power" in step:
                                 fs["ramp"] = True
-                                fs["power"] = {"start": round(step["start_power"] * 100 / ftp) if ftp else 0, "end": round(step["end_power"] * 100 / ftp) if ftp else 0, "units": "%ftp"}
+                                fs["power"] = {"start": round(step["start_power"]), "end": round(step["end_power"]), "units": "%ftp"}
                             elif "power" in step:
-                                fs["power"] = {"value": round(step["power"] * 100 / ftp) if ftp else 0, "units": "%ftp"}
+                                fs["power"] = {"value": round(step["power"]), "units": "%ftp"}
                             planned_steps.append(fs)
                         elif st == "cooldown":
                             fs = {"duration": step.get("duration_sec", 0), "cooldown": True}
                             if "start_power" in step and "end_power" in step:
                                 fs["ramp"] = True
-                                fs["power"] = {"start": round(step["start_power"] * 100 / ftp) if ftp else 0, "end": round(step["end_power"] * 100 / ftp) if ftp else 0, "units": "%ftp"}
+                                fs["power"] = {"start": round(step["start_power"]), "end": round(step["end_power"]), "units": "%ftp"}
                             elif "power" in step:
-                                fs["power"] = {"value": round(step["power"] * 100 / ftp) if ftp else 0, "units": "%ftp"}
+                                fs["power"] = {"value": round(step["power"]), "units": "%ftp"}
                             planned_steps.append(fs)
                         elif st == "intervals" and "repeat" in step:
-                            on_s = {"duration": step.get("on_sec", 0), "power": {"value": round(step.get("on_power", 0) * 100 / ftp) if ftp else 0, "units": "%ftp"}}
-                            off_s = {"duration": step.get("off_sec", 0), "power": {"value": round(step.get("off_power", 0) * 100 / ftp) if ftp else 0, "units": "%ftp"}}
+                            on_s = {"duration": step.get("on_sec", 0), "power": {"value": round(step.get("on_power", 0)), "units": "%ftp"}}
+                            off_s = {"duration": step.get("off_sec", 0), "power": {"value": round(step.get("off_power", 0)), "units": "%ftp"}}
                             planned_steps.append({"repeat": step["repeat"], "steps": [on_s, off_s]})
                         elif st == "ramp":
                             fs = {"duration": step.get("duration_sec", 0), "ramp": True}
                             if "start_power" in step and "end_power" in step:
-                                fs["power"] = {"start": round(step["start_power"] * 100 / ftp) if ftp else 0, "end": round(step["end_power"] * 100 / ftp) if ftp else 0, "units": "%ftp"}
+                                fs["power"] = {"start": round(step["start_power"]), "end": round(step["end_power"]), "units": "%ftp"}
                             planned_steps.append(fs)
                         else:
                             fs = {"duration": step.get("duration_sec", 0)}
                             if "power" in step:
-                                fs["power"] = {"value": round(step["power"] * 100 / ftp) if ftp else 0, "units": "%ftp"}
+                                fs["power"] = {"value": round(step["power"]), "units": "%ftp"}
                             elif "start_power" in step and "end_power" in step:
                                 fs["ramp"] = True
-                                fs["power"] = {"start": round(step["start_power"] * 100 / ftp) if ftp else 0, "end": round(step["end_power"] * 100 / ftp) if ftp else 0, "units": "%ftp"}
+                                fs["power"] = {"start": round(step["start_power"]), "end": round(step["end_power"]), "units": "%ftp"}
                             planned_steps.append(fs)
             except Exception as e:
                 logger.error(f"Failed to convert profile {profile_id} to steps: {e}")
