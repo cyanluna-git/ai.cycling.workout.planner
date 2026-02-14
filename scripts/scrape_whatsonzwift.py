@@ -29,35 +29,38 @@ class StepPosition(Enum):
     LAST = 2
 
 
-# Regex patterns from wozzwo
+# Regex patterns - FIXED: removed double-escapes and added "hr" support
 RAMP_RE = re.compile(
-    r'(?:(?P<mins>\\d+)min )?(?:(?P<secs>\\d+)sec )?'
-    r'(?:@ (?P<cadence>\\d+)rpm, )?from (?P<low>\\d+) to (?P<high>\\d+)% FTP'
+    r'(?:(?P<hours>\d+)hr )?(?:(?P<mins>\d+)min )?(?:(?P<secs>\d+)sec )?'
+    r'(?:@ (?P<cadence>\d+)rpm, )?from (?P<low>\d+) to (?P<high>\d+)% FTP'
 )
 
 STEADY_RE = re.compile(
-    r'(?:(?P<mins>\\d+)min )?(?:(?P<secs>\\d+)sec )?'
-    r'@ (?:(?P<cadence>\\d+)rpm, )?(?P<power>\\d+)% FTP'
+    r'(?:(?P<hours>\d+)hr )?(?:(?P<mins>\d+)min )?(?:(?P<secs>\d+)sec )?'
+    r'@ (?:(?P<cadence>\d+)rpm, )?(?P<power>\d+)% FTP'
 )
 
 INTERVALS_RE = re.compile(
-    r'(?P<reps>\\d+)x (?:(?P<on_mins>\\d+)min )?(?:(?P<on_secs>\\d+)sec )?'
-    r'@ (?:(?P<on_cadence>\\d+)rpm, )?(?P<on_power>\\d+)% FTP,'
-    r'(?:(?P<off_mins>\\d+)min )?(?:(?P<off_secs>\\d+)sec )?'
-    r'@ (?:(?P<off_cadence>\\d+)rpm, )?(?P<off_power>\\d+)% FTP'
+    r'(?P<reps>\d+)x (?:(?P<on_hours>\d+)hr )?(?:(?P<on_mins>\d+)min )?(?:(?P<on_secs>\d+)sec )?'
+    r'@ (?:(?P<on_cadence>\d+)rpm, )?(?P<on_power>\d+)% FTP, ?'
+    r'(?:(?P<off_hours>\d+)hr )?(?:(?P<off_mins>\d+)min )?(?:(?P<off_secs>\d+)sec )?'
+    r'@ (?:(?P<off_cadence>\d+)rpm, )?(?P<off_power>\d+)% FTP'
 )
 
 FREE_RIDE_RE = re.compile(
-    r'(?:(?P<mins>\\d+)min )?(?:(?P<secs>\\d+)sec )?free ride'
+    r'(?:(?P<hours>\d+)hr )?(?:(?P<mins>\d+)min )?(?:(?P<secs>\d+)sec )?free ride'
 )
 
 
-def calc_duration(mins, secs):
+def calc_duration(hours, mins, secs):
+    """Calculate duration in seconds from hours, mins, secs"""
     d = 0
     if secs:
         d += int(secs)
     if mins:
         d += int(mins) * 60
+    if hours:
+        d += int(hours) * 3600
     return d
 
 
@@ -66,10 +69,10 @@ def ramp(match, pos):
         StepPosition.FIRST: "Warmup",
         StepPosition.LAST: "Cooldown"
     }.get(pos, "Ramp")
-    duration = calc_duration(match["mins"], match["secs"])
+    duration = calc_duration(match.get("hours"), match.get("mins"), match.get("secs"))
     cadence = match.get("cadence")
-    low_power = match["low"] / 100.0
-    high_power = match["high"] / 100.0
+    low_power = int(match["low"]) / 100.0
+    high_power = int(match["high"]) / 100.0
     node = etree.Element(label)
     node.set("Duration", str(duration))
     node.set("PowerLow", str(low_power))
@@ -81,9 +84,9 @@ def ramp(match, pos):
 
 
 def steady(match, pos):
-    duration = calc_duration(match["mins"], match["secs"])
+    duration = calc_duration(match.get("hours"), match.get("mins"), match.get("secs"))
     cadence = match.get("cadence")
-    power = match["power"] / 100.0
+    power = int(match["power"]) / 100.0
     node = E.SteadyState(Duration=str(duration), Power=str(power), pace=str(0))
     if cadence:
         node.set("Cadence", str(cadence))
@@ -91,11 +94,11 @@ def steady(match, pos):
 
 
 def intervals(match, pos):
-    on_duration = calc_duration(match["on_mins"], match["on_secs"])
-    off_duration = calc_duration(match["off_mins"], match["off_secs"])
-    reps = match["reps"]
-    on_power = match["on_power"] / 100.0
-    off_power = match["off_power"] / 100.0
+    on_duration = calc_duration(match.get("on_hours"), match.get("on_mins"), match.get("on_secs"))
+    off_duration = calc_duration(match.get("off_hours"), match.get("off_mins"), match.get("off_secs"))
+    reps = int(match["reps"])
+    on_power = int(match["on_power"]) / 100.0
+    off_power = int(match["off_power"]) / 100.0
     on_cadence = match.get("on_cadence")
     off_cadence = match.get("off_cadence")
     node = E.IntervalsT(
@@ -113,7 +116,7 @@ def intervals(match, pos):
 
 
 def free_ride(match, pos):
-    duration = calc_duration(match["mins"], match["secs"])
+    duration = calc_duration(match.get("hours"), match.get("mins"), match.get("secs"))
     return E.FreeRide(Duration=str(duration), FlatRoad=str(0))
 
 
@@ -127,14 +130,11 @@ BLOCKS = [
 
 def parse_workout_step(step, pos):
     """Parse a single workout step div"""
-    text = step.text_content()
+    text = step.text_content().strip()
     for regex, func in BLOCKS:
         match = regex.match(text)
         if match:
-            match_int = {
-                k: int(v) if v else None for k, v in match.groupdict().items()
-            }
-            return func(match_int, pos)
+            return func(match.groupdict(), pos)
     raise RuntimeError(f"Couldn't parse step: {text}")
 
 
@@ -148,19 +148,23 @@ def scrape_workout_page(url, delay=1.5):
     
     tree = lhtml.fromstring(response.content)
     
-    # Extract workout metadata
-    title_nodes = tree.xpath('//h4[contains(@class, "flaticon-bike")]/text()')
-    desc_nodes = tree.xpath('//div[contains(@class, "workoutdescription")]/p/text()')
+    # Extract workout metadata - FIXED selectors
+    # Title is in h1 with class "glyph-icon flaticon-bike"
+    title_nodes = tree.xpath('//h1[contains(@class, "flaticon-bike")]/text()')
+    
+    # Description is in a <p> tag after the zone distribution
+    desc_nodes = tree.xpath('//section//p[not(ancestor::div[contains(@class, "flex")])]/text()')
     
     if not title_nodes:
         print("❌ No title found")
         return None
     
     title = title_nodes[0].strip()
-    description = desc_nodes[0].strip() if desc_nodes else ''
+    # Clean up description - join multiple text nodes
+    description = ' '.join([d.strip() for d in desc_nodes if d.strip()]) if desc_nodes else ''
     
-    # Parse workout steps
-    steps = tree.xpath('//div[contains(@class, "workoutlist")]/div')
+    # Parse workout steps - FIXED: use div.textbar instead of div.workoutlist
+    steps = tree.xpath('//div[contains(@class, "textbar")]')
     
     if not steps:
         print("❌ No workout steps found")
@@ -231,9 +235,10 @@ def scrape_collection_page(url, delay=1.5):
         else:
             full_url = link
         
-        # Only include individual workout pages (with #id=)
-        if '#id=' in full_url or full_url.count('/workouts/') == 2:
-            workout_urls.add(full_url)
+        # Only include individual workout pages (3 parts: /workouts/collection/workout-name)
+        parts = full_url.split('?')[0].split('#')[0].split('/')
+        if parts.count('workouts') == 1 and len(parts) >= 5:
+            workout_urls.add(full_url.split('?')[0].split('#')[0])
     
     return list(workout_urls)
 
@@ -241,7 +246,7 @@ def scrape_collection_page(url, delay=1.5):
 def main():
     parser = argparse.ArgumentParser(description='Scrape Zwift workouts from whatsonzwift.com')
     parser.add_argument('--db', default='../data/workout_profiles.db', help='Database path')
-    parser.add_argument('--delay', type=float, default=1.5, help='Delay between requests (seconds)')
+    parser.add_argument('--delay', type=float, default=2.0, help='Delay between requests (seconds)')
     parser.add_argument('--limit', type=int, help='Limit number of workouts to import')
     parser.add_argument('--collection', help='Specific collection URL to scrape')
     parser.add_argument('--list-collections', action='store_true', help='List available collections')
@@ -266,6 +271,13 @@ def main():
         "https://whatsonzwift.com/workouts/time-trial",
         "https://whatsonzwift.com/workouts/endurance",
         "https://whatsonzwift.com/workouts/recovery",
+        "https://whatsonzwift.com/workouts/tempo",
+        "https://whatsonzwift.com/workouts/sweetspot",
+        "https://whatsonzwift.com/workouts/vo2max",
+        "https://whatsonzwift.com/workouts/sprint",
+        "https://whatsonzwift.com/workouts/one-of-a-kind",
+        "https://whatsonzwift.com/workouts/gravel",
+        "https://whatsonzwift.com/workouts/gravity-racing",
     ]
     
     if args.list_collections:
