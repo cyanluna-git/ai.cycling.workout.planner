@@ -266,6 +266,8 @@ class DailyPlan:
     selected_modules: List[str]
     rationale: str
     session: Optional[str] = None  # "AM", "PM", or None for single session
+    profile_id: Optional[int] = None        # NEW: Profile DB ID
+    customization: Optional[dict] = None    # NEW: Customization instructions
 
 
 @dataclass
@@ -968,6 +970,8 @@ class WeeklyPlanGenerator:
                     selected_modules=selected_modules,
                     rationale=plan_data.get("rationale", ""),
                     session=plan_data.get("session"),
+                    profile_id=plan_data.get("profile_id"),
+                    customization=plan_data.get("customization"),
                 )
             )
 

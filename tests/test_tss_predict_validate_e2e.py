@@ -34,39 +34,39 @@ class TestTSSPredictValidateE2E:
     def _mock_llm_response_conservative(self):
         """Mock LLM response that generates LESS than target (e.g., 400 when target is 500)."""
         return json.dumps([
-            {"day_index": 0, "workout_type": "Rest", "workout_name": "Rest", "duration_minutes": 0, "estimated_tss": 0, "intensity": "rest", "selected_modules": [], "rationale": "Rest day"},
-            {"day_index": 1, "workout_type": "SweetSpot", "workout_name": "SS 2x15", "duration_minutes": 60, "estimated_tss": 60, "intensity": "moderate", "selected_modules": ["warmup_standard", "sweetspot_2x15_foundation"], "rationale": "Sweet Spot"},
-            {"day_index": 2, "workout_type": "Endurance", "workout_name": "Z2", "duration_minutes": 60, "estimated_tss": 50, "intensity": "low", "selected_modules": ["warmup_standard", "endurance_z2_steady_60min"], "rationale": "Recovery"},
-            {"day_index": 3, "workout_type": "SweetSpot", "workout_name": "SS 3x12", "duration_minutes": 60, "estimated_tss": 65, "intensity": "moderate", "selected_modules": ["warmup_standard", "sweetspot_3x12_tempo_spikes"], "rationale": "Sweet Spot"},
-            {"day_index": 4, "workout_type": "Rest", "workout_name": "Rest", "duration_minutes": 0, "estimated_tss": 0, "intensity": "rest", "selected_modules": [], "rationale": "Rest day"},
-            {"day_index": 5, "workout_type": "Threshold", "workout_name": "2x20", "duration_minutes": 90, "estimated_tss": 110, "intensity": "hard", "selected_modules": ["warmup_standard", "threshold_2x20_classic"], "rationale": "Weekend key workout"},
-            {"day_index": 6, "workout_type": "Endurance", "workout_name": "Long Z2", "duration_minutes": 120, "estimated_tss": 115, "intensity": "low", "selected_modules": ["warmup_standard", "endurance_z2_long_120min"], "rationale": "Aerobic base"},
+            {"day_index": 0, "workout_type": "Rest", "workout_name": "Rest", "duration_minutes": 0, "estimated_tss": 0, "intensity": "rest", "selected_modules": [], "profile_id": None, "customization": None, "rationale": "Rest day"},
+            {"day_index": 1, "workout_type": "SweetSpot", "workout_name": "SS 2x15", "duration_minutes": 60, "estimated_tss": 60, "intensity": "moderate", "selected_modules": [], "profile_id": 25, "customization": None, "rationale": "Sweet Spot"},
+            {"day_index": 2, "workout_type": "Endurance", "workout_name": "Z2", "duration_minutes": 60, "estimated_tss": 50, "intensity": "low", "selected_modules": [], "profile_id": 65, "customization": None, "rationale": "Recovery"},
+            {"day_index": 3, "workout_type": "SweetSpot", "workout_name": "SS 3x12", "duration_minutes": 60, "estimated_tss": 65, "intensity": "moderate", "selected_modules": [], "profile_id": 26, "customization": None, "rationale": "Sweet Spot"},
+            {"day_index": 4, "workout_type": "Rest", "workout_name": "Rest", "duration_minutes": 0, "estimated_tss": 0, "intensity": "rest", "selected_modules": [], "profile_id": None, "customization": None, "rationale": "Rest day"},
+            {"day_index": 5, "workout_type": "Threshold", "workout_name": "2x20", "duration_minutes": 90, "estimated_tss": 110, "intensity": "hard", "selected_modules": [], "profile_id": 13, "customization": None, "rationale": "Weekend key workout"},
+            {"day_index": 6, "workout_type": "Endurance", "workout_name": "Long Z2", "duration_minutes": 120, "estimated_tss": 115, "intensity": "low", "selected_modules": [], "profile_id": 67, "customization": None, "rationale": "Aerobic base"},
         ])
         # Total = 400 TSS (target is 500)
 
     def _mock_llm_response_aggressive(self):
         """Mock LLM response that generates MORE than target (e.g., 700 when target is 500)."""
         return json.dumps([
-            {"day_index": 0, "workout_type": "Rest", "workout_name": "Rest", "duration_minutes": 0, "estimated_tss": 0, "intensity": "rest", "selected_modules": [], "rationale": "Rest day"},
-            {"day_index": 1, "workout_type": "Threshold", "workout_name": "Threshold", "duration_minutes": 90, "estimated_tss": 120, "intensity": "hard", "selected_modules": ["warmup_standard", "threshold_3x15_cadence"], "rationale": "Hard"},
-            {"day_index": 2, "workout_type": "SweetSpot", "workout_name": "SS", "duration_minutes": 75, "estimated_tss": 85, "intensity": "moderate", "selected_modules": ["warmup_standard", "sweetspot_2x20_foundation"], "rationale": "Mid"},
-            {"day_index": 3, "workout_type": "Threshold", "workout_name": "Threshold", "duration_minutes": 90, "estimated_tss": 120, "intensity": "hard", "selected_modules": ["warmup_standard", "threshold_2x20_classic"], "rationale": "Hard"},
-            {"day_index": 4, "workout_type": "Rest", "workout_name": "Rest", "duration_minutes": 0, "estimated_tss": 0, "intensity": "rest", "selected_modules": [], "rationale": "Rest day"},
-            {"day_index": 5, "workout_type": "Threshold", "workout_name": "Long Threshold", "duration_minutes": 120, "estimated_tss": 180, "intensity": "hard", "selected_modules": ["warmup_standard", "threshold_3x20_progression"], "rationale": "Weekend"},
-            {"day_index": 6, "workout_type": "Threshold", "workout_name": "Long Threshold", "duration_minutes": 120, "estimated_tss": 195, "intensity": "hard", "selected_modules": ["warmup_standard", "threshold_continuous_45min"], "rationale": "Weekend"},
+            {"day_index": 0, "workout_type": "Rest", "workout_name": "Rest", "duration_minutes": 0, "estimated_tss": 0, "intensity": "rest", "selected_modules": [], "profile_id": None, "customization": None, "rationale": "Rest day"},
+            {"day_index": 1, "workout_type": "Threshold", "workout_name": "Threshold", "duration_minutes": 90, "estimated_tss": 120, "intensity": "hard", "selected_modules": [], "profile_id": 14, "customization": None, "rationale": "Hard"},
+            {"day_index": 2, "workout_type": "SweetSpot", "workout_name": "SS", "duration_minutes": 75, "estimated_tss": 85, "intensity": "moderate", "selected_modules": [], "profile_id": 26, "customization": None, "rationale": "Mid"},
+            {"day_index": 3, "workout_type": "Threshold", "workout_name": "Threshold", "duration_minutes": 90, "estimated_tss": 120, "intensity": "hard", "selected_modules": [], "profile_id": 13, "customization": None, "rationale": "Hard"},
+            {"day_index": 4, "workout_type": "Rest", "workout_name": "Rest", "duration_minutes": 0, "estimated_tss": 0, "intensity": "rest", "selected_modules": [], "profile_id": None, "customization": None, "rationale": "Rest day"},
+            {"day_index": 5, "workout_type": "Threshold", "workout_name": "Long Threshold", "duration_minutes": 120, "estimated_tss": 180, "intensity": "hard", "selected_modules": [], "profile_id": 13, "customization": None, "rationale": "Weekend"},
+            {"day_index": 6, "workout_type": "Threshold", "workout_name": "Long Threshold", "duration_minutes": 120, "estimated_tss": 195, "intensity": "hard", "selected_modules": [], "profile_id": 13, "customization": None, "rationale": "Weekend"},
         ])
         # Total = 700 TSS (target is 500)
 
     def _mock_llm_response_on_target(self):
         """Mock LLM response that's already within tolerance (480-500 range)."""
         return json.dumps([
-            {"day_index": 0, "workout_type": "Rest", "workout_name": "Rest", "duration_minutes": 0, "estimated_tss": 0, "intensity": "rest", "selected_modules": [], "rationale": "Rest day"},
-            {"day_index": 1, "workout_type": "SweetSpot", "workout_name": "SS 2x20", "duration_minutes": 75, "estimated_tss": 78, "intensity": "moderate", "selected_modules": ["warmup_standard", "sweetspot_2x20_foundation"], "rationale": "Sweet Spot"},
-            {"day_index": 2, "workout_type": "Endurance", "workout_name": "Z2", "duration_minutes": 60, "estimated_tss": 55, "intensity": "low", "selected_modules": ["warmup_standard", "endurance_z2_steady_60min"], "rationale": "Recovery"},
-            {"day_index": 3, "workout_type": "SweetSpot", "workout_name": "SS 3x15", "duration_minutes": 75, "estimated_tss": 75, "intensity": "moderate", "selected_modules": ["warmup_standard", "sweetspot_3x15_tempo_spikes"], "rationale": "Sweet Spot"},
-            {"day_index": 4, "workout_type": "Rest", "workout_name": "Rest", "duration_minutes": 0, "estimated_tss": 0, "intensity": "rest", "selected_modules": [], "rationale": "Rest day"},
-            {"day_index": 5, "workout_type": "Threshold", "workout_name": "2x20", "duration_minutes": 90, "estimated_tss": 132, "intensity": "hard", "selected_modules": ["warmup_standard", "threshold_2x20_classic"], "rationale": "Key workout"},
-            {"day_index": 6, "workout_type": "Endurance", "workout_name": "Long Z2", "duration_minutes": 120, "estimated_tss": 140, "intensity": "low", "selected_modules": ["warmup_standard", "endurance_z2_long_120min"], "rationale": "Long ride"},
+            {"day_index": 0, "workout_type": "Rest", "workout_name": "Rest", "duration_minutes": 0, "estimated_tss": 0, "intensity": "rest", "selected_modules": [], "profile_id": None, "customization": None, "rationale": "Rest day"},
+            {"day_index": 1, "workout_type": "SweetSpot", "workout_name": "SS 2x20", "duration_minutes": 75, "estimated_tss": 78, "intensity": "moderate", "selected_modules": [], "profile_id": 26, "customization": None, "rationale": "Sweet Spot"},
+            {"day_index": 2, "workout_type": "Endurance", "workout_name": "Z2", "duration_minutes": 60, "estimated_tss": 55, "intensity": "low", "selected_modules": [], "profile_id": 65, "customization": None, "rationale": "Recovery"},
+            {"day_index": 3, "workout_type": "SweetSpot", "workout_name": "SS 3x15", "duration_minutes": 75, "estimated_tss": 75, "intensity": "moderate", "selected_modules": [], "profile_id": 26, "customization": None, "rationale": "Sweet Spot"},
+            {"day_index": 4, "workout_type": "Rest", "workout_name": "Rest", "duration_minutes": 0, "estimated_tss": 0, "intensity": "rest", "selected_modules": [], "profile_id": None, "customization": None, "rationale": "Rest day"},
+            {"day_index": 5, "workout_type": "Threshold", "workout_name": "2x20", "duration_minutes": 90, "estimated_tss": 132, "intensity": "hard", "selected_modules": [], "profile_id": 13, "customization": None, "rationale": "Key workout"},
+            {"day_index": 6, "workout_type": "Endurance", "workout_name": "Long Z2", "duration_minutes": 120, "estimated_tss": 140, "intensity": "low", "selected_modules": [], "profile_id": 67, "customization": None, "rationale": "Long ride"},
         ])
         # Total = 480 TSS (96% of 500, within ±15%)
 
@@ -266,13 +266,13 @@ class TestTSSPredictValidateE2E:
         """Test that extreme scaling scenarios still respect individual caps."""
         # Create extreme conservative response (total 200 TSS)
         extreme_conservative = json.dumps([
-            {"day_index": 0, "workout_type": "Rest", "workout_name": "Rest", "duration_minutes": 0, "estimated_tss": 0, "intensity": "rest", "selected_modules": [], "rationale": "Rest"},
-            {"day_index": 1, "workout_type": "Endurance", "workout_name": "Easy", "duration_minutes": 30, "estimated_tss": 20, "intensity": "low", "selected_modules": ["warmup_standard"], "rationale": "Easy"},
-            {"day_index": 2, "workout_type": "Endurance", "workout_name": "Easy", "duration_minutes": 30, "estimated_tss": 25, "intensity": "low", "selected_modules": ["warmup_standard"], "rationale": "Easy"},
-            {"day_index": 3, "workout_type": "Endurance", "workout_name": "Easy", "duration_minutes": 45, "estimated_tss": 35, "intensity": "low", "selected_modules": ["warmup_standard"], "rationale": "Easy"},
-            {"day_index": 4, "workout_type": "Rest", "workout_name": "Rest", "duration_minutes": 0, "estimated_tss": 0, "intensity": "rest", "selected_modules": [], "rationale": "Rest"},
-            {"day_index": 5, "workout_type": "Endurance", "workout_name": "Easy", "duration_minutes": 60, "estimated_tss": 60, "intensity": "low", "selected_modules": ["warmup_standard"], "rationale": "Easy"},
-            {"day_index": 6, "workout_type": "Endurance", "workout_name": "Easy", "duration_minutes": 60, "estimated_tss": 60, "intensity": "low", "selected_modules": ["warmup_standard"], "rationale": "Easy"},
+            {"day_index": 0, "workout_type": "Rest", "workout_name": "Rest", "duration_minutes": 0, "estimated_tss": 0, "intensity": "rest", "selected_modules": [], "profile_id": None, "customization": None, "rationale": "Rest"},
+            {"day_index": 1, "workout_type": "Endurance", "workout_name": "Easy", "duration_minutes": 30, "estimated_tss": 20, "intensity": "low", "selected_modules": [], "profile_id": 65, "customization": None, "rationale": "Easy"},
+            {"day_index": 2, "workout_type": "Endurance", "workout_name": "Easy", "duration_minutes": 30, "estimated_tss": 25, "intensity": "low", "selected_modules": [], "profile_id": 65, "customization": None, "rationale": "Easy"},
+            {"day_index": 3, "workout_type": "Endurance", "workout_name": "Easy", "duration_minutes": 45, "estimated_tss": 35, "intensity": "low", "selected_modules": [], "profile_id": 65, "customization": None, "rationale": "Easy"},
+            {"day_index": 4, "workout_type": "Rest", "workout_name": "Rest", "duration_minutes": 0, "estimated_tss": 0, "intensity": "rest", "selected_modules": [], "profile_id": None, "customization": None, "rationale": "Rest"},
+            {"day_index": 5, "workout_type": "Endurance", "workout_name": "Easy", "duration_minutes": 60, "estimated_tss": 60, "intensity": "low", "selected_modules": [], "profile_id": 65, "customization": None, "rationale": "Easy"},
+            {"day_index": 6, "workout_type": "Endurance", "workout_name": "Easy", "duration_minutes": 60, "estimated_tss": 60, "intensity": "low", "selected_modules": [], "profile_id": 65, "customization": None, "rationale": "Easy"},
         ])
         # Total = 200 TSS, target = 500, scale factor = 2.5
 

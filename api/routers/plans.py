@@ -692,6 +692,8 @@ async def generate_weekly_plan(
                 "planned_tss": dp.estimated_tss,
                 "planned_modules": dp.selected_modules,
                 "planned_rationale": dp.rationale,
+                "profile_id": dp.profile_id,
+                "customization": dp.customization,
                 "status": "planned",
             }
         )
