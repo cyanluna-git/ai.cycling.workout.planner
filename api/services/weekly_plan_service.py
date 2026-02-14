@@ -233,7 +233,7 @@ Below are pre-built COMPLETE workout profiles (warmup + main + cooldown included
 Select ONE profile per training day using its ID.
 **Use ONLY profile IDs from this list. Do NOT invent profile IDs.**
 
-{profile_candidates}
+{profile_candidates_text}
 
 Generate the 7-day workout plan now. Output ONLY valid JSON array, no markdown or extra text.
 """
@@ -363,36 +363,17 @@ class WeeklyPlanGenerator:
             weekly_tss_target = int(base_tss * multiplier)
             logger.info(f"Auto-calculated weekly_tss_target: {weekly_tss_target} (CTL={ctl}, focus={training_focus})")
 
-        # Get profile candidates from DB
-        from api.services.workout_profile_service import WorkoutProfileService
-        profile_service = WorkoutProfileService()
+        # Get profile candidates from DB using shared helper
+        from api.services.workout_profile_service import get_profile_candidates_for_llm
         
-        # TSB-based difficulty filter
-        if tsb < -20:
-            max_difficulty = "beginner"
-        elif tsb < -10:
-            max_difficulty = "intermediate"
-        else:
-            max_difficulty = "advanced"
-        
-        # Style-based category mapping
-        style_categories = {
-            "endurance": ["endurance", "recovery", "tempo"],
-            "sweetspot": ["sweetspot", "endurance", "threshold", "recovery"],
-            "threshold": ["threshold", "sweetspot", "vo2max", "endurance", "recovery"],
-            "polarized": ["endurance", "vo2max", "recovery"],
-            "vo2max": ["vo2max", "threshold", "endurance", "recovery"],
-            "sprint": ["sprint", "anaerobic", "endurance", "recovery"],
-            "climbing": ["climbing", "threshold", "sweetspot", "endurance", "recovery"],
-            "norwegian": ["threshold", "vo2max", "endurance", "recovery"],
-        }
-        categories = style_categories.get(training_style, None)
-        
-        candidates = profile_service.get_candidates(
-            categories=categories,
-            duration_range=(20, int(self.profile.get("preferred_duration", 60)) + 60),
-            difficulty_max=max_difficulty,
-            limit=30,
+        preferred_duration = int(self.profile.get("preferred_duration", 60))
+        profile_candidates_text, candidates = get_profile_candidates_for_llm(
+            tsb=tsb,
+            training_style=training_style,
+            duration=preferred_duration,
+            duration_buffer=60,
+            limit=50,
+            exclude_profile_ids=None,  # TODO: Pass recently used profile IDs from this week
         )
         
         # Fallback to legacy module system if no profiles available
@@ -406,7 +387,7 @@ class WeeklyPlanGenerator:
         else:
             import random
             random.shuffle(candidates)
-            profile_candidates = profile_service.format_candidates_for_prompt(candidates)
+            # profile_candidates_text already formatted by helper
             module_inventory = ""  # Not used in profile mode
 
         # Get style-specific weekly structure template
@@ -484,7 +465,7 @@ class WeeklyPlanGenerator:
             week_start=week_start.strftime("%Y-%m-%d"),
             week_end=week_end.strftime("%Y-%m-%d"),
             weekly_structure=weekly_structure,
-            profile_candidates=profile_candidates,
+            profile_candidates_text=profile_candidates_text,
             athlete_context=athlete_context,
             daily_tss_targets=daily_tss_targets_formatted,
             weekly_availability=availability_text,

@@ -294,45 +294,21 @@ class WorkoutGenerator:
                 logger.info("Profile DB not found, will use module assembly fallback")
                 return {}
             
-            from api.services.workout_profile_service import WorkoutProfileService
-            profile_service = WorkoutProfileService()
+            from api.services.workout_profile_service import get_profile_candidates_for_llm
             
-            # TSB-based difficulty filter
-            if tsb < -20:
-                max_difficulty = "beginner"
-            elif tsb < -10:
-                max_difficulty = "intermediate"
-            else:
-                max_difficulty = "advanced"
-            
-            # Style-based category mapping
-            style_categories = {
-                "endurance": ["endurance", "recovery", "tempo"],
-                "sweetspot": ["sweetspot", "endurance", "threshold", "recovery"],
-                "threshold": ["threshold", "sweetspot", "vo2max", "endurance", "recovery"],
-                "polarized": ["endurance", "vo2max", "recovery"],
-                "vo2max": ["vo2max", "threshold", "endurance", "recovery"],
-                "sprint": ["sprint", "anaerobic", "endurance", "recovery"],
-                "climbing": ["climbing", "threshold", "sweetspot", "endurance", "recovery"],
-                "norwegian": ["threshold", "vo2max", "endurance", "recovery"],
-            }
-            categories = style_categories.get(training_style, None)
-            
-            candidates = profile_service.get_candidates(
-                categories=categories,
-                duration_range=(20, duration + 30),
-                difficulty_max=max_difficulty,
-                limit=30,
+            # Use shared helper to get candidates
+            profile_candidates, candidates = get_profile_candidates_for_llm(
+                tsb=tsb,
+                training_style=training_style,
+                duration=duration,
+                duration_buffer=30,
+                limit=50,
+                exclude_profile_ids=None,  # TODO: Pass recently used profile IDs
             )
             
             if not candidates:
                 logger.info("No profile candidates found, will use module assembly fallback")
                 return {}
-            
-            # Shuffle candidates for variety (different order each time)
-            import random
-            random.shuffle(candidates)
-            profile_candidates = profile_service.format_candidates_for_prompt(candidates)
             
             # Build LLM prompt for profile selection
             system_prompt = """You are an expert cycling coach. Select the best workout profile from the database.
