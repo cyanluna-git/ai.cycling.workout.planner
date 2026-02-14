@@ -36,7 +36,7 @@ def _mock_llm_response():
                 "day_index": i, "day_name": name, "date": f"2026-02-16",
                 "session": None, "workout_type": "Rest", "workout_name": "Rest Day",
                 "duration_minutes": 0, "estimated_tss": 0, "intensity": "rest",
-                "selected_modules": [], "rationale": "Rest"
+                "selected_modules": [], "profile_id": None, "customization": None, "rationale": "Rest"
             })
         else:
             plans.append({
@@ -44,7 +44,7 @@ def _mock_llm_response():
                 "session": None, "workout_type": "Endurance",
                 "workout_name": "Zone 2 Ride", "duration_minutes": 60,
                 "estimated_tss": 50, "intensity": "easy",
-                "selected_modules": ["ramp_standard", "endurance_60min", "flush_and_fade"],
+                "selected_modules": [], "profile_id": 65, "customization": None,
                 "rationale": "Aerobic base"
             })
     return json.dumps(plans)
@@ -97,7 +97,7 @@ class TestTypeEnforcementDowngrade:
             "day_index": 0, "day_name": "Monday", "date": "2026-02-16",
             "session": None, "workout_type": "VO2max", "workout_name": "VO2 Blast",
             "duration_minutes": 60, "estimated_tss": 80, "intensity": "hard",
-            "selected_modules": ["ramp_standard", "endurance_60min", "flush_and_fade"],
+            "selected_modules": [],
             "rationale": "Hard day"
         }])
         plans = gen._parse_response(bad_response, date(2026, 2, 16), allowed_types=allowed)
@@ -140,7 +140,7 @@ class TestAthleteContext:
 # ---------------------------------------------------------------------------
 class TestUsedModulesCollection:
     def test_used_modules_collection(self):
-        """WeeklyPlan.used_modules should collect all module keys from daily plans."""
+        """WeeklyPlan.used_modules should be empty (profile-based system)."""  
         gen = _make_generator({"training_style": "endurance", "training_focus": "maintain", "preferred_duration": 60})
         gen.llm.generate.return_value = _mock_llm_response()
         plan = gen.generate_weekly_plan(
@@ -148,9 +148,11 @@ class TestUsedModulesCollection:
             week_start=date(2026, 2, 16),
         )
         assert isinstance(plan.used_modules, list)
-        # 5 workout days x 3 modules each = 15
-        assert len(plan.used_modules) == 15
-        assert "ramp_standard" in plan.used_modules
+        # Profile-based system: selected_modules is empty, so used_modules is also empty
+        assert len(plan.used_modules) == 0
+        # Instead, verify that workout days have profile_id
+        workout_days = [dp for dp in plan.daily_plans if dp.workout_type != "Rest"]
+        assert all(hasattr(dp, 'profile_id') and dp.profile_id is not None for dp in workout_days)
 
 
 # ---------------------------------------------------------------------------

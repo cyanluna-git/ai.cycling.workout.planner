@@ -36,7 +36,7 @@ def _make_llm_response(available_days, week_start, target_tss_map=None):
                 "duration_minutes": duration,
                 "estimated_tss": tss,
                 "intensity": "hard" if tss > 100 else "moderate",
-                "selected_modules": ["ramp_standard", "endurance_20min", "flush_and_fade"],
+                "selected_modules": [], "profile_id": 26, "customization": None,
                 "rationale": f"Target {tss} TSS",
             })
         else:
@@ -50,7 +50,7 @@ def _make_llm_response(available_days, week_start, target_tss_map=None):
                 "duration_minutes": 0,
                 "estimated_tss": 0,
                 "intensity": "rest",
-                "selected_modules": [],
+                "selected_modules": [], "profile_id": None, "customization": None,
                 "rationale": "Rest day",
             })
     
