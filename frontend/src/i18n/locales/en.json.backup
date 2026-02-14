@@ -244,10 +244,7 @@
     "noSavedWorkout": "No saved workout for {{date}}.",
     "loadFailed": "Failed to load: {{message}}",
     "emptyTitle": "Ready to create your first workout?",
-    "emptyDesc": "Click the button below to generate today's optimal workout. AI analyzes your CTL, ATL, TSB to recommend the perfect training.",
-    "coachNote": "Coach's Note",
-    "focusPoints": "Focus Points",
-    "warnings": "Warnings"
+    "emptyDesc": "Click the button below to generate today's optimal workout. AI analyzes your CTL, ATL, TSB to recommend the perfect training."
   },
   "weeklyPlan": {
     "title": "📅 Weekly Workout Plan",

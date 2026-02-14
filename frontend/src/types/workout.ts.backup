@@ -28,13 +28,3 @@ export interface ChartDataPoint {
     power: number;     // Power in % FTP
     color: string;     // Zone color
 }
-
-/**
- * Structured coaching guidance
- */
-export interface CoachingNote {
-    selection_reason: string;
-    focus_points?: string[];
-    warnings?: string[];
-    motivation?: string;
-}
