@@ -152,11 +152,11 @@ export function AuthPage() {
                         {mode !== 'reset' && (
                             <div className="space-y-2">
                                 <Label htmlFor="password">{t('common.password')}</Label>
-                                <Input id="password" type="password" placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+                                <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
                             </div>
                         )}
                         {error && (
-                            <div className="text-destructive text-sm text-center bg-destructive/10 p-2 rounded">\u274c {error}</div>
+                            <div className="text-destructive text-sm text-center bg-destructive/10 p-2 rounded">{error}</div>
                         )}
                         <Button type="submit" className="w-full" disabled={loading}>
                             {loading ? t('common.processing') :
