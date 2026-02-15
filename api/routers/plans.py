@@ -1149,9 +1149,8 @@ async def register_weekly_plan_to_intervals(
                         customization = workout.get("customization")
                         if customization:
                             profile = profile_service.apply_customization(profile, customization, ftp)
-                        # Convert to Intervals.icu steps format
-                        db_steps = profile.get("steps_json", {}).get("steps", [])
-                        planned_steps = convert_power_to_watts(db_steps, ftp)
+                        # DB is nested %FTP format - ZWO converter handles conversion
+                        planned_steps = profile.get("steps_json", {}).get("steps", [])
                         logger.info(f"Converted Profile DB to Intervals.icu (profile_id={profile_id})")
                     else:
                         logger.warning(f"Profile {profile_id} not found, skipping")
