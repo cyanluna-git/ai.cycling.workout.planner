@@ -132,12 +132,24 @@ async def generate_workout(
             },
         )
 
+        # Prepare coaching dict for response
+        coaching_dict = None
+        if workout.coaching:
+            coaching_dict = {
+                "selection_reason": workout.coaching.selection_reason,
+                "focus_points": workout.coaching.focus_points,
+                "warnings": workout.coaching.warnings,
+                "motivation": workout.coaching.motivation,
+            }
+        
         logger.info(f"Successfully generated workout for user {user['id']}")
         return WorkoutGenerateResponse(
             success=True,
             workout=GeneratedWorkout(
                 name=workout.name,
                 workout_type=workout.workout_type,
+                design_goal=workout.design_goal,
+                coaching=coaching_dict,
                 estimated_tss=workout.estimated_tss,
                 estimated_duration_minutes=workout.estimated_duration_minutes,
                 workout_text=workout.workout_text,

@@ -158,6 +158,7 @@ class GeneratedWorkout(BaseModel):
     name: str = Field(..., description="Workout name")
     workout_type: str = Field(..., description="Workout type")
     design_goal: Optional[str] = Field(None, description="Design goal or rationale")
+    coaching: Optional[dict] = Field(None, description="Structured coaching note")
     estimated_tss: Optional[int] = Field(None, description="Estimated TSS")
     estimated_duration_minutes: int = Field(..., description="Duration in minutes")
     workout_text: str = Field(..., description="Formatted workout text")
