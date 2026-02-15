@@ -18,7 +18,6 @@ sys.path.insert(
 
 from src.clients.supabase_client import get_supabase_admin_client
 from .auth import get_current_user
-from api.services.power_converter import convert_power_to_watts
 from ..services.cache_service import clear_user_cache
 
 logger = logging.getLogger(__name__)
@@ -504,13 +503,14 @@ async def get_current_weekly_plan(
         if profile_id:
             try:
                 from api.services.workout_profile_service import WorkoutProfileService
+from api.services.power_converter import convert_power_to_watts
                 profile_service = WorkoutProfileService()
                 profile = profile_service.get_profile_by_id(profile_id)
                 if profile:
                     customization = workout.get("customization") or {}
                     if customization:
                         profile = profile_service.apply_customization(profile, customization, ftp)
-                    # Convert to frontend format (keeps power in %FTP)
+                    # DB already in frontend format (nested, %FTP)
                     planned_steps = profile.get("steps_json", {}).get("steps", [])
             except Exception as e:
                 logger.error(f"Failed to convert profile {profile_id} to steps: {e}")
@@ -1142,6 +1142,7 @@ async def register_weekly_plan_to_intervals(
                 if profile_id:
                     # Generate steps from Profile DB
                     from api.services.workout_profile_service import WorkoutProfileService
+from api.services.power_converter import convert_power_to_watts
                     profile_service = WorkoutProfileService()
                     profile = profile_service.get_profile_by_id(profile_id)
                     if profile:
@@ -1150,9 +1151,8 @@ async def register_weekly_plan_to_intervals(
                         if customization:
                             profile = profile_service.apply_customization(profile, customization, ftp)
                         # Convert to Intervals.icu steps format
-                        db_steps = profile.get("steps_json", {}).get("steps", [])
-                        planned_steps = convert_power_to_watts(db_steps, ftp)
-                        logger.info(f"Converted Profile DB to Intervals.icu (profile_id={profile_id})")
+                        planned_steps = profile_service.profile_to_intervals_steps(profile, ftp)
+                        logger.info(f"Generated Intervals.icu steps from Profile DB (profile_id={profile_id})")
                     else:
                         logger.warning(f"Profile {profile_id} not found, skipping")
                         continue
