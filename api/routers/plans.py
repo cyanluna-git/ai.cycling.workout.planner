@@ -511,7 +511,7 @@ async def get_current_weekly_plan(
                     if customization:
                         profile = profile_service.apply_customization(profile, customization, ftp)
                     # Convert to frontend format (keeps power in %FTP)
-                    planned_steps = profile.get("steps_json", {}).get("steps", [])
+                    planned_steps = profile_service.profile_to_frontend_steps(profile, ftp)
             except Exception as e:
                 logger.error(f"Failed to convert profile {profile_id} to steps: {e}")
         
