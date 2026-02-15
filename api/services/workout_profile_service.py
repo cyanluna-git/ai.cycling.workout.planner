@@ -246,24 +246,16 @@ class WorkoutProfileService:
             allowed_range = coach_notes.get("repeat_adjust", [-2, 2])
             adjust = max(allowed_range[0], min(allowed_range[1], customization["repeat_adjust"]))
             for step in steps:
-                if step.get("type") == "intervals" and "repeat" in step:
-                    step["repeat"] = max(1, step["repeat"] + adjust)
+                # New nested format: repeat/reps block with "steps" array
+                rep_key = "reps" if "reps" in step else "repeat" if "repeat" in step else None
+                if rep_key and "steps" in step:
+                    step[rep_key] = max(1, step[rep_key] + adjust)
 
         # Apply power_adjust (percentage points)
         if "power_adjust" in customization:
             allowed_range = coach_notes.get("power_adjust", [-10, 10])
             adjust = max(allowed_range[0], min(allowed_range[1], customization["power_adjust"]))
-            for step in steps:
-                if "on_power" in step:
-                    step["on_power"] = max(50, step["on_power"] + adjust)
-                if "off_power" in step:
-                    step["off_power"] = max(40, step["off_power"] + adjust)
-                if "start_power" in step:
-                    step["start_power"] = max(40, step["start_power"] + adjust)
-                if "end_power" in step:
-                    step["end_power"] = max(40, step["end_power"] + adjust)
-                if "power" in step:
-                    step["power"] = max(50, step["power"] + adjust)
+            self._adjust_power_recursive(steps, adjust)
 
         # Apply warmup_adjust (minutes)
         if "warmup_adjust" in customization:
@@ -271,8 +263,8 @@ class WorkoutProfileService:
             adjust_min = max(allowed_range[0], min(allowed_range[1], customization["warmup_adjust"]))
             adjust_sec = adjust_min * 60
             for step in steps:
-                if step.get("type") == "warmup" and "duration_sec" in step:
-                    step["duration_sec"] = max(300, step["duration_sec"] + adjust_sec)  # Min 5min
+                if step.get("warmup") and "duration" in step:
+                    step["duration"] = max(300, step["duration"] + adjust_sec)  # Min 5min
 
         # Apply cooldown_adjust (minutes)
         if "cooldown_adjust" in customization:
@@ -280,11 +272,34 @@ class WorkoutProfileService:
             adjust_min = max(allowed_range[0], min(allowed_range[1], customization["cooldown_adjust"]))
             adjust_sec = adjust_min * 60
             for step in steps:
-                if step.get("type") == "cooldown" and "duration_sec" in step:
-                    step["duration_sec"] = max(300, step["duration_sec"] + adjust_sec)  # Min 5min
+                if step.get("cooldown") and "duration" in step:
+                    step["duration"] = max(300, step["duration"] + adjust_sec)  # Min 5min
 
         logger.info(f"Applied customization to profile {profile['id']}: {customization}")
         return profile_copy
+
+    def _adjust_power_recursive(self, steps: List[Dict[str, Any]], adjust: int) -> None:
+        """Adjust power values in steps, handling nested format.
+
+        Supports:
+        - Nested dict: {"power": {"value": 115, "units": "%ftp"}}
+        - Ramp dict: {"power": {"start": 48, "end": 68, "units": "%ftp"}}
+        - Repeat blocks: {"reps": N, "steps": [...]} (recurses into nested steps)
+        """
+        for step in steps:
+            if "power" in step and isinstance(step["power"], dict):
+                power = step["power"]
+                if "value" in power:
+                    power["value"] = max(30, power["value"] + adjust)
+                if "start" in power:
+                    power["start"] = max(30, power["start"] + adjust)
+                if "end" in power:
+                    power["end"] = max(30, power["end"] + adjust)
+            elif "power" in step and isinstance(step["power"], (int, float)):
+                step["power"] = max(30, step["power"] + adjust)
+            # Recurse into repeat block nested steps
+            if "steps" in step and isinstance(step["steps"], list):
+                self._adjust_power_recursive(step["steps"], adjust)
 
     def profile_to_frontend_steps(self, profile: Dict[str, Any], ftp: int) -> List[Dict[str, Any]]:
         """Convert profile steps to frontend WorkoutStep format (power in %FTP).
