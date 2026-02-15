@@ -525,3 +525,129 @@ def get_profile_candidates_for_llm(
     formatted_text = profile_service.format_candidates_for_prompt(candidates)
     
     return formatted_text, candidates
+
+    def profile_to_intervals_steps(self, profile: Dict[str, Any], ftp: int) -> List[Dict[str, Any]]:
+        """Convert profile steps to Intervals.icu API format.
+        
+        Intervals.icu expects nested structures for repeat blocks:
+        {
+            "duration": 0,
+            "repeat": 4,
+            "steps": [
+                {"duration": 240, "power": {"value": 236, "units": "watts"}},
+                {"duration": 180, "power": {"value": 100, "units": "watts"}}
+            ]
+        }
+        
+        Args:
+            profile: Profile dictionary
+            ftp: User's FTP in watts
+            
+        Returns:
+            List of Intervals.icu-compatible workout steps
+        """
+        steps_data = profile.get("steps_json", {}).get("steps", [])
+        intervals_steps = []
+        
+        for step in steps_data:
+            step_type = step.get("type")
+            
+            if step_type == "warmup":
+                if "start_power" in step and "end_power" in step:
+                    intervals_steps.append({
+                        "duration": step.get("duration_sec", 0),
+                        "power": {
+                            "start": int(step["start_power"] * ftp / 100),
+                            "end": int(step["end_power"] * ftp / 100),
+                            "units": "watts"
+                        },
+                        "ramp": True,
+                        "warmup": True
+                    })
+                elif "power" in step:
+                    intervals_steps.append({
+                        "duration": step.get("duration_sec", 0),
+                        "power": {
+                            "value": int(step["power"] * ftp / 100),
+                            "units": "watts"
+                        },
+                        "warmup": True
+                    })
+                    
+            elif step_type == "cooldown":
+                if "start_power" in step and "end_power" in step:
+                    intervals_steps.append({
+                        "duration": step.get("duration_sec", 0),
+                        "power": {
+                            "start": int(step["start_power"] * ftp / 100),
+                            "end": int(step["end_power"] * ftp / 100),
+                            "units": "watts"
+                        },
+                        "ramp": True,
+                        "cooldown": True
+                    })
+                elif "power" in step:
+                    intervals_steps.append({
+                        "duration": step.get("duration_sec", 0),
+                        "power": {
+                            "value": int(step["power"] * ftp / 100),
+                            "units": "watts"
+                        },
+                        "cooldown": True
+                    })
+                    
+            elif step_type == "intervals" and "repeat" in step:
+                # Nested structure for Intervals.icu
+                on_step = {
+                    "duration": step.get("on_sec", 0),
+                    "power": {
+                        "value": int(step.get("on_power", 0) * ftp / 100),
+                        "units": "watts"
+                    }
+                }
+                off_step = {
+                    "duration": step.get("off_sec", 0),
+                    "power": {
+                        "value": int(step.get("off_power", 0) * ftp / 100),
+                        "units": "watts"
+                    }
+                }
+                intervals_steps.append({
+                    "duration": 0,
+                    "repeat": step["repeat"],
+                    "steps": [on_step, off_step]
+                })
+                
+            elif step_type == "ramp":
+                intervals_steps.append({
+                    "duration": step.get("duration_sec", 0),
+                    "power": {
+                        "start": int(step.get("start_power", 0) * ftp / 100),
+                        "end": int(step.get("end_power", 0) * ftp / 100),
+                        "units": "watts"
+                    },
+                    "ramp": True
+                })
+                
+            else:  # steady or unknown
+                if "start_power" in step and "end_power" in step:
+                    intervals_steps.append({
+                        "duration": step.get("duration_sec", 0),
+                        "power": {
+                            "start": int(step["start_power"] * ftp / 100),
+                            "end": int(step["end_power"] * ftp / 100),
+                            "units": "watts"
+                        },
+                        "ramp": True
+                    })
+                elif "power" in step:
+                    intervals_steps.append({
+                        "duration": step.get("duration_sec", 0),
+                        "power": {
+                            "value": int(step["power"] * ftp / 100),
+                            "units": "watts"
+                        }
+                    })
+        
+        logger.info(f"Converted profile {profile['id']} to {len(intervals_steps)} Intervals.icu steps")
+        return intervals_steps
