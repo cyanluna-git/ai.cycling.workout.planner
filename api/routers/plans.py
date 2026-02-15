@@ -1149,8 +1149,8 @@ async def register_weekly_plan_to_intervals(
                         if customization:
                             profile = profile_service.apply_customization(profile, customization, ftp)
                         # Convert to Intervals.icu steps format
-                        planned_steps = profile_service.profile_to_steps(profile, ftp)
-                        logger.info(f"Generated steps from Profile DB (profile_id={profile_id})")
+                        planned_steps = profile_service.profile_to_intervals_steps(profile, ftp)
+                        logger.info(f"Generated Intervals.icu steps from Profile DB (profile_id={profile_id})")
                     else:
                         logger.warning(f"Profile {profile_id} not found, skipping")
                         continue
