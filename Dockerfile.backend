@@ -23,8 +23,8 @@ COPY api/ ./api/
 COPY src/ ./src/
 COPY scripts/ ./scripts/
 
-# Generate workout profiles DB at build time
-RUN python3 scripts/seed_profiles.py
+# Generate workout profiles DB at build time and migrate to nested format
+RUN python3 scripts/seed_profiles.py && python3 scripts/migrate_db_format.py
 
 # Set PYTHONPATH
 ENV PYTHONPATH=/app
