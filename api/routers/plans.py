@@ -1132,18 +1132,37 @@ async def register_weekly_plan_to_intervals(
             continue
 
         try:
-            # Get steps: use planned_steps if available (Profile DB), otherwise convert modules
+            # Get steps: Profile DB or module-based
             planned_steps = workout.get("planned_steps")
             
             if not planned_steps:
-                # Fallback to module-based workflow
-                planned_modules = workout.get("planned_modules", [])
-                if not planned_modules or len(planned_modules) == 0:
-                    logger.warning(f"Skipping workout {workout['id']}: no steps or modules")
-                    continue
-                
-                # Convert modules to steps
-                planned_steps = convert_structure_to_steps(planned_modules, ftp)
+                # Check if this is a Profile DB workout
+                profile_id = workout.get("profile_id")
+                if profile_id:
+                    # Generate steps from Profile DB
+                    from api.services.workout_profile_service import WorkoutProfileService
+                    profile_service = WorkoutProfileService()
+                    profile = profile_service.get_profile_by_id(profile_id)
+                    if profile:
+                        # Apply customization if any
+                        customization = workout.get("customization")
+                        if customization:
+                            profile = profile_service.apply_customization(profile, customization, ftp)
+                        # Convert to Intervals.icu steps format
+                        planned_steps = profile_service.profile_to_steps(profile, ftp)
+                        logger.info(f"Generated steps from Profile DB (profile_id={profile_id})")
+                    else:
+                        logger.warning(f"Profile {profile_id} not found, skipping")
+                        continue
+                else:
+                    # Fallback to module-based workflow
+                    planned_modules = workout.get("planned_modules", [])
+                    if not planned_modules or len(planned_modules) == 0:
+                        logger.warning(f"Skipping workout {workout['id']}: no steps, profile_id, or modules")
+                        continue
+                    
+                    # Convert modules to steps
+                    planned_steps = convert_structure_to_steps(planned_modules, ftp)
             
             if not planned_steps or len(planned_steps) == 0:
                 logger.warning(f"Skipping workout {workout['id']}: no steps generated")
