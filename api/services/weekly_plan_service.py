@@ -374,6 +374,8 @@ class WeeklyPlanGenerator:
             duration_buffer=60,
             limit=50,
             exclude_profile_ids=None,  # TODO: Pass recently used profile IDs from this week
+            ftp=ftp,  # Add FTP for W/kg-based difficulty filtering
+            weight=weight,  # Add weight for W/kg calculation
         )
         
         # Fallback to legacy module system if no profiles available
