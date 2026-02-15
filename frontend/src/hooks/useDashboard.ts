@@ -13,6 +13,7 @@ import i18n from '@/i18n/config';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { queryKeys } from "@/lib/queryClient";
+import { getCachedData, setCachedData } from "@/lib/queryCache";
 import {
     fetchFitness,
     generateWorkout,
@@ -127,9 +128,14 @@ export function useDashboard(): UseDashboardReturn {
     // Fetch fitness data (cached for 2 hours, matches backend)
     const { data: fitness = null } = useQuery({
         queryKey: queryKeys.fitness(),
-        queryFn: () => fetchFitness(session?.access_token || ''),
-        enabled: !!session?.access_token && isApiConfigured === true,
+        queryFn: async () => {
+            const result = await fetchFitness(session?.access_token || '');
+            setCachedData('fitness', result);
+            return result;
+        },
+        enabled: !!session?.access_token,
         staleTime: 2 * 60 * 60 * 1000, // 2 hours
+        placeholderData: () => getCachedData<FitnessData>('fitness'),
     });
 
     // Fetch weekly calendar (cached for 2 hours)
@@ -138,9 +144,14 @@ export function useDashboard(): UseDashboardReturn {
         isLoading: isLoadingCalendar,
     } = useQuery({
         queryKey: queryKeys.weeklyCalendar(),
-        queryFn: () => fetchWeeklyCalendar(session?.access_token || ''),
-        enabled: !!session?.access_token && isApiConfigured === true,
+        queryFn: async () => {
+            const result = await fetchWeeklyCalendar(session?.access_token || '');
+            setCachedData('weeklyCalendar', result);
+            return result;
+        },
+        enabled: !!session?.access_token,
         staleTime: 2 * 60 * 60 * 1000, // 2 hours
+        placeholderData: () => getCachedData<WeeklyCalendarData>('weeklyCalendar'),
     });
 
     // Fetch weekly plan (cached per week)
@@ -150,16 +161,21 @@ export function useDashboard(): UseDashboardReturn {
         isLoading: isLoadingPlan,
     } = useQuery({
         queryKey: queryKeys.weeklyPlan(weekStartDate),
-        queryFn: () => fetchWeeklyPlan(session?.access_token || '', weekStartDate),
-        enabled: !!session?.access_token && isApiConfigured === true,
+        queryFn: async () => {
+            const result = await fetchWeeklyPlan(session?.access_token || '', weekStartDate);
+            setCachedData(`weeklyPlan-${weekStartDate}`, result);
+            return result;
+        },
+        enabled: !!session?.access_token,
         staleTime: 2 * 60 * 60 * 1000, // 2 hours
+        placeholderData: () => getCachedData<WeeklyPlan>(`weeklyPlan-${weekStartDate}`),
     });
 
     // Fetch today's workout (initially)
     const { data: todayWorkoutData } = useQuery({
         queryKey: queryKeys.todayWorkout(),
         queryFn: () => fetchTodaysWorkout(session?.access_token || ''),
-        enabled: !!session?.access_token && isApiConfigured === true,
+        enabled: !!session?.access_token,
         staleTime: 1 * 60 * 60 * 1000, // 1 hour
     });
 
@@ -167,7 +183,7 @@ export function useDashboard(): UseDashboardReturn {
     const { data: todayPlanData } = useQuery({
         queryKey: [...queryKeys.weeklyPlan("today-plan")],
         queryFn: () => fetchTodayPlan(session?.access_token || ''),
-        enabled: !!session?.access_token && isApiConfigured === true,
+        enabled: !!session?.access_token,
         staleTime: 30 * 60 * 1000, // 30 minutes
     });
 
@@ -410,9 +426,15 @@ export function useDashboard(): UseDashboardReturn {
     // Achievements query
     const { data: achievements = null, isLoading: isLoadingAchievements } = useQuery<AchievementsData | null>({
         queryKey: ["achievements", session?.access_token],
-        queryFn: () => session?.access_token ? fetchAchievements(session.access_token) : null,
-        enabled: !!session?.access_token && isApiConfigured === true,
+        queryFn: async () => {
+            if (!session?.access_token) return null;
+            const result = await fetchAchievements(session.access_token);
+            setCachedData('achievements', result);
+            return result;
+        },
+        enabled: !!session?.access_token,
         staleTime: 1000 * 60 * 30, // 30 min
+        placeholderData: () => getCachedData<AchievementsData>('achievements'),
     });
 
     return {
