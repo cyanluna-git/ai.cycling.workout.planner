@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AI Cycling Coach</string>
+    <string name="title_activity_main">AI Cycling Coach</string>
+    <string name="package_name">com.aicyclingcoach.app</string>
+    <string name="custom_url_scheme">com.aicyclingcoach.app</string>
+</resources>
