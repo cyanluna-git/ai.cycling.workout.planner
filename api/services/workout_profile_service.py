@@ -42,6 +42,8 @@ class WorkoutProfileService:
         difficulty_max: Optional[str] = None,
         limit: int = 50,
         exclude_profile_ids: Optional[List[int]] = None,
+        ftp: Optional[float] = None,
+        weight: Optional[float] = None,
     ) -> List[Dict[str, Any]]:
         """Query workout profiles by filters.
 
@@ -470,6 +472,30 @@ def get_max_difficulty_from_tsb(tsb: float) -> str:
     else:
         return "advanced"
 
+def get_max_difficulty_from_wkg(ftp: Optional[float], weight: Optional[float]) -> str:
+    """Map W/kg to maximum difficulty level.
+    
+    Args:
+        ftp: Functional Threshold Power in watts (or None)
+        weight: Body weight in kg (or None)
+        
+    Returns:
+        Maximum difficulty: "beginner", "intermediate", or "advanced"
+    """
+    if ftp is None or weight is None or weight <= 0:
+        return "advanced"  # No limit if FTP or weight unknown
+    
+    wpkg = ftp / weight
+    
+    if wpkg < 3.0:
+        return "beginner"      # < 3.0 W/kg
+    elif wpkg < 3.5:
+        return "intermediate"  # 3.0-3.5 W/kg
+    else:
+        return "advanced"      # >= 3.5 W/kg
+
+
+
 
 def get_profile_candidates_for_llm(
     tsb: float,
@@ -478,6 +504,8 @@ def get_profile_candidates_for_llm(
     duration_buffer: int = 30,
     limit: int = 50,
     exclude_profile_ids: Optional[List[int]] = None,
+    ftp: Optional[float] = None,
+    weight: Optional[float] = None,
     db_path: str = "data/workout_profiles.db",
 ) -> Tuple[str, List[Dict[str, Any]]]:
     """Get profile candidates formatted for LLM selection.
@@ -492,6 +520,8 @@ def get_profile_candidates_for_llm(
         duration_buffer: Buffer around target duration (default: 30min)
         limit: Maximum number of candidates (default: 50)
         exclude_profile_ids: List of profile IDs to exclude (recently used)
+        ftp: Functional Threshold Power in watts (optional)
+        weight: Body weight in kg (optional)
         db_path: Path to workout profiles database
         
     Returns:
@@ -501,7 +531,25 @@ def get_profile_candidates_for_llm(
     profile_service = WorkoutProfileService(db_path=db_path)
     
     # Calculate max difficulty from TSB
-    max_difficulty = get_max_difficulty_from_tsb(tsb)
+    max_difficulty_tsb = get_max_difficulty_from_tsb(tsb)
+    
+    # Calculate max difficulty from W/kg
+    max_difficulty_wkg = get_max_difficulty_from_wkg(ftp, weight)
+    
+    # Use more restrictive difficulty level
+    difficulty_order = {"beginner": 0, "intermediate": 1, "advanced": 2}
+    max_difficulty = min(
+        max_difficulty_tsb,
+        max_difficulty_wkg,
+        key=lambda x: difficulty_order[x]
+    )
+    
+    # Log difficulty determination
+    wpkg = ftp / weight if ftp and weight and weight > 0 else None
+    logger.info(
+        f"Profile difficulty filtering: TSB={tsb:.1f}({max_difficulty_tsb}), "
+        f"W/kg={f'{wpkg:.2f}' if wpkg else 'N/A'}({max_difficulty_wkg}) → Final={max_difficulty}"
+    )
     
     # Map training style to categories
     categories = STYLE_CATEGORIES.get(training_style, None)
