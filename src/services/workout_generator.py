@@ -331,7 +331,7 @@ You will receive:
 - Athlete's current training state (TSB, form, recent load)
 - Context (weekday, wellness, preferences)
 
-Respond with JSON only (in Korean):
+Respond with JSON only (in English):
 {
   "profile_id": <selected profile ID>,
   "customization": {
@@ -340,23 +340,23 @@ Respond with JSON only (in Korean):
     "warmup_adjust": <-5 to +10 minutes, default 0>,
     "cooldown_adjust": <-5 to +10 minutes, default 0>
   },
-  "workout_name": "<descriptive workout name>",
+  "workout_name": "<descriptive workout name in English>",
   "coaching": {
-    "selection_reason": "<TSB 기반 피로도 분석 및 선택 이유 설명>",
-    "focus_points": ["<집중 포인트 1>", "<집중 포인트 2>"],
-    "warnings": ["<주의사항 1>", "<주의사항 2 if any>"],
-    "motivation": "<경쾌하고 격려적인 메시지>"
+    "selection_reason": "<TSB-based fatigue analysis and selection rationale>",
+    "focus_points": ["<focus point 1>", "<focus point 2>"],
+    "warnings": ["<warning 1>", "<warning 2 if any>"],
+    "motivation": "<short encouraging message>"
   }
 }
 
-**Coaching Guidelines (한국어로 작성):**
+**Coaching Guidelines (in English):**
 1. **selection_reason**:
-   - TSB 음수 (-10 이하) → 어제 부하, 피로 누적 상태, 회복 운동 권장
-   - TSB 양수 (+5 이상) → 컸디션 좋음, 고강도 가능, 자신감 부여
-   - 웰니스 데이터 반영 (수면, 스트레스, 근육통)
-2. **focus_points**: 2-3개 구체적 지침 (페달링, 심박수, 호흡 등)
-3. **warnings**: TSB 매우 낮음 / 어제 고강도 후 회복 부족 시 경고
-4. **motivation**: 간결하고 격려적인 메시지, emoji 활용 OK
+   - Negative TSB (below -10): high fatigue from recent load, recommend recovery
+   - Positive TSB (above +5): good form, high intensity possible, build confidence
+   - Reflect wellness data (sleep, stress, muscle soreness)
+2. **focus_points**: 2-3 specific cues (pedaling, heart rate, breathing, etc.)
+3. **warnings**: Alert if TSB is very low or insufficient recovery after hard session
+4. **motivation**: Brief, encouraging message, emoji OK
 
 Guidelines:
 - Match profile difficulty to athlete's TSB and form
