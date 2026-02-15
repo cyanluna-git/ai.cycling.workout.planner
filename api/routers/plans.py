@@ -1131,16 +1131,20 @@ async def register_weekly_plan_to_intervals(
         if workout.get("planned_type") == "Rest":
             continue
 
-        # Skip if no modules (can't build workout)
-        planned_modules = workout.get("planned_modules", [])
-        if not planned_modules or len(planned_modules) == 0:
-            logger.warning(f"Skipping workout {workout['id']}: no modules")
-            continue
-
         try:
-            # Convert modules to steps
-            planned_steps = convert_structure_to_steps(planned_modules, ftp)
-
+            # Get steps: use planned_steps if available (Profile DB), otherwise convert modules
+            planned_steps = workout.get("planned_steps")
+            
+            if not planned_steps:
+                # Fallback to module-based workflow
+                planned_modules = workout.get("planned_modules", [])
+                if not planned_modules or len(planned_modules) == 0:
+                    logger.warning(f"Skipping workout {workout['id']}: no steps or modules")
+                    continue
+                
+                # Convert modules to steps
+                planned_steps = convert_structure_to_steps(planned_modules, ftp)
+            
             if not planned_steps or len(planned_steps) == 0:
                 logger.warning(f"Skipping workout {workout['id']}: no steps generated")
                 continue
