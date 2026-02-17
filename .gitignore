@@ -63,4 +63,4 @@ workout.db/
 
 uploaded_workout.zwo
 uploaded_workout.json
-data/workout_profiles.db
+# data/workout_profiles.db — now tracked (2,578 workout profiles for production)
