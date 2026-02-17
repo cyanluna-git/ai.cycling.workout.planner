@@ -229,21 +229,31 @@ def calculate_duration(steps):
     return int(total_sec / 60)
 
 
-def import_zwo_to_db(zwo_path, db_path, category=None, difficulty='intermediate'):
+def import_zwo_to_db(
+    zwo_path, db_path, category=None, difficulty='intermediate',
+    source='zwift', source_url=None,
+):
     """
-    Import a ZWO file into the database
+    Import a ZWO file into the database.
+
+    Parameters
+    ----------
+    source : str
+        Origin identifier (e.g. 'zwift', 'whatsonzwift').
+    source_url : str | None
+        Canonical URL of the workout on the source site.
     """
     # Parse ZWO file
     workout = parse_zwo_file(zwo_path)
-    
+
     # Auto-detect category if not provided
     if category is None:
         category = detect_category(workout['steps'], workout['tags'])
-    
+
     target_zone = detect_target_zone(category, workout['steps'])
     duration_minutes = calculate_duration(workout['steps'])
     tss, if_value = calculate_normalized_power(workout['steps'])
-    
+
     # Determine fatigue impact from TSS
     if tss < 50:
         fatigue_impact = 'low'
@@ -253,31 +263,38 @@ def import_zwo_to_db(zwo_path, db_path, category=None, difficulty='intermediate'
         fatigue_impact = 'high'
     else:
         fatigue_impact = 'very_high'
-    
+
     # Create slug
     slug = workout['name'].lower().replace(' ', '-').replace('×', 'x')
-    
+
     # Connect to database
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    
-    # Check if already exists
+
+    # Check duplicates: source_url first, then slug
+    if source_url:
+        cursor.execute(
+            'SELECT id FROM workout_profiles WHERE source_url = ?', (source_url,)
+        )
+        if cursor.fetchone():
+            print(f"⚠️  Workout already exists (source_url: {source_url})")
+            conn.close()
+            return False
+
     cursor.execute('SELECT id FROM workout_profiles WHERE slug = ?', (slug,))
-    existing = cursor.fetchone()
-    
-    if existing:
+    if cursor.fetchone():
         print(f"⚠️  Workout '{workout['name']}' already exists (slug: {slug})")
         conn.close()
         return False
-    
+
     # Insert into database
     cursor.execute('''
         INSERT INTO workout_profiles (
             name, slug, category, tags, target_zone,
             duration_minutes, estimated_tss, estimated_if,
             fatigue_impact, difficulty, steps_json, zwo_xml,
-            source, description, is_active
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            source, source_url, description, is_active
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         workout['name'],
         slug,
@@ -291,14 +308,15 @@ def import_zwo_to_db(zwo_path, db_path, category=None, difficulty='intermediate'
         difficulty,
         json.dumps({'steps': workout['steps']}),
         workout['zwo_xml'],
-        'zwift',
+        source,
+        source_url,
         workout['description'],
         1
     ))
-    
+
     conn.commit()
     conn.close()
-    
+
     print(f"✅ Imported: {workout['name']}")
     print(f"   Category: {category} | Zone: {target_zone} | Duration: {duration_minutes}min")
     print(f"   TSS: {tss} | IF: {if_value} | Fatigue: {fatigue_impact}")

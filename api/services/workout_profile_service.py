@@ -459,15 +459,17 @@ class WorkoutProfileService:
 # ---------------------------------------------------------------------------
 
 # Training style to category mapping (shared constant)
+# "mixed" included as fallback — enrichment resolves most to specific categories,
+# but some edge cases may remain "mixed" in the DB.
 STYLE_CATEGORIES = {
-    "endurance": ["endurance", "recovery", "tempo"],
-    "sweetspot": ["sweetspot", "endurance", "threshold", "recovery"],
-    "threshold": ["threshold", "sweetspot", "vo2max", "endurance", "recovery"],
-    "polarized": ["endurance", "vo2max", "recovery"],
-    "vo2max": ["vo2max", "threshold", "endurance", "recovery"],
-    "sprint": ["sprint", "anaerobic", "endurance", "recovery"],
-    "climbing": ["climbing", "threshold", "sweetspot", "endurance", "recovery"],
-    "norwegian": ["threshold", "vo2max", "endurance", "recovery"],
+    "endurance": ["endurance", "recovery", "tempo", "mixed"],
+    "sweetspot": ["sweetspot", "endurance", "threshold", "recovery", "mixed"],
+    "threshold": ["threshold", "sweetspot", "vo2max", "endurance", "recovery", "mixed"],
+    "polarized": ["endurance", "vo2max", "recovery", "mixed"],
+    "vo2max": ["vo2max", "threshold", "endurance", "recovery", "mixed"],
+    "sprint": ["sprint", "anaerobic", "endurance", "recovery", "mixed"],
+    "climbing": ["climbing", "threshold", "sweetspot", "endurance", "recovery", "mixed"],
+    "norwegian": ["threshold", "vo2max", "endurance", "recovery", "mixed"],
 }
 
 
