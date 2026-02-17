@@ -108,3 +108,38 @@ async def health():
         "git_commit_date": _git_info["commit_date"],
         "started_at": _start_time,
     }
+
+
+@app.get("/api/profile-stats")
+async def profile_stats():
+    """Return workout profile DB statistics."""
+    import sqlite3
+    from pathlib import Path
+
+    db_path = Path("data/workout_profiles.db")
+    if not db_path.exists():
+        return {"total": 0, "error": "DB not found"}
+
+    conn = sqlite3.connect(db_path)
+    c = conn.cursor()
+
+    c.execute("SELECT COUNT(*) FROM workout_profiles")
+    total = c.fetchone()[0]
+
+    c.execute("SELECT source, COUNT(*) FROM workout_profiles GROUP BY source")
+    by_source = dict(c.fetchall())
+
+    c.execute("SELECT category, COUNT(*) FROM workout_profiles GROUP BY category ORDER BY COUNT(*) DESC")
+    by_category = dict(c.fetchall())
+
+    c.execute("SELECT difficulty, COUNT(*) FROM workout_profiles GROUP BY difficulty")
+    by_difficulty = dict(c.fetchall())
+
+    conn.close()
+
+    return {
+        "total": total,
+        "by_source": by_source,
+        "by_category": by_category,
+        "by_difficulty": by_difficulty,
+    }
