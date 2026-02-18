@@ -8,7 +8,7 @@ from datetime import datetime
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import workout, fitness, auth, settings, admin, plans
+from .routers import workout, fitness, auth, settings, admin, plans, profiles
 from starlette.middleware.base import BaseHTTPMiddleware
 from .i18n import get_language
 
@@ -62,6 +62,7 @@ app.include_router(fitness.router, prefix="/api", tags=["fitness"])
 app.include_router(workout.router, prefix="/api", tags=["workout"])
 app.include_router(plans.router, prefix="/api", tags=["plans"])
 app.include_router(admin.router, prefix="/api", tags=["admin"])
+app.include_router(profiles.router, prefix="/api", tags=["profiles"])
 
 
 def _get_git_info():
@@ -110,36 +111,3 @@ async def health():
     }
 
 
-@app.get("/api/profile-stats")
-async def profile_stats():
-    """Return workout profile DB statistics."""
-    import sqlite3
-    from pathlib import Path
-
-    db_path = Path("data/workout_profiles.db")
-    if not db_path.exists():
-        return {"total": 0, "error": "DB not found"}
-
-    conn = sqlite3.connect(db_path)
-    c = conn.cursor()
-
-    c.execute("SELECT COUNT(*) FROM workout_profiles")
-    total = c.fetchone()[0]
-
-    c.execute("SELECT source, COUNT(*) FROM workout_profiles GROUP BY source")
-    by_source = dict(c.fetchall())
-
-    c.execute("SELECT category, COUNT(*) FROM workout_profiles GROUP BY category ORDER BY COUNT(*) DESC")
-    by_category = dict(c.fetchall())
-
-    c.execute("SELECT difficulty, COUNT(*) FROM workout_profiles GROUP BY difficulty")
-    by_difficulty = dict(c.fetchall())
-
-    conn.close()
-
-    return {
-        "total": total,
-        "by_source": by_source,
-        "by_category": by_category,
-        "by_difficulty": by_difficulty,
-    }
