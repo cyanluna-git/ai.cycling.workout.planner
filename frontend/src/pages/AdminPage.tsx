@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CURRENT_VERSION } from '@/lib/version';
 import { createAuthFetcher, publicFetcher, defaultSWRConfig } from '@/lib/swr';
+import { ProfilesTab } from '@/components/admin/ProfilesTab';
 
 // Types
 interface OverviewStats {
@@ -52,7 +53,7 @@ interface AdminPageProps {
 export function AdminPage({ onBack }: AdminPageProps) {
     const { session } = useAuth();
     const { t } = useTranslation();
-    const [activeTab, setActiveTab] = useState<'overview' | 'api-logs' | 'audit-logs'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'api-logs' | 'audit-logs' | 'profiles'>('overview');
     const [userStatsDays, setUserStatsDays] = useState<1 | 7 | 30>(7);
     const [apiLogsPage, setApiLogsPage] = useState(1);
     const [auditLogsPage, setAuditLogsPage] = useState(1);
@@ -202,6 +203,12 @@ export function AdminPage({ onBack }: AdminPageProps) {
                         onClick={() => setActiveTab('audit-logs')}
                     >
                         {t("admin.auditLogsTab")}
+                    </Button>
+                    <Button
+                        variant={activeTab === 'profiles' ? 'default' : 'outline'}
+                        onClick={() => setActiveTab('profiles')}
+                    >
+                        Profiles
                     </Button>
                 </div>
 
@@ -534,6 +541,9 @@ export function AdminPage({ onBack }: AdminPageProps) {
                         </CardContent>
                     </Card>
                 )}
+
+                {/* Profiles Tab */}
+                {activeTab === 'profiles' && <ProfilesTab />}
 
                 {/* Audit Logs Tab */}
                 {activeTab === 'audit-logs' && (

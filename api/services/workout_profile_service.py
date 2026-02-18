@@ -180,6 +180,153 @@ class WorkoutProfileService:
             logger.error(f"Error fetching profile {profile_id}: {e}")
             return None
 
+    def list_profiles(
+        self,
+        offset: int = 0,
+        limit: int = 50,
+        category: Optional[str] = None,
+        difficulty: Optional[str] = None,
+        source: Optional[str] = None,
+        search: Optional[str] = None,
+        is_active: Optional[bool] = None,
+    ) -> Dict[str, Any]:
+        """List profiles with pagination and filtering. Excludes steps_json/zwo_xml for performance.
+
+        Returns:
+            Dict with 'items' list and 'total' count
+        """
+        if not self.db_path.exists():
+            return {"items": [], "total": 0}
+
+        # Select all columns except heavy ones for list view
+        columns = (
+            "id, name, slug, category, subcategory, tags, target_zone, "
+            "interval_type, interval_length, duration_minutes, estimated_tss, "
+            "estimated_if, fatigue_impact, difficulty, min_ftp, source, "
+            "source_url, description, coach_notes, is_active, created_at, updated_at"
+        )
+
+        query = f"SELECT {columns} FROM workout_profiles WHERE 1=1"
+        count_query = "SELECT COUNT(*) FROM workout_profiles WHERE 1=1"
+        params: List[Any] = []
+        count_params: List[Any] = []
+
+        if category:
+            query += " AND category = ?"
+            count_query += " AND category = ?"
+            params.append(category)
+            count_params.append(category)
+
+        if difficulty:
+            query += " AND difficulty = ?"
+            count_query += " AND difficulty = ?"
+            params.append(difficulty)
+            count_params.append(difficulty)
+
+        if source:
+            query += " AND source = ?"
+            count_query += " AND source = ?"
+            params.append(source)
+            count_params.append(source)
+
+        if is_active is not None:
+            query += " AND is_active = ?"
+            count_query += " AND is_active = ?"
+            val = 1 if is_active else 0
+            params.append(val)
+            count_params.append(val)
+
+        if search:
+            query += " AND (name LIKE ? OR description LIKE ?)"
+            count_query += " AND (name LIKE ? OR description LIKE ?)"
+            search_val = f"%{search}%"
+            params.extend([search_val, search_val])
+            count_params.extend([search_val, search_val])
+
+        query += " ORDER BY id ASC LIMIT ? OFFSET ?"
+        params.extend([limit, offset])
+
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+
+            cursor.execute(count_query, count_params)
+            total = cursor.fetchone()[0]
+
+            cursor.execute(query, params)
+            rows = cursor.fetchall()
+            conn.close()
+
+            items = [dict(row) for row in rows]
+            return {"items": items, "total": total}
+
+        except Exception as e:
+            logger.error(f"Error listing profiles: {e}")
+            return {"items": [], "total": 0}
+
+    def delete_profile(self, profile_id: int) -> bool:
+        """Hard delete a profile by ID.
+
+        Returns:
+            True if deleted, False if not found or error
+        """
+        if not self.db_path.exists():
+            return False
+
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM workout_profiles WHERE id = ?", (profile_id,))
+            deleted = cursor.rowcount > 0
+            conn.commit()
+            conn.close()
+            if deleted:
+                logger.info(f"Deleted profile {profile_id}")
+            else:
+                logger.warning(f"Profile {profile_id} not found for deletion")
+            return deleted
+
+        except Exception as e:
+            logger.error(f"Error deleting profile {profile_id}: {e}")
+            return False
+
+    def get_profile_stats(self) -> Dict[str, Any]:
+        """Get profile database statistics."""
+        if not self.db_path.exists():
+            return {"total": 0, "error": "DB not found"}
+
+        try:
+            conn = self._get_connection()
+            c = conn.cursor()
+
+            c.execute("SELECT COUNT(*) FROM workout_profiles")
+            total = c.fetchone()[0]
+
+            c.execute("SELECT source, COUNT(*) FROM workout_profiles GROUP BY source")
+            by_source = dict(c.fetchall())
+
+            c.execute(
+                "SELECT category, COUNT(*) FROM workout_profiles "
+                "GROUP BY category ORDER BY COUNT(*) DESC"
+            )
+            by_category = dict(c.fetchall())
+
+            c.execute("SELECT difficulty, COUNT(*) FROM workout_profiles GROUP BY difficulty")
+            by_difficulty = dict(c.fetchall())
+
+            conn.close()
+
+            return {
+                "total": total,
+                "by_source": by_source,
+                "by_category": by_category,
+                "by_difficulty": by_difficulty,
+            }
+
+        except Exception as e:
+            logger.error(f"Error getting profile stats: {e}")
+            return {"total": 0, "error": str(e)}
+
     def format_candidates_for_prompt(self, candidates: List[Dict[str, Any]]) -> str:
         """Format profile candidates for LLM prompt.
 
