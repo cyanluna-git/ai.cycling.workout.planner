@@ -104,6 +104,63 @@ class TestDataProcessor:
         assert result.sleep_hours == 8.0
         assert "Good" in result.readiness
 
+    def test_analyze_wellness_hrv_from_previous_day(self, processor):
+        """Test that HRV falls back to previous day when today's entry lacks it."""
+        wellness = [
+            {
+                "id": "2026-02-24",
+                "hrv": 58,
+                "restingHR": 50,
+                "sleepSecs": 27000,  # 7.5 hours
+                "soreness": 2,
+                "fatigue": 3,
+            },
+            {
+                "id": "2026-02-25",
+                # Today: no HRV, no sleep (wearable not synced yet)
+                "soreness": 1,
+                "fatigue": 2,
+            },
+        ]
+
+        result = processor.analyze_wellness(wellness)
+
+        # HRV and sleep should come from yesterday
+        assert result.hrv == 58
+        assert result.rhr == 50
+        assert result.sleep_hours == 7.5
+        # Subjective data should come from today (latest entry)
+        assert result.soreness == 1
+        assert result.fatigue == 2
+
+    def test_analyze_wellness_hrv_sdnn_fallback(self, processor):
+        """Test that hrvSDNN is used as fallback when hrv (RMSSD) is unavailable."""
+        wellness = [
+            {
+                "id": "2026-02-25",
+                "hrvSDNN": 65,  # Only SDNN available, no RMSSD
+                "restingHR": 48,
+                "sleepSecs": 28800,
+            },
+        ]
+
+        result = processor.analyze_wellness(wellness)
+
+        assert result.hrv == 65
+        assert result.sleep_hours == 8.0
+
+    def test_analyze_wellness_all_days_null_hrv(self, processor):
+        """Test that hrv is None when no entry has HRV data."""
+        wellness = [
+            {"id": "2026-02-24", "soreness": 2},
+            {"id": "2026-02-25", "fatigue": 3},
+        ]
+
+        result = processor.analyze_wellness(wellness)
+
+        assert result.hrv is None
+        assert result.sleep_hours is None
+
     def test_check_existing_workout_found(self, processor):
         """Test finding existing workout."""
         events = [
