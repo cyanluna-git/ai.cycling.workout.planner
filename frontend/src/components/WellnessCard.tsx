@@ -39,9 +39,9 @@ const getRatingEmoji = (value: number | null, invertScale: boolean = true) => {
 
 export function WellnessCard({ wellness, className }: WellnessCardProps) {
     const { t } = useTranslation();
-    const hasSubjectiveData = wellness.soreness || wellness.fatigue || wellness.stress || wellness.mood || wellness.motivation;
-    const hasHealthData = wellness.spo2 || wellness.systolic || wellness.respiration;
-    const hasSleepData = wellness.sleep_hours || wellness.sleep_score;
+    const hasSubjectiveData = wellness.soreness != null || wellness.fatigue != null || wellness.stress != null || wellness.mood != null || wellness.motivation != null;
+    const hasHealthData = wellness.spo2 != null || wellness.systolic != null || wellness.respiration != null;
+    const hasSleepData = wellness.sleep_hours != null || wellness.sleep_score != null;
 
     return (
         <Card className={className}>
@@ -53,28 +53,28 @@ export function WellnessCard({ wellness, className }: WellnessCardProps) {
             <CardContent className="space-y-4">
                 {/* Primary Metrics Row */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    {wellness.hrv && (
+                    {wellness.hrv != null && (
                         <div className="text-center p-2 bg-muted/50 rounded-lg">
                             <div className="text-xs text-muted-foreground">HRV</div>
                             <div className="text-xl font-bold text-blue-500">{wellness.hrv.toFixed(0)}</div>
                             <div className="text-[10px] text-muted-foreground">ms</div>
                         </div>
                     )}
-                    {wellness.rhr && (
+                    {wellness.rhr != null && (
                         <div className="text-center p-2 bg-muted/50 rounded-lg">
                             <div className="text-xs text-muted-foreground">{t('wellnessCard.restingHR')}</div>
                             <div className="text-xl font-bold">{wellness.rhr}</div>
                             <div className="text-[10px] text-muted-foreground">bpm</div>
                         </div>
                     )}
-                    {wellness.vo2max && (
+                    {wellness.vo2max != null && (
                         <div className="text-center p-2 bg-muted/50 rounded-lg">
                             <div className="text-xs text-muted-foreground">VO2max</div>
                             <div className="text-xl font-bold text-emerald-500">{wellness.vo2max.toFixed(1)}</div>
                             <div className="text-[10px] text-muted-foreground">ml/kg/min</div>
                         </div>
                     )}
-                    {wellness.weight && (
+                    {wellness.weight != null && (
                         <div className="text-center p-2 bg-muted/50 rounded-lg">
                             <div className="text-xs text-muted-foreground">{t('wellnessCard.weight')}</div>
                             <div className="text-xl font-bold">{wellness.weight.toFixed(1)}</div>
@@ -90,7 +90,7 @@ export function WellnessCard({ wellness, className }: WellnessCardProps) {
                             {t('wellnessCard.sleepTitle')}
                         </div>
                         <div className="flex flex-wrap gap-4">
-                            {wellness.sleep_hours && (
+                            {wellness.sleep_hours != null && (
                                 <div className="flex items-center gap-2">
                                     <span className="text-sm text-muted-foreground">{t('wellnessCard.sleepHours')}</span>
                                     <span className={`font-bold ${wellness.sleep_hours >= 7 ? 'text-green-500' : wellness.sleep_hours >= 6 ? 'text-yellow-500' : 'text-red-500'}`}>
@@ -98,7 +98,7 @@ export function WellnessCard({ wellness, className }: WellnessCardProps) {
                                     </span>
                                 </div>
                             )}
-                            {wellness.sleep_score && (
+                            {wellness.sleep_score != null && (
                                 <div className="flex items-center gap-2">
                                     <span className="text-sm text-muted-foreground">{t('wellnessCard.sleepScore')}</span>
                                     <span className={`font-bold ${wellness.sleep_score >= 80 ? 'text-green-500' : wellness.sleep_score >= 60 ? 'text-yellow-500' : 'text-red-500'}`}>
@@ -106,7 +106,7 @@ export function WellnessCard({ wellness, className }: WellnessCardProps) {
                                     </span>
                                 </div>
                             )}
-                            {wellness.sleep_quality && (
+                            {wellness.sleep_quality != null && (
                                 <div className="flex items-center gap-2">
                                     <span className="text-sm text-muted-foreground">{t('wellnessCard.sleepQuality')}</span>
                                     <span className="font-bold">{wellness.sleep_quality}/5</span>
@@ -174,7 +174,7 @@ export function WellnessCard({ wellness, className }: WellnessCardProps) {
                             {t('wellnessCard.healthTitle')}
                         </div>
                         <div className="flex flex-wrap gap-4">
-                            {wellness.spo2 && (
+                            {wellness.spo2 != null && (
                                 <div className="flex items-center gap-2">
                                     <span className="text-sm text-muted-foreground">SpO2</span>
                                     <span className={`font-bold ${wellness.spo2 >= 95 ? 'text-green-500' : 'text-yellow-500'}`}>
@@ -182,21 +182,21 @@ export function WellnessCard({ wellness, className }: WellnessCardProps) {
                                     </span>
                                 </div>
                             )}
-                            {wellness.systolic && wellness.diastolic && (
+                            {wellness.systolic != null && wellness.diastolic != null && (
                                 <div className="flex items-center gap-2">
                                     <span className="text-sm text-muted-foreground">{t('wellnessCard.bloodPressure')}</span>
                                     <span className="font-bold">{wellness.systolic}/{wellness.diastolic}</span>
                                     <span className="text-xs text-muted-foreground">mmHg</span>
                                 </div>
                             )}
-                            {wellness.respiration && (
+                            {wellness.respiration != null && (
                                 <div className="flex items-center gap-2">
                                     <span className="text-sm text-muted-foreground">{t('wellnessCard.respiration')}</span>
                                     <span className="font-bold">{wellness.respiration.toFixed(1)}</span>
                                     <span className="text-xs text-muted-foreground">{t("wellnessCard.perMinute")}</span>
                                 </div>
                             )}
-                            {wellness.body_fat && (
+                            {wellness.body_fat != null && (
                                 <div className="flex items-center gap-2">
                                     <span className="text-sm text-muted-foreground">{t('wellnessCard.bodyFat')}</span>
                                     <span className="font-bold">{wellness.body_fat.toFixed(1)}%</span>
@@ -217,7 +217,7 @@ export function WellnessCard({ wellness, className }: WellnessCardProps) {
                             {wellness.readiness}
                         </span>
                     </div>
-                    {wellness.readiness_score && (
+                    {wellness.readiness_score != null && (
                         <div className="mt-1">
                             <div className="w-full bg-muted rounded-full h-2">
                                 <div
