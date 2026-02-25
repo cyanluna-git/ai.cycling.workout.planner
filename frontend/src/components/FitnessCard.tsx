@@ -98,19 +98,19 @@ export function FitnessCard({ training, wellness, profile }: FitnessCardProps) {
                     {/* Right: Wellness Metrics */}
                     <div className="space-y-2">
                         <div className="text-xs font-medium text-muted-foreground mb-1">{t('fitness.wellness')}</div>
-                        {wellness.hrv && (
+                        {wellness.hrv != null && (
                             <div className="flex justify-between items-baseline">
                                 <span className="text-sm text-muted-foreground">HRV</span>
                                 <span className="text-lg font-bold text-blue-500">{wellness.hrv.toFixed(0)} ms</span>
                             </div>
                         )}
-                        {wellness.rhr && (
+                        {wellness.rhr != null && (
                             <div className="flex justify-between items-baseline">
                                 <span className="text-sm text-muted-foreground">{t('fitness.restingHR')}</span>
                                 <span className="text-lg font-bold">{wellness.rhr} bpm</span>
                             </div>
                         )}
-                        {wellness.sleep_hours && (
+                        {wellness.sleep_hours != null && (
                             <div className="flex justify-between items-baseline">
                                 <span className="text-sm text-muted-foreground">{t('fitness.sleep')}</span>
                                 <span className={`text-lg font-bold ${wellness.sleep_hours >= 7 ? 'text-green-500' : wellness.sleep_hours >= 6 ? 'text-yellow-500' : 'text-red-500'}`}>
@@ -118,7 +118,7 @@ export function FitnessCard({ training, wellness, profile }: FitnessCardProps) {
                                 </span>
                             </div>
                         )}
-                        {wellness.sleep_score && !wellness.sleep_hours && (
+                        {wellness.sleep_score != null && wellness.sleep_hours == null && (
                             <div className="flex justify-between items-baseline">
                                 <span className="text-sm text-muted-foreground">{t('fitness.sleepScore')}</span>
                                 <span className={`text-lg font-bold ${wellness.sleep_score >= 80 ? 'text-green-500' : wellness.sleep_score >= 60 ? 'text-yellow-500' : 'text-red-500'}`}>

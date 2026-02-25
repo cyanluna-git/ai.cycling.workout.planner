@@ -7,7 +7,7 @@ and analysis of wellness data.
 import logging
 from dataclasses import dataclass
 from datetime import date
-from typing import Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -216,37 +216,49 @@ class DataProcessor:
                 readiness_score=None,
             )
 
-        # Get latest wellness data
-        latest = max(wellness_data, key=lambda x: x.get("id", ""))
+        # Sort wellness entries by date descending (newest first)
+        sorted_data = sorted(
+            wellness_data, key=lambda x: x.get("id", ""), reverse=True
+        )
+        latest = sorted_data[0]
 
-        # Basic metrics
-        hrv = latest.get("hrv")
-        hrv_sdnn = latest.get("hrvSDNN")
-        rhr = latest.get("restingHR")
-        sleep_secs = latest.get("sleepSecs")
+        # Wearable-synced metrics: scan backwards to find most recent non-null.
+        # Handles the common case where today's entry exists but wearable
+        # data (HRV, sleep) hasn't synced yet.
+        hrv = self._get_most_recent_value(sorted_data, "hrv")
+        hrv_sdnn = self._get_most_recent_value(sorted_data, "hrvSDNN")
+        rhr = self._get_most_recent_value(sorted_data, "restingHR")
+        sleep_secs = self._get_most_recent_value(sorted_data, "sleepSecs")
         sleep_hours = sleep_secs / 3600 if sleep_secs else None
-        sleep_score = latest.get("sleepScore")
-        sleep_quality = latest.get("sleepQuality")
+        sleep_score = self._get_most_recent_value(sorted_data, "sleepScore")
+        sleep_quality = self._get_most_recent_value(sorted_data, "sleepQuality")
 
-        # Physical state
-        weight = latest.get("weight")
-        body_fat = latest.get("bodyFat")
-        vo2max = latest.get("vo2max")
+        # Use hrvSDNN as fallback when RMSSD HRV is not available
+        if hrv is None and hrv_sdnn is not None:
+            logger.info(
+                f"Using HRV SDNN ({hrv_sdnn}) as fallback for missing RMSSD HRV"
+            )
+            hrv = hrv_sdnn
 
-        # Subjective ratings
+        # Physical state - wearable-synced, scan backwards
+        weight = self._get_most_recent_value(sorted_data, "weight")
+        body_fat = self._get_most_recent_value(sorted_data, "bodyFat")
+        vo2max = self._get_most_recent_value(sorted_data, "vo2max")
+
+        # Subjective ratings - use latest entry only (date-specific user input)
         soreness = latest.get("soreness")
         fatigue = latest.get("fatigue")
         stress = latest.get("stress")
         mood = latest.get("mood")
         motivation = latest.get("motivation")
 
-        # Health metrics
-        spo2 = latest.get("spO2")
-        systolic = latest.get("systolic")
-        diastolic = latest.get("diastolic")
-        respiration = latest.get("respiration")
+        # Health metrics - wearable-synced, scan backwards
+        spo2 = self._get_most_recent_value(sorted_data, "spO2")
+        systolic = self._get_most_recent_value(sorted_data, "systolic")
+        diastolic = self._get_most_recent_value(sorted_data, "diastolic")
+        respiration = self._get_most_recent_value(sorted_data, "respiration")
 
-        # Readiness score from Intervals.icu (if available)
+        # Readiness score from Intervals.icu (use latest, computed daily)
         readiness_score = latest.get("readiness")
 
         # Determine readiness text based on available data
@@ -283,6 +295,26 @@ class DataProcessor:
             respiration=respiration,
             readiness_score=readiness_score,
         )
+
+    def _get_most_recent_value(
+        self,
+        sorted_data: list[dict],
+        field: str,
+    ) -> Any:
+        """Get the most recent non-null value for a field across wellness entries.
+
+        Args:
+            sorted_data: Wellness entries sorted by date descending (newest first).
+            field: The Intervals.icu field name to look up.
+
+        Returns:
+            The most recent non-null value, or None.
+        """
+        for entry in sorted_data:
+            value = entry.get(field)
+            if value is not None:
+                return value
+        return None
 
     def _assess_readiness(
         self,
