@@ -5,43 +5,11 @@
       <stop offset="100%" style="stop-color:#7c3aed"/>
     </linearGradient>
   </defs>
-  <!-- Rounded rect background -->
   <rect width="512" height="512" rx="108" fill="url(#bg)"/>
-
-  <!-- Bicycle silhouette (centered, bold, solid) -->
-  <g transform="translate(256, 280)" fill="white">
-    <!-- Rear wheel -->
-    <circle cx="-95" cy="0" r="80" fill="none" stroke="white" stroke-width="16"/>
-    <circle cx="-95" cy="0" r="10" fill="white"/>
-    <!-- Front wheel -->
-    <circle cx="95" cy="0" r="80" fill="none" stroke="white" stroke-width="16"/>
-    <circle cx="95" cy="0" r="10" fill="white"/>
-
-    <!-- Frame (solid thick lines) -->
-    <g stroke="white" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" fill="none">
-      <!-- Seat tube: rear hub → seat junction -->
-      <line x1="-95" y1="0" x2="-45" y2="-100"/>
-      <!-- Top tube: seat junction → head tube top -->
-      <line x1="-45" y1="-100" x2="55" y2="-95"/>
-      <!-- Down tube: rear hub → head tube top -->
-      <line x1="-95" y1="0" x2="55" y2="-95"/>
-      <!-- Fork: head tube top → front hub -->
-      <line x1="55" y1="-95" x2="95" y2="0"/>
-      <!-- Chain stay + seat stay (rear triangle) -->
-      <line x1="-95" y1="0" x2="-15" y2="-30"/>
-      <line x1="95" y1="0" x2="-15" y2="-30"/>
-    </g>
-
-    <!-- Seat -->
-    <g stroke="white" stroke-width="14" stroke-linecap="round" fill="none">
-      <line x1="-45" y1="-100" x2="-40" y2="-120"/>
-      <line x1="-58" y1="-120" x2="-22" y2="-120"/>
-    </g>
-
-    <!-- Handlebar -->
-    <g stroke="white" stroke-width="14" stroke-linecap="round" fill="none">
-      <line x1="55" y1="-95" x2="65" y2="-118"/>
-      <line x1="58" y1="-118" x2="82" y2="-108"/>
-    </g>
+  <g transform="translate(96, 96) scale(13.3)" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="18.5" cy="17.5" r="3.5"/>
+    <circle cx="5.5" cy="17.5" r="3.5"/>
+    <circle cx="15" cy="5" r="1"/>
+    <path d="M12 17.5V14l-3-3 4-3 2 3h2"/>
   </g>
 </svg>
