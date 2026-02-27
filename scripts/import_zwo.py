@@ -71,10 +71,21 @@ def parse_zwo_element(elem):
         }
     
     elif tag == 'steadystate':
+        duration_sec = int(float(elem.get('Duration', '300')))
+        power_attr = elem.get('Power')
+        if power_attr is not None:
+            power = int(float(power_attr) * 100)
+        else:
+            power_high = float(elem.get('PowerHigh', '1.0'))
+            power_low = float(elem.get('PowerLow', '1.0'))
+            if abs(power_high - power_low) < 0.001:
+                power = int(power_high * 100)
+            else:
+                power = int(((power_high + power_low) / 2) * 100)
         return {
             'type': 'steady',
-            'power': int(float(elem.get('Power', '1.0')) * 100),
-            'duration_sec': int(float(elem.get('Duration', '300')))
+            'power': power,
+            'duration_sec': duration_sec
         }
     
     elif tag == 'ramp':

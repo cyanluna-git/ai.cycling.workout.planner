@@ -36,7 +36,15 @@ export function parseZwoToChartData(zwoContent: string): ChartDataPoint[] {
 
                 if (tagName === 'steadystate') {
                     const duration = parseInt(el.getAttribute('Duration') || '0');
-                    const power = parseFloat(el.getAttribute('Power') || '0.5') * 100;
+                    const powerAttr = el.getAttribute('Power');
+                    let power: number;
+                    if (powerAttr !== null) {
+                        power = parseFloat(powerAttr) * 100;
+                    } else {
+                        const powerHigh = parseFloat(el.getAttribute('PowerHigh') || '0.5');
+                        const powerLow = parseFloat(el.getAttribute('PowerLow') || '0.5');
+                        power = ((powerHigh + powerLow) / 2) * 100;
+                    }
 
                     for (let t = 0; t < duration; t += RESOLUTION) {
                         chartData.push({
