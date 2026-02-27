@@ -14,21 +14,13 @@ import {
 } from 'recharts';
 import { parseZwoToChartData, type ChartDataPoint } from '@/lib/zwo-parser';
 import type { WorkoutStep } from '@/types/workout';
+import { getZoneColor } from '@/lib/workout-utils';
 
 interface WorkoutChartProps {
     workoutText: string;
     zwoContent?: string;
     steps?: WorkoutStep[];
     ftp?: number;
-}
-
-function getZoneColor(power: number): string {
-    if (power <= 55) return '#10b981';      // Z1 - Recovery (green)
-    if (power <= 75) return '#3b82f6';      // Z2 - Endurance (blue)
-    if (power <= 90) return '#22c55e';      // Z3 - Tempo (light green)
-    if (power <= 105) return '#eab308';     // Z4 - Threshold (yellow)
-    if (power <= 120) return '#f97316';     // Z5 - VO2 Max (orange)
-    return '#ef4444';                        // Z6/Z7 - Anaerobic (red)
 }
 
 interface Segment {

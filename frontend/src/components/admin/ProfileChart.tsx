@@ -14,6 +14,7 @@ import {
     ResponsiveContainer,
     ReferenceLine,
 } from 'recharts';
+import { getZoneColor } from '@/lib/workout-utils';
 
 interface StepPower {
     value?: number;
@@ -49,15 +50,6 @@ interface ProfileChartProps {
     stepsJson: StepsJson | Step[] | null;
     height?: number;
     className?: string;
-}
-
-function getZoneColor(power: number): string {
-    if (power <= 55) return '#009e80';   // Z1 - Recovery
-    if (power <= 75) return '#009e00';   // Z2 - Endurance
-    if (power <= 90) return '#ffcb0e';   // Z3 - Tempo
-    if (power <= 105) return '#ff7f0e';  // Z4 - Threshold
-    if (power <= 120) return '#dd0447';  // Z5 - VO2max
-    return '#6633cc';                     // Z6 - Anaerobic
 }
 
 interface Segment {
