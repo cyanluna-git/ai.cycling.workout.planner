@@ -3,6 +3,7 @@
  */
 
 import type { WorkoutStep } from '@/types/workout';
+import { getZoneColor } from '@/lib/workout-utils';
 
 export interface FormattedStep {
     text: string;
@@ -13,18 +14,6 @@ export interface WorkoutSections {
     warmup: FormattedStep[];
     main: FormattedStep[];
     cooldown: FormattedStep[];
-}
-
-/**
- * Get zone color based on power percentage
- */
-function getZoneColor(power: number): string {
-    if (power <= 55) return '#10b981';      // Z1
-    if (power <= 75) return '#3b82f6';      // Z2
-    if (power <= 90) return '#22c55e';      // Z3
-    if (power <= 105) return '#eab308';     // Z4
-    if (power <= 120) return '#f97316';     // Z5
-    return '#ef4444';                        // Z6/Z7
 }
 
 /**

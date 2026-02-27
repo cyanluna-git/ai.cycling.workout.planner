@@ -5,17 +5,9 @@
  */
 
 import type { WorkoutStep, ChartDataPoint } from '@/types/workout';
+import { getZoneColor } from '@/lib/workout-utils';
 
 const RESOLUTION = 10; // 10-second resolution for legacy chart
-
-function getZoneColor(power: number): string {
-    if (power <= 55) return '#10b981';      // Z1 - Recovery
-    if (power <= 75) return '#3b82f6';      // Z2 - Endurance
-    if (power <= 90) return '#22c55e';      // Z3 - Tempo
-    if (power <= 105) return '#eab308';     // Z4 - Threshold
-    if (power <= 120) return '#f97316';     // Z5 - VO2max
-    return '#ef4444';                        // Z6/Z7 - Anaerobic
-}
 
 /**
  * Convert steps to fine-grained chart data (10-second resolution)
