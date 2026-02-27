@@ -8,6 +8,8 @@ import { useTranslation } from 'react-i18next';
 import { useState, memo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Sunrise, Sunset, Moon, Calendar, Loader2, RefreshCw, Trash2 } from "lucide-react";
+import { getWorkoutTypeIcon, getStatusIcon } from "@/lib/icon-maps";
 import { WorkoutThumbnailChart } from "@/components/WorkoutThumbnailChart";
 import { WorkoutDetailModal } from "@/components/WorkoutDetailModal";
 import type { WeeklyPlan, DailyWorkout } from "@/lib/api";
@@ -48,16 +50,7 @@ const typeColors: Record<string, string> = {
     VO2max: "bg-purple-100 text-purple-700",
 };
 
-// Workout type to emoji mapping
-const typeEmoji: Record<string, string> = {
-    Rest: "😴",
-    Recovery: "🌱",
-    Endurance: "🚴",
-    Tempo: "💪",
-    SweetSpot: "🍯",
-    Threshold: "🔥",
-    VO2max: "⚡",
-};
+// Workout type icons are now from icon-maps.ts
 
 function DailyWorkoutRow({
     workout,
@@ -69,11 +62,11 @@ function DailyWorkoutRow({
     const { t } = useTranslation();
     const workoutType = workout.planned_type || "Endurance";
     const colorClass = typeColors[workoutType] || typeColors.Endurance;
-    const emoji = typeEmoji[workoutType] || "🚴";
+    const typeIcon = getWorkoutTypeIcon(workoutType, "h-3.5 w-3.5 inline");
     const isRest = workoutType === "Rest";
 
     // Session label for Norwegian-style double sessions
-    const sessionLabel = workout.session === "AM" ? "🌅" : workout.session === "PM" ? "🌆" : "";
+    const sessionIcon = workout.session === "AM" ? <Sunrise className="h-3 w-3 inline" /> : workout.session === "PM" ? <Sunset className="h-3 w-3 inline" /> : null;
 
     return (
         <div
@@ -93,8 +86,8 @@ function DailyWorkoutRow({
 
             {/* Middle: Workout info (compact, single line) */}
             <div className="flex-grow min-w-0">
-                <div className="font-semibold text-xs truncate leading-tight">
-                    {sessionLabel}{emoji} {workout.planned_name || (isRest ? "Complete Rest" : "Workout")}
+                <div className="font-semibold text-xs truncate leading-tight flex items-center gap-1">
+                    {sessionIcon}{typeIcon} {workout.planned_name || (isRest ? "Complete Rest" : "Workout")}
                 </div>
                 {!isRest && (
                     <div className="text-[10px] opacity-80 leading-tight">
@@ -102,7 +95,7 @@ function DailyWorkoutRow({
                     </div>
                 )}
                 {isRest && (
-                    <div className="text-[10px] opacity-60 leading-tight">😴 Rest</div>
+                    <div className="text-[10px] opacity-60 leading-tight flex items-center gap-1"><Moon className="h-3 w-3 inline" /> Rest</div>
                 )}
             </div>
 
@@ -205,7 +198,7 @@ export const WeeklyPlanCard = memo(function WeeklyPlanCard({
                 </CardHeader>
                 <CardContent>
                     <div className="py-12 text-center">
-                        <div className="text-5xl mb-4">📅</div>
+                        <div className="mb-4 flex justify-center"><Calendar className="h-12 w-12 text-primary" /></div>
                         <h3 className="text-xl font-bold mb-2">{t("weeklyPlan.emptyTitle")}</h3>
                         <p className="text-muted-foreground text-sm mb-6 max-w-md mx-auto">
                             {t("weeklyPlan.emptyDesc")}
@@ -288,10 +281,7 @@ export const WeeklyPlanCard = memo(function WeeklyPlanCard({
                                 plan.achievement_status === "missed" ? "bg-red-100 text-red-700" :
                                 "bg-blue-100 text-blue-700"
                             }`}>
-                                {plan.achievement_status === "exceeded" ? "🏆" :
-                                 plan.achievement_status === "achieved" ? "✅" :
-                                 plan.achievement_status === "partial" ? "🔶" :
-                                 plan.achievement_status === "missed" ? "❌" : "⏳"}
+                                {getStatusIcon(plan.achievement_status || "in_progress", "h-3 w-3 inline")}
                                 {" "}{plan.achievement_pct != null ? `${plan.achievement_pct}%` : ""}
                             </div>
                         )}
@@ -401,7 +391,7 @@ export const WeeklyPlanCard = memo(function WeeklyPlanCard({
                         onClick={onGenerate}
                         disabled={isGenerating}
                     >
-                        {isGenerating ? (<><span className="animate-spin">⏳</span>{t("common.generating")}</> ) : t("weeklyPlan.regenerate")}
+                        {isGenerating ? (<><Loader2 className="h-4 w-4 animate-spin" />{t("common.generating")}</> ) : t("weeklyPlan.regenerate")}
                     </Button>
                     {onSync && (
                         <Button
@@ -410,7 +400,7 @@ export const WeeklyPlanCard = memo(function WeeklyPlanCard({
                             onClick={() => onSync(plan.id)}
                             disabled={isSyncing}
                         >
-                            {isSyncing ? t("weeklyPlan.syncing") : "🔃 Sync"}
+                            {isSyncing ? t("weeklyPlan.syncing") : <><RefreshCw className="h-4 w-4" /> Sync</>}
                         </Button>
                     )}
                     {onRegisterAll && (
@@ -446,7 +436,7 @@ export const WeeklyPlanCard = memo(function WeeklyPlanCard({
                                     variant="ghost"
                                     className="h-11 sm:h-9 transition-all active:scale-95"
                                     onClick={() => setShowConfirmDelete(true)}
-                                >{"🗑️ " + t("common.delete")}</Button>
+                                ><Trash2 className="h-4 w-4" /> {t("common.delete")}</Button>
                             )}
                         </>
                     )}

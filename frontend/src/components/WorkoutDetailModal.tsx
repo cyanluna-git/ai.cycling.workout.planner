@@ -3,6 +3,7 @@
  * Shows power chart, step breakdown, TSS, rationale
  */
 
+import { Lightbulb } from "lucide-react";
 import {
     Dialog,
     DialogContent,
@@ -60,7 +61,7 @@ export function WorkoutDetailModal({
 
                 {workout.planned_rationale && (
                     <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                        <h3 className="font-semibold text-sm mb-2">💡 Rationale</h3>
+                        <h3 className="font-semibold text-sm mb-2 flex items-center gap-1.5"><Lightbulb className="h-4 w-4" /> Rationale</h3>
                         <p className="text-sm text-gray-700">
                             {workout.planned_rationale}
                         </p>

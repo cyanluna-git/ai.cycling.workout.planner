@@ -1,5 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Flame } from "lucide-react";
+import { getStatusIcon } from "@/lib/icon-maps";
 import type { AchievementsData } from '@/lib/api';
 
 interface AchievementBadgesProps {
@@ -7,14 +9,7 @@ interface AchievementBadgesProps {
     isLoading: boolean;
 }
 
-const statusIcons: Record<string, string> = {
-    exceeded: '🏆',
-    achieved: '✅',
-    partial: '🔶',
-    missed: '❌',
-    in_progress: '⏳',
-    no_target: '➖',
-};
+// Status icons are now from icon-maps.ts
 
 const statusColors: Record<string, string> = {
     exceeded: 'bg-yellow-200',
@@ -45,7 +40,7 @@ export function AchievementBadges({ data, isLoading }: AchievementBadgesProps) {
             <CardHeader className="pb-2 pt-3 px-4">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2">
                     {data.current_streak > 0 && (
-                        <span className="text-lg">🔥</span>
+                        <Flame className="h-5 w-5 text-orange-500" />
                     )}
                     {data.current_streak > 0
                         ? t('achievements.streakLabel', { count: data.current_streak })
@@ -94,10 +89,10 @@ export function AchievementBadges({ data, isLoading }: AchievementBadgesProps) {
                                 <div
                                     key={idx}
                                     className={`w-4 h-4 rounded-sm ${statusColors[week.achievement_status] || 'bg-gray-100'} flex items-center justify-center`}
-                                    title={`${week.week_start}: ${statusIcons[week.achievement_status] || ''} ${week.achievement_pct}%`}
+                                    title={`${week.week_start}: ${week.achievement_pct}%`}
                                 >
-                                    <span className="text-[8px]">
-                                        {statusIcons[week.achievement_status] || ''}
+                                    <span className="flex items-center justify-center">
+                                        {getStatusIcon(week.achievement_status, "h-2.5 w-2.5")}
                                     </span>
                                 </div>
                             ))}

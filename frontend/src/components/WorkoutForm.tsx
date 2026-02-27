@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { Bike, Crosshair, Smile, Dumbbell, Flame } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -17,11 +18,11 @@ export function WorkoutForm({ onGenerate, isLoading }: WorkoutFormProps) {
     const [intensity, setIntensity] = useState("auto");
     const [indoor, setIndoor] = useState(false);
 
-    const INTENSITIES = [
-        { value: "auto", label: t('workout.intensityAuto'), emoji: "🎯" },
-        { value: "easy", label: t('workout.intensityEasy'), emoji: "😌" },
-        { value: "moderate", label: t('workout.intensityModerate'), emoji: "💪" },
-        { value: "hard", label: t('workout.intensityHard'), emoji: "🔥" },
+    const INTENSITIES: { value: string; label: string; icon: ReactNode }[] = [
+        { value: "auto", label: t('workout.intensityAuto'), icon: <Crosshair className="h-3.5 w-3.5" /> },
+        { value: "easy", label: t('workout.intensityEasy'), icon: <Smile className="h-3.5 w-3.5" /> },
+        { value: "moderate", label: t('workout.intensityModerate'), icon: <Dumbbell className="h-3.5 w-3.5" /> },
+        { value: "hard", label: t('workout.intensityHard'), icon: <Flame className="h-3.5 w-3.5" /> },
     ];
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -39,7 +40,7 @@ export function WorkoutForm({ onGenerate, isLoading }: WorkoutFormProps) {
         <Card className="w-full">
             <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
-                    🚴 {t('workout.todayTitle')}
+                    <Bike className="h-5 w-5" /> {t('workout.todayTitle')}
                 </CardTitle>
             </CardHeader>
             <CardContent>
@@ -73,7 +74,7 @@ export function WorkoutForm({ onGenerate, isLoading }: WorkoutFormProps) {
                                     onClick={() => setIntensity(i.value)}
                                     className="text-xs"
                                 >
-                                    {i.emoji} {i.label}
+                                    <span className="inline-flex items-center gap-1">{i.icon} {i.label}</span>
                                 </Button>
                             ))}
                         </div>

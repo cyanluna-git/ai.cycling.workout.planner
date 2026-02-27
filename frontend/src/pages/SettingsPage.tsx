@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { CalendarDays, Bike, Moon, PartyPopper } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -203,7 +204,7 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                     </CardContent>
                 </Card>
                 <Card>
-                    <CardHeader><CardTitle>📅 {t('settings.weeklyAvailability.title')}</CardTitle></CardHeader>
+                    <CardHeader><CardTitle className="flex items-center gap-2"><CalendarDays className="h-5 w-5" /> {t('settings.weeklyAvailability.title')}</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
                         <p className="text-sm text-muted-foreground">{t('settings.weeklyAvailability.description')}</p>
                         <div className="space-y-3">
@@ -221,10 +222,10 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="available">
-                                                🚴 {t("settings.weeklyAvailability.available")}
+                                                <span className="inline-flex items-center gap-1.5"><Bike className="h-3.5 w-3.5" /> {t("settings.weeklyAvailability.available")}</span>
                                             </SelectItem>
-<SelectItem value="rest">
-                                                😴 {t("settings.weeklyAvailability.rest")}
+                                            <SelectItem value="rest">
+                                                <span className="inline-flex items-center gap-1.5"><Moon className="h-3.5 w-3.5" /> {t("settings.weeklyAvailability.rest")}</span>
                                             </SelectItem>
                                         </SelectContent>
                                     </Select>
@@ -248,7 +249,7 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                     <CardContent className="space-y-4">
                         {apiKeysCheck?.intervals_configured ? (
                             <div className="text-center py-4">
-                                <div className="text-4xl mb-2">🎉</div>
+                                <div className="mb-2 flex justify-center"><PartyPopper className="h-10 w-10 text-primary" /></div>
                                 <p className="text-sm text-muted-foreground">{t('settings.apiConnectedMessage')}</p>
                                 <Button variant="outline" size="sm" className="mt-4" onClick={() => setApiKeysCheck({ intervals_configured: false })}>{t('settings.apiResetKey')}</Button>
                             </div>

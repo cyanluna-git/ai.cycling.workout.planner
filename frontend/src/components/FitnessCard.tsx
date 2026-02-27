@@ -1,5 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Info, ChevronRight } from "lucide-react";
+import { getTsbIcon } from "@/lib/icon-maps";
 import type { TrainingMetrics, WellnessMetrics, AthleteProfile } from "@/lib/api";
 
 interface FitnessCardProps {
@@ -18,13 +20,7 @@ export function FitnessCard({ training, wellness, profile }: FitnessCardProps) {
         return "text-red-500";
     };
 
-    const getTsbEmoji = (tsb: number) => {
-        if (tsb > 10) return "🚀";
-        if (tsb > 0) return "✅";
-        if (tsb > -10) return "😐";
-        if (tsb > -20) return "😓";
-        return "🛏️";
-    };
+    const getTsbIconNode = (tsb: number) => getTsbIcon(tsb, "h-4 w-4 inline");
 
     const getReadinessColor = (readiness: string) => {
         if (readiness.includes("Poor")) return "text-red-500";
@@ -89,8 +85,8 @@ export function FitnessCard({ training, wellness, profile }: FitnessCardProps) {
                             <span className="text-sm text-muted-foreground">
                                 TSB
                             </span>
-                            <span className={`text-lg font-bold ${getTsbColor(training.tsb)}`}>
-                                {getTsbEmoji(training.tsb)} {training.tsb.toFixed(1)}
+                            <span className={`text-lg font-bold ${getTsbColor(training.tsb)} flex items-center gap-1`}>
+                                {getTsbIconNode(training.tsb)} {training.tsb.toFixed(1)}
                             </span>
                         </div>
                     </div>
@@ -145,36 +141,37 @@ export function FitnessCard({ training, wellness, profile }: FitnessCardProps) {
                 {/* NEW: Glossary Section */}
                 <details className="mt-4 pt-4 border-t">
                     <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2">
-                        <span>💡 {t('fitness.glossaryTitle')}</span>
+                        <Info className="h-4 w-4" />
+                        <span>{t('fitness.glossaryTitle')}</span>
                         <span className="text-xs">▼</span>
                     </summary>
                     <div className="mt-3 space-y-3 text-sm">
                         <div>
-                            <div className="font-semibold mb-1">🔹 {t('fitness.ctlLabel')}</div>
+                            <div className="font-semibold mb-1 flex items-center gap-1"><ChevronRight className="h-3 w-3" /> {t('fitness.ctlLabel')}</div>
                             <p className="text-muted-foreground text-xs leading-relaxed">
                                 {t('fitness.ctlGlossary')}
                             </p>
                         </div>
                         <div>
-                            <div className="font-semibold mb-1">🔹 {t('fitness.atlLabel')}</div>
+                            <div className="font-semibold mb-1 flex items-center gap-1"><ChevronRight className="h-3 w-3" /> {t('fitness.atlLabel')}</div>
                             <p className="text-muted-foreground text-xs leading-relaxed">
                                 {t('fitness.atlGlossary')}
                             </p>
                         </div>
                         <div>
-                            <div className="font-semibold mb-1">🔹 TSB (컨디션)</div>
+                            <div className="font-semibold mb-1 flex items-center gap-1"><ChevronRight className="h-3 w-3" /> TSB</div>
                             <p className="text-muted-foreground text-xs leading-relaxed">
                                 {t('fitness.tsbGlossary')}
                             </p>
                         </div>
                         <div>
-                            <div className="font-semibold mb-1">🔹 FTP (역치 파워)</div>
+                            <div className="font-semibold mb-1 flex items-center gap-1"><ChevronRight className="h-3 w-3" /> FTP</div>
                             <p className="text-muted-foreground text-xs leading-relaxed">
                                 {t('fitness.ftpGlossary')}
                             </p>
                         </div>
                         <div>
-                            <div className="font-semibold mb-1">🔹 HRV (심박 변이도)</div>
+                            <div className="font-semibold mb-1 flex items-center gap-1"><ChevronRight className="h-3 w-3" /> HRV</div>
                             <p className="text-muted-foreground text-xs leading-relaxed">
                                 {t('fitness.hrvGlossary')}
                             </p>

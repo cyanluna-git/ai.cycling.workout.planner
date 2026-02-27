@@ -1,5 +1,8 @@
+import type { ReactNode } from "react";
 import { useTranslation } from 'react-i18next';
+import { Check } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getEventTypeIcon } from "@/lib/icon-maps";
 import type { WeeklyCalendarData, WeeklyEvent } from "@/lib/api";
 import { cleanWorkoutName } from "@/lib/workout-utils";
 
@@ -11,15 +14,11 @@ interface WeeklyCalendarCardProps {
 
 // DAY_NAMES now from i18n
 
-function getEventIcon(event: WeeklyEvent): string {
-    const t = (event.workout_type || event.category).toLowerCase();
-
-    let icon = "🚴";
-    if (t.includes("run") || t.includes("walk")) icon = "🏃";
-    if (t.includes("swim")) icon = "🏊";
-    if (t.includes("weight") || t.includes("strength")) icon = "🏋️";
-
-    return icon;
+function getEventIconNode(event: WeeklyEvent): ReactNode {
+    return getEventTypeIcon(
+        { workout_type: event.workout_type ?? undefined, category: event.category },
+        "h-3 w-3 inline",
+    );
 }
 
 /**
@@ -143,12 +142,12 @@ export function WeeklyCalendarCard({ calendar, isLoading, onSelectDate }: Weekly
                                     >
                                         <div className="flex items-center gap-1">
                                             {event.is_actual ? (
-                                                <span className="text-green-600">✓</span>
+                                                <Check className="h-3 w-3 text-green-600" />
                                             ) : (
                                                 <span className="opacity-60">•</span>
                                             )}
                                             <span className="flex items-center gap-0.5">
-                                                <span>{getEventIcon(event)}</span>
+                                                <span>{getEventIconNode(event)}</span>
                                                 <span className="truncate">
                                                     {cleanWorkoutName(event.name)}
                                                 </span>
@@ -175,7 +174,7 @@ export function WeeklyCalendarCard({ calendar, isLoading, onSelectDate }: Weekly
                 {/* Legend */}
                 <div className="flex justify-center gap-6 mt-3 pt-3 border-t text-xs text-muted-foreground">
                     <div className="flex items-center gap-1.5">
-                        <span className="text-green-600">✓</span>
+                        <Check className="h-3 w-3 text-green-600" />
                         <span>{t('calendar.completedLegend')}</span>
                     </div>
                     <div className="flex items-center gap-1.5">

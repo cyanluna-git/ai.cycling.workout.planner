@@ -5,11 +5,12 @@
  * Shows sequential steps with fade-in effects and completion checkmarks.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { BarChart3, Crosshair, PenLine, CalendarDays, Zap, CircleCheck } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface Step {
-  icon: string;
+  icon: ReactNode;
   text: string;
 }
 
@@ -19,9 +20,9 @@ interface CoachLoadingAnimationProps {
 }
 
 const DEFAULT_STEPS: Step[] = [
-  { icon: "📊", text: "Analyzing your training data..." },
-  { icon: "🎯", text: "Selecting optimal workout..." },
-  { icon: "✍️", text: "Writing coaching notes..." },
+  { icon: <BarChart3 className="h-6 w-6" />, text: "Analyzing your training data..." },
+  { icon: <Crosshair className="h-6 w-6" />, text: "Selecting optimal workout..." },
+  { icon: <PenLine className="h-6 w-6" />, text: "Writing coaching notes..." },
 ];
 
 export function CoachLoadingAnimation({
@@ -60,9 +61,9 @@ export function CoachLoadingAnimation({
                 }`}
               >
                 {/* Icon or Checkmark */}
-                <div className="text-2xl min-w-[32px] flex items-center justify-center">
+                <div className="min-w-[32px] flex items-center justify-center">
                   {isCompleted ? (
-                    <span className="text-green-600">✅</span>
+                    <CircleCheck className="h-6 w-6 text-green-600" />
                   ) : (
                     <span className={isCurrent ? "animate-pulse" : ""}>
                       {step.icon}
@@ -99,10 +100,10 @@ export function CoachLoadingAnimation({
 // Weekly plan variant with different messages
 export function WeeklyPlanLoadingAnimation() {
   const WEEKLY_STEPS: Step[] = [
-    { icon: "📊", text: "Analyzing weekly metrics..." },
-    { icon: "📅", text: "Planning your training week..." },
-    { icon: "⚡", text: "Optimizing TSS distribution..." },
-    { icon: "✍️", text: "Finalizing coach recommendations..." },
+    { icon: <BarChart3 className="h-6 w-6" />, text: "Analyzing weekly metrics..." },
+    { icon: <CalendarDays className="h-6 w-6" />, text: "Planning your training week..." },
+    { icon: <Zap className="h-6 w-6" />, text: "Optimizing TSS distribution..." },
+    { icon: <PenLine className="h-6 w-6" />, text: "Finalizing coach recommendations..." },
   ];
 
   return <CoachLoadingAnimation steps={WEEKLY_STEPS} intervalMs={1000} />;

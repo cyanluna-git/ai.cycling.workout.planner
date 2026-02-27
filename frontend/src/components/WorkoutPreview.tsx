@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { Sparkles, Lightbulb, CircleCheck } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { GeneratedWorkout } from "@/lib/api";
@@ -55,7 +56,7 @@ export function WorkoutPreview({ workout, onRegister, isRegistering, isRegistere
         <Card className="w-full">
             <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center justify-between">
-                    <span>✨ {cleanWorkoutName(workout.name)}</span>
+                    <span className="flex items-center gap-1.5"><Sparkles className="h-5 w-5" /> {cleanWorkoutName(workout.name)}</span>
                     <span className="text-sm font-normal text-muted-foreground">
                         {workout.workout_type} • ~{workout.estimated_duration_minutes}{t("common.minutes")}
                         {workout.estimated_tss && ` • TSS ${workout.estimated_tss}`}
@@ -66,7 +67,7 @@ export function WorkoutPreview({ workout, onRegister, isRegistering, isRegistere
                 {/* Design Goal / AI Briefing */}
                 {workout.design_goal && (
                     <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900 rounded-lg p-3 text-sm text-blue-800 dark:text-blue-300">
-                        <span className="font-semibold mr-1">💡 Coach's Note:</span>
+                        <span className="font-semibold mr-1 inline-flex items-center gap-1"><Lightbulb className="h-4 w-4" /> Coach's Note:</span>
                         {workout.design_goal}
                     </div>
                 )}
@@ -154,8 +155,8 @@ export function WorkoutPreview({ workout, onRegister, isRegistering, isRegistere
 
                 {/* Register Button or Success Message */}
                 {isRegistered ? (
-                    <div className="w-full bg-green-500/10 text-green-600 font-bold py-2 rounded-md text-center border border-green-200 dark:border-green-900">
-                        {"✅ " + t("common.registered") + "!"}
+                    <div className="w-full bg-green-500/10 text-green-600 font-bold py-2 rounded-md text-center border border-green-200 dark:border-green-900 flex items-center justify-center gap-1.5">
+                        <CircleCheck className="h-4 w-4" /> {t("common.registered") + "!"}
                     </div>
                 ) : (
                     <Button
