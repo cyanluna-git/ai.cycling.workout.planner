@@ -217,6 +217,55 @@ def _smart_fallback_for_unknown_block(block_type: str, block: dict) -> Optional[
     return None
 
 
+def resolve_workout_steps(workout: dict, ftp: int) -> Optional[List[dict]]:
+    """Resolve a daily_workout record to ZWO-compatible frontend-format steps.
+
+    Tries three sources in order:
+    1. ``planned_steps`` (already in frontend format — stored by daily workout generation)
+    2. ``profile_id`` → ProfileDB → profile_to_frontend_steps() (weekly profile-based workouts)
+    3. ``planned_modules`` → convert_structure_to_steps() (legacy module-based workouts)
+
+    Returns None if no steps can be resolved.
+
+    This is the single source of truth for steps resolution used by both
+    the daily workout endpoint and the weekly register-all endpoint.
+    """
+    from typing import Optional as _Optional
+
+    # 1. Stored frontend-format steps (daily workout flow)
+    planned_steps = workout.get("planned_steps")
+    if planned_steps:
+        return planned_steps
+
+    # 2. Profile DB (weekly plan profile-based flow)
+    profile_id = workout.get("profile_id")
+    if profile_id:
+        from api.services.workout_profile_service import WorkoutProfileService
+        profile_service = WorkoutProfileService()
+        profile = profile_service.get_profile_by_id(profile_id)
+        if not profile:
+            logger.warning(f"resolve_workout_steps: profile {profile_id} not found")
+            return None
+        customization = workout.get("customization")
+        if customization:
+            profile = profile_service.apply_customization(profile, customization, ftp)
+        # CRITICAL: must convert DB format → frontend format before ZWO conversion.
+        # DB stores {type, duration_sec, start_power, on_sec/off_sec, ...}
+        # ZWOConverter expects {duration, power: {value/start/end, units}, warmup, ...}
+        steps = profile_service.profile_to_frontend_steps(profile, ftp)
+        logger.info(
+            f"resolve_workout_steps: profile {profile_id} → {len(steps)} frontend steps"
+        )
+        return steps
+
+    # 3. Legacy module-based flow
+    planned_modules = workout.get("planned_modules") or []
+    if planned_modules:
+        return convert_structure_to_steps(planned_modules, ftp)
+
+    return None
+
+
 def convert_structure_to_steps(module_keys: List[str], ftp: int) -> List[dict]:
     """Convert workout module keys to WorkoutStep[] format for frontend chart rendering.
 
@@ -1133,40 +1182,20 @@ async def register_weekly_plan_to_intervals(
             continue
 
         try:
-            # Get steps: Profile DB or module-based
-            planned_steps = workout.get("planned_steps")
-            
+            # Resolve steps via shared helper (planned_steps → profile_id → modules)
+            planned_steps = resolve_workout_steps(workout, ftp)
+
             if not planned_steps:
-                # Check if this is a Profile DB workout
-                profile_id = workout.get("profile_id")
-                if profile_id:
-                    # Generate steps from Profile DB
-                    from api.services.workout_profile_service import WorkoutProfileService
-                    profile_service = WorkoutProfileService()
-                    profile = profile_service.get_profile_by_id(profile_id)
-                    if profile:
-                        # Apply customization if any
-                        customization = workout.get("customization")
-                        if customization:
-                            profile = profile_service.apply_customization(profile, customization, ftp)
-                        # DB is nested %FTP format - ZWO converter handles conversion
-                        planned_steps = profile.get("steps_json", {}).get("steps", [])
-                        logger.info(f"Converted Profile DB to Intervals.icu (profile_id={profile_id})")
-                    else:
-                        logger.warning(f"Profile {profile_id} not found, skipping")
-                        continue
-                else:
-                    # Fallback to module-based workflow
-                    planned_modules = workout.get("planned_modules", [])
-                    if not planned_modules or len(planned_modules) == 0:
-                        logger.warning(f"Skipping workout {workout['id']}: no steps, profile_id, or modules")
-                        continue
-                    
-                    # Convert modules to steps
-                    planned_steps = convert_structure_to_steps(planned_modules, ftp)
-            
-            if not planned_steps or len(planned_steps) == 0:
-                logger.warning(f"Skipping workout {workout['id']}: no steps generated")
+                logger.warning(
+                    f"Skipping workout {workout['id']} ({workout.get('workout_date')}): "
+                    f"no steps resolved (planned_steps={bool(workout.get('planned_steps'))}, "
+                    f"profile_id={workout.get('profile_id')}, "
+                    f"modules={bool(workout.get('planned_modules'))})"
+                )
+                failed_count += 1
+                errors.append(
+                    f"{workout.get('workout_date')}: Could not resolve workout steps"
+                )
                 continue
 
             workout_name = f"[AICoach] {workout.get('planned_name', 'Workout')}"
@@ -1324,8 +1353,8 @@ async def sync_weekly_plan_with_intervals(
             "message": "No registered workouts to sync",
         }
 
-    # Get Intervals.icu client
-    intervals = get_user_intervals_client(user["id"])
+    # Get Intervals.icu client (must await — get_user_intervals_client is async)
+    intervals = await get_user_intervals_client(user["id"])
     if not intervals:
         raise HTTPException(status_code=400, detail="Intervals.icu not configured")
 

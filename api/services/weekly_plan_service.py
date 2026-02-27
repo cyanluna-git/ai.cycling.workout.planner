@@ -363,34 +363,7 @@ class WeeklyPlanGenerator:
             weekly_tss_target = int(base_tss * multiplier)
             logger.info(f"Auto-calculated weekly_tss_target: {weekly_tss_target} (CTL={ctl}, focus={training_focus})")
 
-        # Get profile candidates from DB using shared helper
-        from api.services.workout_profile_service import get_profile_candidates_for_llm
-        
         preferred_duration = int(self.profile.get("preferred_duration", 60))
-        profile_candidates_text, candidates = get_profile_candidates_for_llm(
-            tsb=tsb,
-            training_style=training_style,
-            duration=preferred_duration,
-            duration_buffer=60,
-            limit=50,
-            exclude_profile_ids=None,  # TODO: Pass recently used profile IDs from this week
-            ftp=ftp,  # Add FTP for W/kg-based difficulty filtering
-            weight=weight,  # Add weight for W/kg calculation
-        )
-        
-        # Fallback to legacy module system if no profiles available
-        if not candidates:
-            logger.warning("No profile candidates found, falling back to legacy module system")
-            from src.services.workout_modules import get_module_inventory_text
-            module_inventory = get_module_inventory_text(
-                exclude_barcode=exclude_barcode, training_style=training_style
-            )
-            profile_candidates = "(Using legacy module system - no profiles available)"
-        else:
-            import random
-            random.shuffle(candidates)
-            # profile_candidates_text already formatted by helper
-            module_inventory = ""  # Not used in profile mode
 
         # Get style-specific weekly structure template
         weekly_structure = WEEKLY_STRUCTURE_TEMPLATES.get(
@@ -434,10 +407,16 @@ class WeeklyPlanGenerator:
             unavailable_days=unavailable_days,
         )
 
+        # Calculate per-day duration targets from TSS targets
+        daily_duration_targets = self._calculate_daily_duration_targets(
+            daily_tss_targets=daily_tss_targets,
+            training_style=training_style,
+        )
+
         # Format availability for prompt
         availability_text = self._format_availability_for_prompt(weekly_availability)
-        
-        # Format daily TSS targets for prompt
+
+        # Format daily TSS targets for prompt (include duration target per day)
         day_names = [
             "Monday", "Tuesday", "Wednesday", "Thursday",
             "Friday", "Saturday", "Sunday",
@@ -448,8 +427,57 @@ class WeeklyPlanGenerator:
             if target_tss == 0:
                 daily_tss_text.append(f"- {day_name}: Rest (0 TSS)")
             else:
-                daily_tss_text.append(f"- {day_name}: ~{target_tss} TSS")
+                target_dur = daily_duration_targets.get(day_idx, 60)
+                daily_tss_text.append(
+                    f"- {day_name}: ~{target_tss} TSS (target duration: ~{target_dur} min)"
+                )
         daily_tss_targets_formatted = "\n".join(daily_tss_text)
+
+        # Get profile candidates from DB using dynamic duration range
+        # Range covers the full span of daily duration targets so the LLM has
+        # both short weekday profiles and long weekend profiles to choose from.
+        from api.services.workout_profile_service import get_profile_candidates_for_llm
+        import random
+
+        active_durations = [v for v in daily_duration_targets.values() if v > 0]
+        if active_durations:
+            max_daily_dur = max(active_durations)
+            min_daily_dur = min(active_durations)
+            candidate_center = (max_daily_dur + min_daily_dur) // 2
+            # Buffer ensures both short and long profiles are included
+            candidate_buffer = max(60, (max_daily_dur - min_daily_dur) // 2 + 30)
+        else:
+            candidate_center = preferred_duration
+            candidate_buffer = 60
+
+        logger.info(
+            f"Profile candidate range: center={candidate_center}min "
+            f"buffer=±{candidate_buffer}min "
+            f"({max(20, candidate_center - candidate_buffer)}-{candidate_center + candidate_buffer}min)"
+        )
+
+        profile_candidates_text, candidates = get_profile_candidates_for_llm(
+            tsb=tsb,
+            training_style=training_style,
+            duration=candidate_center,
+            duration_buffer=candidate_buffer,
+            limit=50,
+            exclude_profile_ids=None,  # TODO: Pass recently used profile IDs from this week
+            ftp=ftp,
+            weight=weight,
+        )
+
+        # Fallback to legacy module system if no profiles available
+        if not candidates:
+            logger.warning("No profile candidates found, falling back to legacy module system")
+            from src.services.workout_modules import get_module_inventory_text
+            module_inventory = get_module_inventory_text(
+                exclude_barcode=exclude_barcode, training_style=training_style
+            )
+            profile_candidates_text = "(Using legacy module system - no profiles available)"
+        else:
+            random.shuffle(candidates)
+            module_inventory = ""  # Not used in profile mode
 
         # Build user prompt
         user_prompt = WEEKLY_PLAN_USER_PROMPT.format(
@@ -664,6 +692,55 @@ class WeeklyPlanGenerator:
         return "\n".join(lines)
 
     # -----------------------------------------------------------------------
+    # Daily duration target calculation
+    # -----------------------------------------------------------------------
+    def _calculate_daily_duration_targets(
+        self,
+        daily_tss_targets: Dict[int, int],
+        training_style: str,
+    ) -> Dict[int, int]:
+        """Calculate expected workout duration per day from TSS targets.
+
+        Converts each day's TSS target into an expected duration using
+        style-specific average IF values. Weekend days use a lower IF
+        (longer, easier rides) and have a higher minimum duration floor.
+
+        Args:
+            daily_tss_targets: day_index -> target_tss
+            training_style: Training style for IF lookup
+
+        Returns:
+            Dict[int, int]: day_index -> expected_duration_minutes
+        """
+        # Typical average IF per style (weekday vs weekend)
+        STYLE_IF_MAP = {
+            "polarized":  {"weekday": 0.68, "weekend": 0.65},
+            "norwegian":  {"weekday": 0.87, "weekend": 0.72},
+            "sweetspot":  {"weekday": 0.85, "weekend": 0.75},
+            "threshold":  {"weekday": 0.90, "weekend": 0.80},
+            "endurance":  {"weekday": 0.72, "weekend": 0.68},
+        }
+        ifs = STYLE_IF_MAP.get(training_style, STYLE_IF_MAP["sweetspot"])
+
+        durations: Dict[int, int] = {}
+        for day, tss in daily_tss_targets.items():
+            if tss == 0:
+                durations[day] = 0
+                continue
+            is_weekend = day in [5, 6]
+            avg_if = ifs["weekend"] if is_weekend else ifs["weekday"]
+            # TSS = duration_hrs * IF^2 * 100  →  duration_min = TSS / (IF^2 * 100) * 60
+            duration_min = int((tss / (avg_if ** 2 * 100)) * 60)
+            # Apply style-aware floor/ceiling
+            min_dur = 45 if is_weekend else 30
+            max_dur = 180 if is_weekend else 90
+            duration_min = max(min_dur, min(max_dur, round(duration_min / 5) * 5))
+            durations[day] = duration_min
+
+        logger.info(f"Daily duration targets ({training_style}): {durations}")
+        return durations
+
+    # -----------------------------------------------------------------------
     # Daily TSS prediction
     # -----------------------------------------------------------------------
     def _predict_daily_tss(
@@ -800,8 +877,9 @@ class WeeklyPlanGenerator:
             new_tss = int(dp.estimated_tss * scale_factor)
             new_tss = max(20, min(150, new_tss))  # Floor 20, cap 150
             
-            # Also scale duration proportionally
-            if dp.duration_minutes > 0:
+            # Scale duration only for legacy module workouts.
+            # Profile-based workouts have a fixed ZWO duration — don't fake-scale it.
+            if dp.duration_minutes > 0 and dp.profile_id is None:
                 dur_scale = new_tss / max(dp.estimated_tss, 1)
                 dp.duration_minutes = max(30, min(180, int(dp.duration_minutes * dur_scale)))
                 # Round to nearest 5
