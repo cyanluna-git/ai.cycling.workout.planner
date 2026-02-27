@@ -9,6 +9,7 @@
  */
 
 import { useState, useCallback, useEffect } from "react";
+import type { WorkoutStep } from "@/types/workout";
 import i18n from '@/i18n/config';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
@@ -226,7 +227,7 @@ export function useDashboard(): UseDashboardReturn {
             design_goal?: string;
             workout_type?: string;
             force?: boolean;
-            steps?: any[];
+            steps?: WorkoutStep[];
         }) => createWorkout(data, session?.access_token || ''),
         onSuccess: (result) => {
             if (result.success) {

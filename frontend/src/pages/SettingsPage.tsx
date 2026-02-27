@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { CalendarDays, Bike, Moon, PartyPopper } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -44,15 +44,11 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
     const [saving, setSaving] = useState(false)
     const [message, setMessage] = useState<string | null>(null)
 
-    useEffect(() => {
-        if (session?.access_token) { fetchSettings(); checkApiKeys(); }
-    }, [session])
-
-    const fetchSettings = async () => {
+    const fetchSettings = useCallback(async () => {
         try {
             const res = await fetch(`${API_BASE}/api/settings`, { headers: { Authorization: `Bearer ${session?.access_token}` } });
-            if (res.ok) { 
-                const data = await res.json(); 
+            if (res.ok) {
+                const data = await res.json();
                 setSettings({
                     ...data.settings,
                     weekly_availability: data.settings.weekly_availability || {
@@ -66,15 +62,19 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                     }
                 });
             }
-        } catch (e) { console.error('Failed to fetch settings', e); }
-    }
+        } catch { console.error('Failed to fetch settings'); }
+    }, [session?.access_token]);
 
-    const checkApiKeys = async () => {
+    const checkApiKeys = useCallback(async () => {
         try {
             const res = await fetch(`${API_BASE}/api/settings/api-keys/check`, { headers: { Authorization: `Bearer ${session?.access_token}` } });
             if (res.ok) setApiKeysCheck(await res.json());
-        } catch (e) { console.error('Failed to check API keys', e); }
-    }
+        } catch { console.error('Failed to check API keys'); }
+    }, [session?.access_token]);
+
+    useEffect(() => {
+        if (session?.access_token) { fetchSettings(); checkApiKeys(); }
+    }, [session?.access_token, fetchSettings, checkApiKeys])
 
     const saveSettings = async () => {
         setSaving(true); setMessage(null);
@@ -84,7 +84,7 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                 body: JSON.stringify(settings),
             });
             if (res.ok) setMessage(t('settings.settingsSaved'));
-        } catch (e) { setMessage(t('common.saveFailed')); } finally { setSaving(false); }
+        } catch { setMessage(t('common.saveFailed')); } finally { setSaving(false); }
     }
 
     const saveApiKeys = async () => {
@@ -95,7 +95,7 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                 body: JSON.stringify(apiKeys),
             });
             if (res.ok) { setMessage(t('settings.apiKeySaved')); checkApiKeys(); setApiKeys({ ...apiKeys, intervals_api_key: '' }); }
-        } catch (e) { setMessage(t('common.saveFailed')); } finally { setSaving(false); }
+        } catch { setMessage(t('common.saveFailed')); } finally { setSaving(false); }
     }
 
     // Weekly Availability handlers
@@ -135,7 +135,7 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
             } else {
                 setMessage(t("settings.weeklyAvailability.saveError"));
             }
-        } catch (error) {
+        } catch {
             setMessage(t("settings.weeklyAvailability.saveError"));
         } finally { setSaving(false); }
     };

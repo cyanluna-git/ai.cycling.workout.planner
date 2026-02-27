@@ -25,8 +25,8 @@ export function createAuthFetcher(token: string | undefined) {
 
         const response = await fetch(`${API_BASE}${url}`, { headers });
         if (!response.ok) {
-            const error = new Error('API request failed');
-            (error as any).status = response.status;
+            const error = new Error('API request failed') as Error & { status: number };
+            error.status = response.status;
             throw error;
         }
         return response.json();
@@ -39,8 +39,8 @@ export function createAuthFetcher(token: string | undefined) {
 export async function publicFetcher(url: string) {
     const response = await fetch(`${API_BASE}${url}`);
     if (!response.ok) {
-        const error = new Error('API request failed');
-        (error as any).status = response.status;
+        const error = new Error('API request failed') as Error & { status: number };
+        error.status = response.status;
         throw error;
     }
     return response.json();

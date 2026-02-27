@@ -10,7 +10,7 @@ interface ResetPasswordPageProps {
     onComplete: () => void;
 }
 
-export function ResetPasswordPage({ onComplete: _onComplete }: ResetPasswordPageProps) {
+export function ResetPasswordPage({ onComplete }: ResetPasswordPageProps) {
     const { t } = useTranslation()
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
@@ -27,7 +27,7 @@ export function ResetPasswordPage({ onComplete: _onComplete }: ResetPasswordPage
         try {
             const { error } = await supabase.auth.updateUser({ password })
             if (error) { setError(error.message) } else { setSuccess(true) }
-        } catch (err) { setError(t('common.error')) } finally { setLoading(false) }
+        } catch { setError(t('common.error')) } finally { setLoading(false) }
     }
 
     if (success) {
@@ -39,7 +39,7 @@ export function ResetPasswordPage({ onComplete: _onComplete }: ResetPasswordPage
                     </CardHeader>
                     <CardContent className="space-y-4 text-center">
                         <p className="text-muted-foreground">{t('resetPassword.completeMessage')}</p>
-                        <Button onClick={() => { window.location.hash = ''; window.location.href = '/'; }}>
+                        <Button onClick={() => { onComplete(); }}>
                             {t('resetPassword.goHome')}
                         </Button>
                     </CardContent>
