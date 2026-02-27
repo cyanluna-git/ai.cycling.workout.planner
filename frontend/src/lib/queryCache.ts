@@ -22,5 +22,7 @@ export function setCachedData<T>(key: string, data: T): void {
       CACHE_PREFIX + key,
       JSON.stringify({ data, timestamp: Date.now() })
     );
-  } catch {}
+  } catch {
+    // Intentionally ignored -- localStorage may be full or disabled
+  }
 }

@@ -54,7 +54,7 @@ export function ProfileDetailModal({ profileId, onClose, onDeleted }: ProfileDet
             } else {
                 setDeleteError(`Failed to delete (${res.status})`);
             }
-        } catch (e) {
+        } catch {
             setDeleteError('Network error');
         } finally {
             setDeleting(false);

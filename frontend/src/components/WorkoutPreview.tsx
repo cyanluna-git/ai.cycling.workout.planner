@@ -3,8 +3,8 @@ import { Sparkles, Lightbulb, CircleCheck } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { GeneratedWorkout } from "@/lib/api";
-import { WorkoutChart, getZoneColor } from "./WorkoutChart";
-import { cleanWorkoutName } from "@/lib/workout-utils";
+import { WorkoutChart } from "./WorkoutChart";
+import { cleanWorkoutName, getZoneColor } from "@/lib/workout-utils";
 import { formatWorkoutSections } from "@/lib/format-workout-steps";
 
 interface WorkoutPreviewProps {

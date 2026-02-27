@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   Zap, HardDrive, RefreshCw, CalendarDays, Settings, Sparkles,
 } from "lucide-react";
@@ -47,19 +47,9 @@ function resolveFeatureIcon(iconName?: string): ReactNode {
  */
 export function UpdateAnnouncementModal() {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
-  const [update, setUpdate] = useState<VersionUpdate | null>(null);
-
-  useEffect(() => {
-    // Check for new version on mount
-    if (hasNewVersion()) {
-      const latestUpdate = getLatestUpdate();
-      if (latestUpdate) {
-        setUpdate(latestUpdate);
-        setOpen(true);
-      }
-    }
-  }, []);
+  const initialUpdate = hasNewVersion() ? getLatestUpdate() : null;
+  const [update] = useState<VersionUpdate | null>(initialUpdate);
+  const [open, setOpen] = useState(initialUpdate !== null);
 
   const handleClose = () => {
     if (update) {

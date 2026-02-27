@@ -22,7 +22,7 @@ interface WorkoutChartProps {
     ftp?: number;
 }
 
-export function getZoneColor(power: number): string {
+function getZoneColor(power: number): string {
     if (power <= 55) return '#10b981';      // Z1 - Recovery (green)
     if (power <= 75) return '#3b82f6';      // Z2 - Endurance (blue)
     if (power <= 90) return '#22c55e';      // Z3 - Tempo (light green)

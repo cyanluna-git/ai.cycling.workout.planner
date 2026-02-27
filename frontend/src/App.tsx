@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { Bike } from "lucide-react";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
@@ -45,22 +45,24 @@ function Dashboard() {
   const [showAdmin, setShowAdmin] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  const checkAdminStatus = useCallback(async () => {
+  useEffect(() => {
     if (!session?.access_token) return;
-    try {
-      const response = await fetch(`${API_BASE}/api/admin/check`, {
-        headers: { 'Authorization': `Bearer ${session.access_token}` },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setIsAdmin(data.is_admin || false);
+    let cancelled = false;
+    (async () => {
+      try {
+        const response = await fetch(`${API_BASE}/api/admin/check`, {
+          headers: { 'Authorization': `Bearer ${session.access_token}` },
+        });
+        if (response.ok && !cancelled) {
+          const data = await response.json();
+          setIsAdmin(data.is_admin || false);
+        }
+      } catch (error) {
+        console.error('Failed to check admin status:', error);
       }
-    } catch (error) {
-      console.error('Failed to check admin status:', error);
-    }
+    })();
+    return () => { cancelled = true; };
   }, [session?.access_token]);
-
-  useEffect(() => { checkAdminStatus(); }, [checkAdminStatus]);
 
   const {
     isApiConfigured, fitness, workout, weeklyCalendar, weeklyPlan,
@@ -146,13 +148,10 @@ function AppContent() {
   const { t } = useTranslation();
   const { user, loading } = useAuth();
   const [showLanding, setShowLanding] = useState(true);
-  const [showResetPassword, setShowResetPassword] = useState(false);
-
-  useEffect(() => {
+  const [showResetPassword, setShowResetPassword] = useState(() => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const type = hashParams.get('type');
-    if (type === 'recovery') setShowResetPassword(true);
-  }, []);
+    return hashParams.get('type') === 'recovery';
+  });
 
   if (loading) {
     return (

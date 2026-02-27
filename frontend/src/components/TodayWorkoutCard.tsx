@@ -14,8 +14,8 @@ import { Slider } from "@/components/ui/slider";
 import { Sparkles, XCircle, BookOpen, Target, AlertTriangle, RefreshCw, CircleCheck, Loader2, CalendarPlus } from "lucide-react";
 import { getIntensityIcon } from "@/lib/icon-maps";
 import type { GeneratedWorkout, WorkoutGenerateRequest } from "@/lib/api";
-import { WorkoutChart, getZoneColor } from "./WorkoutChart";
-import { cleanWorkoutName } from "@/lib/workout-utils";
+import { WorkoutChart } from "./WorkoutChart";
+import { cleanWorkoutName, getZoneColor } from "@/lib/workout-utils";
 import { formatWorkoutSections } from "@/lib/format-workout-steps";
 import { CoachLoadingAnimation } from "./CoachLoadingAnimation";
 

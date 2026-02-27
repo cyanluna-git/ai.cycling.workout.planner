@@ -138,7 +138,7 @@ export function parseZwoToChartData(zwoContent: string): ChartDataPoint[] {
                     currentTime += duration;
                 }
                 // Ignore unknown elements silently
-            } catch (elementError) {
+            } catch {
                 // Silently ignore element parsing errors
             }
         }
@@ -146,7 +146,7 @@ export function parseZwoToChartData(zwoContent: string): ChartDataPoint[] {
 
         return chartData;
 
-    } catch (error) {
+    } catch {
         // Silently fail and return empty array
         return [];
     }

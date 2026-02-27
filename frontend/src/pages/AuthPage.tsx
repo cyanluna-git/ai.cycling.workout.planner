@@ -49,7 +49,7 @@ export function AuthPage() {
                     setMode('reset-sent')
                 }
             }
-        } catch (err) {
+        } catch {
             setError(t('common.error'))
         } finally {
             setLoading(false)
