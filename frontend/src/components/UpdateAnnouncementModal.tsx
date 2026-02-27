@@ -1,5 +1,8 @@
 import { useTranslation } from 'react-i18next';
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
+import {
+  Zap, HardDrive, RefreshCw, CalendarDays, Settings, Sparkles,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +18,20 @@ import {
   markVersionAsSeen,
   type VersionUpdate,
 } from "@/lib/version";
+
+/** Resolve icon name string to a Lucide React icon element */
+const FEATURE_ICON_MAP: Record<string, ReactNode> = {
+  "zap": <Zap className="h-7 w-7" />,
+  "hard-drive": <HardDrive className="h-7 w-7" />,
+  "refresh-cw": <RefreshCw className="h-7 w-7" />,
+  "calendar-days": <CalendarDays className="h-7 w-7" />,
+  "settings": <Settings className="h-7 w-7" />,
+};
+
+function resolveFeatureIcon(iconName?: string): ReactNode {
+  if (!iconName) return <Sparkles className="h-7 w-7" />;
+  return FEATURE_ICON_MAP[iconName] ?? <Sparkles className="h-7 w-7" />;
+}
 
 /**
  * UpdateAnnouncementModal
@@ -84,8 +101,8 @@ export function UpdateAnnouncementModal() {
               className="flex gap-4 p-4 rounded-lg bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border border-blue-100 dark:border-blue-900/30"
             >
               {feature.icon && (
-                <div className="flex-shrink-0 text-3xl leading-none">
-                  {feature.icon}
+                <div className="flex-shrink-0 leading-none text-primary">
+                  {resolveFeatureIcon(feature.icon)}
                 </div>
               )}
               <div className="flex-1 space-y-1">

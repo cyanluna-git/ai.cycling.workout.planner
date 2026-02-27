@@ -9,6 +9,7 @@
 import { useState, useMemo } from 'react';
 import useSWR from 'swr';
 import { useTranslation } from 'react-i18next';
+import { Wrench, Rocket, Trophy, Medal } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -173,7 +174,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
                             {t("admin.back")}
                         </Button>
                         <div>
-                            <h1 className="text-2xl font-bold">🔧 Admin Dashboard</h1>
+                            <h1 className="text-2xl font-bold flex items-center gap-2"><Wrench className="h-6 w-6" /> Admin Dashboard</h1>
                             <p className="text-muted-foreground text-sm">{t('admin.subtitle')}</p>
                         </div>
                     </div>
@@ -219,7 +220,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
                         {deployInfo && (
                             <Card>
                                 <CardHeader className="pb-2">
-                                    <CardTitle className="text-lg">🚀 Deployment Info</CardTitle>
+                                    <CardTitle className="text-lg flex items-center gap-2"><Rocket className="h-5 w-5" /> Deployment Info</CardTitle>
                                 </CardHeader>
                                 <CardContent>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -393,7 +394,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
                                         {topUser && (
                                             <div className="mb-4 p-4 rounded-lg bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 border border-yellow-200 dark:border-yellow-800">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-2xl">🏆</span>
+                                                    <Trophy className="h-6 w-6 text-yellow-600" />
                                                     <div>
                                                         <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">{t('admin.topUser')}</p>
                                                         <p className="text-lg font-bold text-yellow-900 dark:text-yellow-100">
@@ -419,7 +420,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
                                                         {userStats.slice(0, 10).map((user, index) => (
                                                             <tr key={user.user_id} className="border-b hover:bg-muted/50">
                                                                 <td className="py-2 px-3 text-muted-foreground">
-                                                                    {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}`}
+                                                                    {index < 3 ? <Medal className={`h-4 w-4 ${index === 0 ? 'text-yellow-500' : index === 1 ? 'text-gray-400' : 'text-amber-600'}`} /> : `${index + 1}`}
                                                                 </td>
                                                                 <td className="py-2 px-3 font-mono text-xs">
                                                                     {user.email}

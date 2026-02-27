@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Clock, XCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,7 +70,7 @@ export function OnboardingPage({ onComplete, accessToken }: OnboardingPageProps)
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-lg font-semibold">{t('onboarding.step1Title')}</h3>
-                                <span className="text-xs text-muted-foreground">⏱️ {t('onboarding.step1Time')}</span>
+                                <span className="text-xs text-muted-foreground inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {t('onboarding.step1Time')}</span>
                             </div>
                             <div className="bg-muted/50 rounded-lg p-4 space-y-3">
                                 <p><strong>Intervals.icu</strong> {t('onboarding.step1Desc1')}</p>
@@ -87,7 +88,7 @@ export function OnboardingPage({ onComplete, accessToken }: OnboardingPageProps)
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-lg font-semibold">{t('onboarding.step2Title')}</h3>
-                                <span className="text-xs text-muted-foreground">⏱️ {t('onboarding.step2Time')}</span>
+                                <span className="text-xs text-muted-foreground inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {t('onboarding.step2Time')}</span>
                             </div>
                             <div className="bg-muted/50 rounded-lg p-4 space-y-4">
                                 <ol className="list-decimal list-inside space-y-2 text-sm">
@@ -115,9 +116,9 @@ export function OnboardingPage({ onComplete, accessToken }: OnboardingPageProps)
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-lg font-semibold">{t('onboarding.step3Title')}</h3>
-                                <span className="text-xs text-muted-foreground">⏱️ {t('onboarding.step3Time')}</span>
+                                <span className="text-xs text-muted-foreground inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {t('onboarding.step3Time')}</span>
                             </div>
-                            {error && <div className="bg-destructive/10 text-destructive p-3 rounded-lg text-sm">❌ {error}</div>}
+                            {error && <div className="bg-destructive/10 text-destructive p-3 rounded-lg text-sm flex items-center gap-1.5"><XCircle className="h-4 w-4 flex-shrink-0" /> {error}</div>}
                             <div className="space-y-4">
                                 <div><Label htmlFor="athleteId">Athlete ID</Label><Input id="athleteId" placeholder="i12345" value={athleteId} onChange={(e) => setAthleteId(e.target.value)} /></div>
                                 <div><Label htmlFor="apiKey">API Key</Label><Input id="apiKey" type="password" placeholder={t('onboarding.step3ApiKeyPlaceholder')} value={apiKey} onChange={(e) => setApiKey(e.target.value)} /></div>

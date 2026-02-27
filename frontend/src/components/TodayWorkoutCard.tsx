@@ -11,6 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { Sparkles, XCircle, BookOpen, Target, AlertTriangle, RefreshCw, CircleCheck, Loader2, CalendarPlus } from "lucide-react";
+import { getIntensityIcon } from "@/lib/icon-maps";
 import type { GeneratedWorkout, WorkoutGenerateRequest } from "@/lib/api";
 import { WorkoutChart, getZoneColor } from "./WorkoutChart";
 import { cleanWorkoutName } from "@/lib/workout-utils";
@@ -64,10 +66,10 @@ export function TodayWorkoutCard({
     const [indoor, setIndoor] = useState(false);
 
     const INTENSITIES = [
-        { value: "auto", label: t('workout.intensityAuto'), emoji: "🎯" },
-        { value: "easy", label: t('workout.intensityEasy'), emoji: "😌" },
-        { value: "moderate", label: t('workout.intensityModerate'), emoji: "💪" },
-        { value: "hard", label: t('workout.intensityHard'), emoji: "🔥" },
+        { value: "auto", label: t('workout.intensityAuto') },
+        { value: "easy", label: t('workout.intensityEasy') },
+        { value: "moderate", label: t('workout.intensityModerate') },
+        { value: "hard", label: t('workout.intensityHard') },
     ];
 
     const handleGenerate = () => {
@@ -105,7 +107,7 @@ export function TodayWorkoutCard({
                 <CardHeader className="pb-2">
                     <CardTitle className="text-base sm:text-lg">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                            <span className="truncate">✨ {cleanWorkoutName(workout.name)}</span>
+                            <span className="truncate flex items-center gap-1"><Sparkles className="h-4 w-4 flex-shrink-0" /> {cleanWorkoutName(workout.name)}</span>
                             <span className="text-xs sm:text-sm font-normal text-muted-foreground whitespace-nowrap">
                                 {workout.workout_type} • ~{workout.estimated_duration_minutes}{t('common.minutes')}
                                 {workout.estimated_tss && ` • TSS ${workout.estimated_tss}`}
@@ -116,8 +118,8 @@ export function TodayWorkoutCard({
                 <CardContent className="space-y-4">
                     {/* Messages */}
                     {error && (
-                        <div className="bg-destructive/10 text-destructive p-3 rounded-lg text-sm">
-                            ❌ {error}
+                        <div className="bg-destructive/10 text-destructive p-3 rounded-lg text-sm flex items-center gap-2">
+                            <XCircle className="h-4 w-4 flex-shrink-0" /> {error}
                         </div>
                     )}
                     {success && !success.includes(t('common.registered')) && (
@@ -130,7 +132,7 @@ export function TodayWorkoutCard({
                     {(workout.coaching || workout.design_goal) && (
                         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-100 dark:border-blue-800 rounded-xl p-4 space-y-3">
                             <div className="flex items-center gap-2 font-semibold text-blue-900 dark:text-blue-200">
-                                <span>🏋️ {t('workout.coachNote')}</span>
+                                <BookOpen className="h-4 w-4" /> <span>{t('workout.coachNote')}</span>
                             </div>
                             
                             {/* Selection Reason */}
@@ -141,7 +143,7 @@ export function TodayWorkoutCard({
                             {/* Focus Points */}
                             {workout.coaching?.focus_points && workout.coaching.focus_points.length > 0 && (
                                 <div>
-                                    <span className="text-xs font-medium text-blue-600 dark:text-blue-400">🎯 {t('workout.focusPoints')}</span>
+                                    <span className="text-xs font-medium text-blue-600 dark:text-blue-400 flex items-center gap-1"><Target className="h-3.5 w-3.5" /> {t('workout.focusPoints')}</span>
                                     <ul className="mt-1 space-y-1">
                                         {workout.coaching.focus_points.map((point, i) => (
                                             <li key={i} className="text-sm text-blue-700 dark:text-blue-300 flex items-start gap-1.5">
@@ -155,7 +157,7 @@ export function TodayWorkoutCard({
                             {/* Warnings */}
                             {workout.coaching?.warnings && workout.coaching.warnings.length > 0 && (
                                 <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-2">
-                                    <span className="text-xs font-medium text-amber-600 dark:text-amber-400">⚠️ {t('workout.warnings')}</span>
+                                    <span className="text-xs font-medium text-amber-600 dark:text-amber-400 flex items-center gap-1"><AlertTriangle className="h-3.5 w-3.5" /> {t('workout.warnings')}</span>
                                     {workout.coaching.warnings.map((w, i) => (
                                         <p key={i} className="text-sm text-amber-700 dark:text-amber-300 mt-1">{w}</p>
                                     ))}
@@ -259,7 +261,7 @@ export function TodayWorkoutCard({
                                     onClick={() => setIntensity(i.value)}
                                     className="h-11 sm:h-9 text-xs transition-all active:scale-95"
                                 >
-                                    {i.emoji} {i.label}
+                                    {getIntensityIcon(i.value, "h-3.5 w-3.5")} {i.label}
                                 </Button>
                             ))}
                         </div>
@@ -273,11 +275,11 @@ export function TodayWorkoutCard({
                             disabled={isLoading}
                             className="flex-1 h-11 sm:h-9 transition-all active:scale-95"
                         >
-                            🔄 {t('workout.regenerate')}
+                            <RefreshCw className="h-4 w-4" /> {t('workout.regenerate')}
                         </Button>
                         {isRegistered ? (
                             <div className="flex-1 bg-green-500/10 text-green-600 font-bold py-2 rounded-md text-center border border-green-200 dark:border-green-900 text-sm min-h-[44px] flex items-center justify-center">
-                                ✅ {t('common.registered')}
+                                <CircleCheck className="h-4 w-4" /> {t('common.registered')}
                             </div>
                         ) : (
                             <Button
@@ -287,11 +289,11 @@ export function TodayWorkoutCard({
                             >
                                 {isRegistering ? (
                                     <>
-                                        <span className="animate-spin">⏳</span>
+                                        <Loader2 className="h-4 w-4 animate-spin" />
                                         {t('common.registering')}
                                     </>
                                 ) : (
-                                    `📅 ${t('workout.register')}`
+                                    <><CalendarPlus className="h-4 w-4" /> {t('workout.register')}</>
                                 )}
                             </Button>
                         )}
@@ -310,7 +312,7 @@ export function TodayWorkoutCard({
             </CardHeader>
             <CardContent className="py-8 text-center">
                 <div className="max-w-md mx-auto space-y-4">
-                    <div className="text-5xl mb-4">🎯</div>
+                    <div className="mb-4 flex justify-center"><Target className="h-12 w-12 text-primary" /></div>
                     <h3 className="text-xl font-bold">{t("workout.emptyTitle")}</h3>
                     <p className="text-muted-foreground text-sm">
                         {t("workout.emptyDesc")}
@@ -318,8 +320,8 @@ export function TodayWorkoutCard({
 
                     {/* Messages */}
                     {error && (
-                        <div className="bg-destructive/10 text-destructive p-3 rounded-lg text-sm">
-                            ❌ {error}
+                        <div className="bg-destructive/10 text-destructive p-3 rounded-lg text-sm flex items-center gap-2">
+                            <XCircle className="h-4 w-4 flex-shrink-0" /> {error}
                         </div>
                     )}
 
@@ -351,7 +353,7 @@ export function TodayWorkoutCard({
                                     onClick={() => setIntensity(i.value)}
                                     className="h-11 sm:h-9 text-xs transition-all active:scale-95"
                                 >
-                                    {i.emoji} {i.label}
+                                    {getIntensityIcon(i.value, "h-3.5 w-3.5")} {i.label}
                                 </Button>
                             ))}
                         </div>

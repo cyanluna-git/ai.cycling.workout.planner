@@ -1,4 +1,6 @@
+import { type ReactNode, createElement } from "react";
 import { useTranslation } from 'react-i18next';
+import { Smile, Minus, Frown, Flame, Moon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { WellnessMetrics } from "@/lib/api";
 
@@ -23,17 +25,19 @@ const getRatingColor = (value: number | null, invertScale: boolean = true) => {
     }
 };
 
-// Helper function to get rating emoji
-const getRatingEmoji = (value: number | null, invertScale: boolean = true) => {
-    if (value === null) return "—";
+// Helper function to get rating icon
+const getRatingIcon = (value: number | null, invertScale: boolean = true): ReactNode => {
+    if (value === null) return createElement(Minus, { className: "h-3.5 w-3.5 inline" });
     if (invertScale) {
-        if (value <= 2) return "😊";
-        if (value <= 3) return "😐";
-        return "😓";
+        // lower is better (soreness, fatigue, stress)
+        if (value <= 2) return createElement(Smile, { className: "h-3.5 w-3.5 inline" });
+        if (value <= 3) return createElement(Minus, { className: "h-3.5 w-3.5 inline" });
+        return createElement(Frown, { className: "h-3.5 w-3.5 inline" });
     } else {
-        if (value >= 4) return "🔥";
-        if (value >= 3) return "😐";
-        return "😴";
+        // higher is better (mood, motivation)
+        if (value >= 4) return createElement(Flame, { className: "h-3.5 w-3.5 inline" });
+        if (value >= 3) return createElement(Minus, { className: "h-3.5 w-3.5 inline" });
+        return createElement(Moon, { className: "h-3.5 w-3.5 inline" });
     }
 };
 
@@ -127,7 +131,7 @@ export function WellnessCard({ wellness, className }: WellnessCardProps) {
                                 <div className="text-center p-2 bg-muted/30 rounded">
                                     <div className="text-[10px] text-muted-foreground">{t('wellnessCard.fatigue')}</div>
                                     <div className={`font-bold ${getRatingColor(wellness.fatigue)}`}>
-                                        {getRatingEmoji(wellness.fatigue)} {wellness.fatigue}/5
+                                        {getRatingIcon(wellness.fatigue)} {wellness.fatigue}/5
                                     </div>
                                 </div>
                             )}
@@ -135,7 +139,7 @@ export function WellnessCard({ wellness, className }: WellnessCardProps) {
                                 <div className="text-center p-2 bg-muted/30 rounded">
                                     <div className="text-[10px] text-muted-foreground">{t('wellnessCard.soreness')}</div>
                                     <div className={`font-bold ${getRatingColor(wellness.soreness)}`}>
-                                        {getRatingEmoji(wellness.soreness)} {wellness.soreness}/5
+                                        {getRatingIcon(wellness.soreness)} {wellness.soreness}/5
                                     </div>
                                 </div>
                             )}
@@ -143,7 +147,7 @@ export function WellnessCard({ wellness, className }: WellnessCardProps) {
                                 <div className="text-center p-2 bg-muted/30 rounded">
                                     <div className="text-[10px] text-muted-foreground">{t('wellnessCard.stress')}</div>
                                     <div className={`font-bold ${getRatingColor(wellness.stress)}`}>
-                                        {getRatingEmoji(wellness.stress)} {wellness.stress}/5
+                                        {getRatingIcon(wellness.stress)} {wellness.stress}/5
                                     </div>
                                 </div>
                             )}
@@ -151,7 +155,7 @@ export function WellnessCard({ wellness, className }: WellnessCardProps) {
                                 <div className="text-center p-2 bg-muted/30 rounded">
                                     <div className="text-[10px] text-muted-foreground">{t('wellnessCard.mood')}</div>
                                     <div className={`font-bold ${getRatingColor(wellness.mood, false)}`}>
-                                        {getRatingEmoji(wellness.mood, false)} {wellness.mood}/5
+                                        {getRatingIcon(wellness.mood, false)} {wellness.mood}/5
                                     </div>
                                 </div>
                             )}
@@ -159,7 +163,7 @@ export function WellnessCard({ wellness, className }: WellnessCardProps) {
                                 <div className="text-center p-2 bg-muted/30 rounded">
                                     <div className="text-[10px] text-muted-foreground">{t('wellnessCard.motivation')}</div>
                                     <div className={`font-bold ${getRatingColor(wellness.motivation, false)}`}>
-                                        {getRatingEmoji(wellness.motivation, false)} {wellness.motivation}/5
+                                        {getRatingIcon(wellness.motivation, false)} {wellness.motivation}/5
                                     </div>
                                 </div>
                             )}

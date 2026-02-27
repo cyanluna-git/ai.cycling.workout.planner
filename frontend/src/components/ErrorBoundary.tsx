@@ -1,5 +1,6 @@
-import { Component } from 'react';
+import { Component, createElement } from 'react';
 import type { ReactNode, ErrorInfo } from 'react';
+import { AlertTriangle } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
@@ -29,7 +30,7 @@ class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
           <div className="max-w-md rounded-lg bg-white p-8 shadow-lg">
-            <h1 className="mb-4 text-2xl font-bold text-red-600">⚠️ Something went wrong</h1>
+            <h1 className="mb-4 text-2xl font-bold text-red-600 flex items-center gap-2">{createElement(AlertTriangle, { className: "h-6 w-6" })} Something went wrong</h1>
             <p className="mb-4 text-gray-700">
               We're sorry, but something unexpected happened. Please try reloading the page.
             </p>
