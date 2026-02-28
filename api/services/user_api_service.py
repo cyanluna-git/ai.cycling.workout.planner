@@ -237,13 +237,13 @@ def get_server_llm_client() -> LLMClient:
     # Check for Vercel AI Gateway first (recommended)
     vercel_gateway_key = os.getenv("VERCEL_AI_GATEWAY_API_KEY")
     if vercel_gateway_key:
-        # Use Gemini as primary to avoid Groq rate limits
-        logger.info("Using Vercel AI Gateway for LLM calls (Gemini primary, Groq fallback)")
+        # Use Groq as primary for faster inference speed
+        logger.info("Using Vercel AI Gateway for LLM calls (Groq primary, Gemini fallback)")
         gateway_client = VercelGatewayClient(
             api_key=vercel_gateway_key,
-            model="google/gemini-2.0-flash",  # Changed: Gemini as primary
+            model="groq/llama-3.3-70b-versatile",  # Groq as primary
             fallback_models=[
-                "groq/llama-3.3-70b-versatile",  # Groq as fallback
+                "google/gemini-2.0-flash",  # Gemini as fallback
                 "google/gemini-1.5-flash",
             ],
         )
