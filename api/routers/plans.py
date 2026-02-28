@@ -126,6 +126,46 @@ def get_next_week_dates() -> tuple:
     return week_start, week_end
 
 
+async def get_completed_tss_for_week(
+    user_id: str, week_start: date
+) -> int:
+    """Fetch completed TSS from Intervals.icu for current week (Monday to yesterday).
+
+    Args:
+        user_id: User ID to look up Intervals.icu client.
+        week_start: Monday of the target week.
+
+    Returns:
+        Sum of icu_training_load from completed activities.
+    """
+    from ..services.user_api_service import get_user_intervals_client
+
+    today = date.today()
+    # Only fetch Monday through yesterday
+    yesterday = today - timedelta(days=1)
+    if yesterday < week_start:
+        return 0
+
+    try:
+        intervals_client = await get_user_intervals_client(user_id)
+        activities = intervals_client.get_activities(
+            oldest=week_start, newest=yesterday
+        )
+        total_tss = sum(
+            a.get("icu_training_load") or 0
+            for a in activities
+            if a.get("icu_training_load") is not None
+        )
+        logger.info(
+            f"Completed TSS for week {week_start} to {yesterday}: {total_tss} "
+            f"({len(activities)} activities)"
+        )
+        return total_tss
+    except Exception as e:
+        logger.warning(f"Failed to fetch completed TSS from Intervals.icu: {e}")
+        return 0
+
+
 def _smart_fallback_for_unknown_block(block_type: str, block: dict) -> Optional[dict]:
     """Smart fallback for unknown block types based on naming patterns.
 
@@ -703,6 +743,43 @@ async def generate_weekly_plan(
     
     logger.info(f"Resolved weekly_tss_target={weekly_tss_target} for user {user['id'][:8]}...")
 
+    # Detect current-week generation
+    today = date.today()
+    current_week_monday, _ = get_week_dates(today)
+    is_current_week = (week_start == current_week_monday)
+    remaining_days_only = False
+    completed_tss = 0
+    start_day_index = 0
+
+    if is_current_week:
+        start_day_index = today.weekday()  # 0=Mon, 6=Sun
+
+        # Count remaining available days (from today onward)
+        weekly_availability = user_settings.get(
+            "weekly_availability",
+            {"0": "available", "1": "available", "2": "available",
+             "3": "available", "4": "available", "5": "available", "6": "available"},
+        )
+        remaining_available = sum(
+            1 for day_idx in range(start_day_index, 7)
+            if weekly_availability.get(str(day_idx), "available") == "available"
+        )
+
+        if remaining_available < 2:
+            raise HTTPException(
+                status_code=400,
+                detail="Not enough remaining days this week (minimum 2 available days required). "
+                       "Try generating a plan for next week instead.",
+            )
+
+        # Fetch completed TSS from Intervals.icu
+        completed_tss = await get_completed_tss_for_week(user["id"], week_start)
+        remaining_days_only = True
+        logger.info(
+            f"Current-week generation: start_day={start_day_index}, "
+            f"completed_tss={completed_tss}, remaining_available={remaining_available}"
+        )
+
     generator = WeeklyPlanGenerator(llm_client, user_settings)
     weekly_plan = generator.generate_weekly_plan(
         ctl=ctl,
@@ -716,6 +793,9 @@ async def generate_weekly_plan(
         week_start=week_start,
         exclude_barcode=user_settings.get("exclude_barcode_workouts", False),
         weekly_tss_target=weekly_tss_target,
+        remaining_days_only=remaining_days_only,
+        completed_tss=completed_tss,
+        start_day_index=start_day_index,
     )
 
     # Delete existing plan for this week if any
@@ -724,11 +804,26 @@ async def generate_weekly_plan(
     ).execute()
 
     # Delete existing daily_workouts for this week's date range
+    # Preserve already-registered workouts (status == 'registered')
     for i in range(7):
         workout_date = (week_start + timedelta(days=i)).isoformat()
-        supabase.table("daily_workouts").delete().eq("user_id", user["id"]).eq(
-            "workout_date", workout_date
-        ).execute()
+        existing_result = (
+            supabase.table("daily_workouts")
+            .select("id, status")
+            .eq("user_id", user["id"])
+            .eq("workout_date", workout_date)
+            .execute()
+        )
+        if existing_result and existing_result.data:
+            for row in existing_result.data:
+                if row.get("status") == "registered":
+                    logger.info(
+                        f"Preserving registered workout {row['id']} on {workout_date}"
+                    )
+                    continue
+                supabase.table("daily_workouts").delete().eq(
+                    "id", row["id"]
+                ).execute()
 
     # Save weekly plan to DB
     plan_insert_data = {
@@ -749,9 +844,34 @@ async def generate_weekly_plan(
 
     plan_id = plan_result.data[0]["id"]
 
-    # Save daily workouts
+    # Collect dates that still have registered workouts (skip inserting for those)
+    registered_dates: set = set()
+    for i in range(7):
+        workout_date = (week_start + timedelta(days=i)).isoformat()
+        reg_check = (
+            supabase.table("daily_workouts")
+            .select("id")
+            .eq("user_id", user["id"])
+            .eq("workout_date", workout_date)
+            .eq("status", "registered")
+            .execute()
+        )
+        if reg_check and reg_check.data:
+            registered_dates.add(workout_date)
+            # Link preserved registered workouts to the new plan
+            for row in reg_check.data:
+                supabase.table("daily_workouts").update(
+                    {"plan_id": plan_id}
+                ).eq("id", row["id"]).execute()
+
+    # Save daily workouts (skip dates with registered workouts)
     daily_workouts_data = []
     for dp in weekly_plan.daily_plans:
+        if dp.workout_date.isoformat() in registered_dates:
+            logger.info(
+                f"Skipping insert for {dp.workout_date} — registered workout preserved"
+            )
+            continue
         daily_workouts_data.append(
             {
                 "plan_id": plan_id,
@@ -769,7 +889,8 @@ async def generate_weekly_plan(
             }
         )
 
-    supabase.table("daily_workouts").insert(daily_workouts_data).execute()
+    if daily_workouts_data:
+        supabase.table("daily_workouts").insert(daily_workouts_data).execute()
 
     logger.info(f"Generated weekly plan {plan_id} for user {user['id']}")
 

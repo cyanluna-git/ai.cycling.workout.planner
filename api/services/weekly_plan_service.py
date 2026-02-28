@@ -305,6 +305,9 @@ class WeeklyPlanGenerator:
         week_start: Optional[date] = None,
         exclude_barcode: bool = False,
         weekly_tss_target: Optional[int] = None,
+        remaining_days_only: bool = False,
+        completed_tss: int = 0,
+        start_day_index: int = 0,
     ) -> WeeklyPlan:
         """Generate a complete 7-day workout plan.
 
@@ -315,6 +318,10 @@ class WeeklyPlanGenerator:
             form_status: Form status string (Fresh, Tired, etc.)
             week_start: Monday of the target week (default: next Monday)
             exclude_barcode: Whether to exclude barcode workouts
+            weekly_tss_target: Override weekly TSS target
+            remaining_days_only: If True, generate for remaining days only (mid-week)
+            completed_tss: TSS already completed this week (used with remaining_days_only)
+            start_day_index: Day index of today (0=Mon, used with remaining_days_only)
 
         Returns:
             WeeklyPlan with 7 daily plans
@@ -406,6 +413,53 @@ class WeeklyPlanGenerator:
             available_days=available_days,
             unavailable_days=unavailable_days,
         )
+
+        # Mid-week adjustment: zero out past days and redistribute remaining TSS
+        mid_week_context = ""
+        if remaining_days_only and start_day_index > 0:
+            remaining_tss = max(0, weekly_tss_target - completed_tss)
+            logger.info(
+                f"Mid-week generation: start_day_index={start_day_index}, "
+                f"completed_tss={completed_tss}, remaining_tss={remaining_tss}"
+            )
+
+            # Zero out days before start_day_index
+            for day_idx in range(start_day_index):
+                daily_tss_targets[day_idx] = 0
+
+            # Collect remaining available day ratios and re-normalize
+            remaining_ratios = {}
+            for day_idx in range(start_day_index, 7):
+                if daily_tss_targets.get(day_idx, 0) > 0:
+                    remaining_ratios[day_idx] = daily_tss_targets[day_idx]
+
+            total_remaining_ratio = sum(remaining_ratios.values())
+            if total_remaining_ratio > 0:
+                for day_idx, old_tss in remaining_ratios.items():
+                    normalized = old_tss / total_remaining_ratio
+                    new_tss = int(round(remaining_tss * normalized / 5) * 5)
+                    max_tss = 180 if (training_style == "endurance" and day_idx in [5, 6]) else 150
+                    daily_tss_targets[day_idx] = min(new_tss, max_tss)
+
+            logger.info(
+                f"Mid-week daily TSS targets: {daily_tss_targets} "
+                f"(total: {sum(daily_tss_targets.values())})"
+            )
+
+            # Build mid-week context for LLM prompt
+            day_names_list = [
+                "Monday", "Tuesday", "Wednesday", "Thursday",
+                "Friday", "Saturday", "Sunday",
+            ]
+            mid_week_context = (
+                f"\n# Mid-Week Context\n"
+                f"This is a mid-week plan regeneration. "
+                f"Days before {day_names_list[start_day_index]} are already completed.\n"
+                f"- Completed TSS so far: {completed_tss}\n"
+                f"- Remaining TSS budget: {remaining_tss}\n"
+                f"- IMPORTANT: Days before {day_names_list[start_day_index]} MUST be Rest (TSS=0).\n"
+                f"- Only plan workouts from {day_names_list[start_day_index]} onward.\n"
+            )
 
         # Calculate per-day duration targets from TSS targets
         daily_duration_targets = self._calculate_daily_duration_targets(
@@ -501,6 +555,10 @@ class WeeklyPlanGenerator:
             weekly_availability=availability_text,
         )
 
+        # Append mid-week context if present
+        if mid_week_context:
+            user_prompt += mid_week_context
+
         logger.info(f"Generating weekly plan for {week_start} to {week_end}")
 
         # Generate with LLM (with retry on parse failure)
@@ -526,8 +584,26 @@ class WeeklyPlanGenerator:
             else:
                 logger.error(f"All {max_retries} attempts failed, using fallback plan")
 
+        # Force past days to Rest for mid-week plans (guard against LLM non-compliance)
+        if remaining_days_only and start_day_index > 0 and daily_plans:
+            for dp in daily_plans:
+                if dp.day_index < start_day_index and dp.workout_type != "Rest":
+                    logger.info(
+                        f"Forcing {dp.day_name} (day_index={dp.day_index}) to Rest "
+                        f"(was {dp.workout_type})"
+                    )
+                    dp.workout_type = "Rest"
+                    dp.estimated_tss = 0
+                    dp.duration_minutes = 0
+                    dp.rationale = "Already completed (mid-week generation)"
+                    dp.selected_modules = []
+
         # Post-validate weekly TSS
-        daily_plans = self._post_validate_weekly_tss(daily_plans, weekly_tss_target)
+        # For mid-week plans, validate against remaining TSS (not full weekly target)
+        validation_tss_target = weekly_tss_target
+        if remaining_days_only and completed_tss > 0:
+            validation_tss_target = max(0, weekly_tss_target - completed_tss)
+        daily_plans = self._post_validate_weekly_tss(daily_plans, validation_tss_target)
 
         # Calculate total TSS and collect used modules
         total_tss = sum(dp.estimated_tss for dp in daily_plans)

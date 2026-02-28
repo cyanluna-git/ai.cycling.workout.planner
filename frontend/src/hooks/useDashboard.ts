@@ -245,7 +245,7 @@ export function useDashboard(): UseDashboardReturn {
     });
 
     const generatePlanMutation = useMutation({
-        mutationFn: () => generateWeeklyPlan(session?.access_token || '', undefined, todayPlanData?.weekly_tss_target || undefined),
+        mutationFn: () => generateWeeklyPlan(session?.access_token || '', weekStartDate, todayPlanData?.weekly_tss_target || undefined),
         onSuccess: (plan) => {
             // Update cache with new plan
             queryClient.setQueryData(queryKeys.weeklyPlan(weekStartDate), plan);

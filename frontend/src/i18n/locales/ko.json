@@ -280,7 +280,9 @@
     "tssRemaining": "남은 TSS: {{remaining}}",
     "daysRemaining": "남은 {{days}}일",
     "tssAchievementStatus": "{{status}}",
-    "tssWarningUnachievable": "남은 {{days}}일로 목표 TSS {{target}} 달성이 어렵습니다. 현재 {{accumulated}}/{{target}} ({{pct}}%). 목표를 조정하시겠습니까?"
+    "tssWarningUnachievable": "남은 {{days}}일로 목표 TSS {{target}} 달성이 어렵습니다. 현재 {{accumulated}}/{{target}} ({{pct}}%). 목표를 조정하시겠습니까?",
+    "currentWeekHint": "주중 계획: 이미 완료한 운동을 반영하여 남은 요일의 워크아웃을 AI가 생성합니다.",
+    "tooFewDaysError": "이번 주 남은 운동 가능 일수가 부족합니다. 다음 주 계획을 생성해보세요."
   },
   "admin": {
     "back": "← 뒤로",
