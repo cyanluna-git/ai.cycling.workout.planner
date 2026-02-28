@@ -203,6 +203,11 @@ export const WeeklyPlanCard = memo(function WeeklyPlanCard({
                         <p className="text-muted-foreground text-sm mb-6 max-w-md mx-auto">
                             {t("weeklyPlan.emptyDesc")}
                         </p>
+                        {currentWeekOffset === 0 && (
+                            <p className="text-xs text-blue-600 dark:text-blue-400 mb-4 max-w-md mx-auto">
+                                {t("weeklyPlan.currentWeekHint")}
+                            </p>
+                        )}
                         <Button
                             onClick={onGenerate}
                             disabled={isGenerating}

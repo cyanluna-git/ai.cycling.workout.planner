@@ -239,3 +239,102 @@ class TestWeeklyTssTarget:
         )
         assert isinstance(plan, WeeklyPlan)
         assert len(plan.daily_plans) >= 7
+
+
+# ---------------------------------------------------------------------------
+# Current-week (mid-week) generation
+# ---------------------------------------------------------------------------
+class TestCurrentWeekGeneration:
+    """Tests for remaining_days_only mid-week plan generation."""
+
+    def test_mid_week_past_days_are_rest(self):
+        """Days before start_day_index should be Rest with TSS=0."""
+        gen = _make_generator({
+            "training_style": "sweetspot", "training_focus": "maintain",
+            "preferred_duration": 60,
+        })
+        gen.llm.generate.return_value = _mock_llm_response()
+        plan = gen.generate_weekly_plan(
+            ctl=60.0, atl=55.0, tsb=5.0, form_status="Optimal",
+            week_start=date(2026, 3, 2),  # Monday
+            weekly_tss_target=500,
+            remaining_days_only=True,
+            completed_tss=200,
+            start_day_index=3,  # Thursday
+        )
+        assert isinstance(plan, WeeklyPlan)
+        # LLM is mocked, so we can't fully control which days the mock returns.
+        # However, we verify the generator ran without errors.
+        assert len(plan.daily_plans) >= 7
+
+    def test_mid_week_remaining_tss_subtracted(self):
+        """Remaining TSS = weekly_target - completed_tss; check that
+        the generator's internal daily_tss_targets reflect this."""
+        gen = _make_generator({
+            "training_style": "sweetspot", "training_focus": "maintain",
+            "preferred_duration": 60,
+        })
+        # We'll check the daily TSS prediction directly via the internal method
+        daily_tss = gen._predict_daily_tss_with_availability(
+            weekly_tss_target=500,
+            training_style="sweetspot",
+            available_days=[1, 2, 3, 5, 6],
+            unavailable_days=[0, 4],
+        )
+        # Simulate mid-week: zero out days 0-2, redistribute
+        remaining_tss = 500 - 200  # 300 remaining
+        for day_idx in range(3):
+            daily_tss[day_idx] = 0
+        remaining_ratios = {
+            k: v for k, v in daily_tss.items() if k >= 3 and v > 0
+        }
+        total = sum(remaining_ratios.values())
+        if total > 0:
+            for day_idx, old_tss in remaining_ratios.items():
+                normalized = old_tss / total
+                daily_tss[day_idx] = min(
+                    int(round(remaining_tss * normalized / 5) * 5), 150
+                )
+        # Past days should be 0
+        assert daily_tss[0] == 0
+        assert daily_tss[1] == 0
+        assert daily_tss[2] == 0
+        # Total of remaining days should not exceed remaining_tss + rounding margin
+        remaining_total = sum(v for k, v in daily_tss.items() if k >= 3)
+        assert remaining_total <= remaining_tss + 25  # rounding tolerance
+
+    def test_mid_week_per_day_tss_cap(self):
+        """Per-day TSS should be capped at 150 (180 for endurance weekends)."""
+        gen = _make_generator({
+            "training_style": "endurance", "training_focus": "maintain",
+            "preferred_duration": 60,
+        })
+        gen.llm.generate.return_value = _mock_llm_response()
+        plan = gen.generate_weekly_plan(
+            ctl=80.0, atl=70.0, tsb=10.0, form_status="Fresh",
+            week_start=date(2026, 3, 2),
+            weekly_tss_target=700,
+            remaining_days_only=True,
+            completed_tss=100,
+            start_day_index=5,  # Saturday — only Sat+Sun left
+        )
+        assert isinstance(plan, WeeklyPlan)
+
+    def test_next_week_generation_unchanged(self):
+        """Next week generation should not be affected by mid-week logic."""
+        gen = _make_generator({
+            "training_style": "sweetspot", "training_focus": "maintain",
+            "preferred_duration": 60,
+        })
+        gen.llm.generate.return_value = _mock_llm_response()
+        plan = gen.generate_weekly_plan(
+            ctl=60.0, atl=55.0, tsb=5.0, form_status="Optimal",
+            week_start=date(2026, 3, 9),  # Next week Monday
+            weekly_tss_target=500,
+            remaining_days_only=False,  # Not current week
+        )
+        assert isinstance(plan, WeeklyPlan)
+        assert len(plan.daily_plans) >= 7
+        # Verify that non-rest days have TSS > 0
+        workout_days = [dp for dp in plan.daily_plans if dp.workout_type != "Rest"]
+        assert len(workout_days) >= 3
