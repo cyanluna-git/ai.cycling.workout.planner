@@ -675,6 +675,16 @@ async def generate_weekly_plan(
     request: GenerateWeeklyPlanRequest, user: dict = Depends(get_current_user)
 ):
     """Generate a new weekly plan (or regenerate existing)."""
+    from ..services.user_api_service import (
+        check_rate_limit, increment_usage, RateLimitExceededError
+    )
+
+    try:
+        await check_rate_limit(user["id"])
+    except RateLimitExceededError as e:
+        logger.warning(f"Rate limit exceeded for user {user['id']}")
+        raise HTTPException(status_code=429, detail=str(e))
+
     supabase = get_supabase_admin_client()
 
     # Determine target week
@@ -894,6 +904,9 @@ async def generate_weekly_plan(
 
     logger.info(f"Generated weekly plan {plan_id} for user {user['id']}")
 
+    # Increment usage count on success
+    await increment_usage(user["id"])
+
     # Clear cache to ensure fresh data on next request
     # Clear both granular and complete fitness cache keys
     clear_user_cache(
@@ -1055,6 +1068,16 @@ async def regenerate_today_workout(
     request: RegenerateRequest, user: dict = Depends(get_current_user)
 ):
     """Regenerate today's workout based on current condition."""
+    from ..services.user_api_service import (
+        check_rate_limit, increment_usage, RateLimitExceededError
+    )
+
+    try:
+        await check_rate_limit(user["id"])
+    except RateLimitExceededError as e:
+        logger.warning(f"Rate limit exceeded for user {user['id']}")
+        raise HTTPException(status_code=429, detail=str(e))
+
     supabase = get_supabase_admin_client()
     today = date.today()
 
@@ -1183,6 +1206,9 @@ async def regenerate_today_workout(
     ).eq("id", workout_id).execute()
 
     logger.info(f"Regenerated workout {workout_id} for user {user['id']}")
+
+    # Increment usage count on success
+    await increment_usage(user["id"])
 
     # Clear cache to ensure fresh data on next request
     clear_user_cache(
