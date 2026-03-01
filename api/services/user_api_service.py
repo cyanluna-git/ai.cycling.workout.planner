@@ -52,12 +52,12 @@ class RateLimitExceededError(UserApiServiceError):
     pass
 
 
-async def check_rate_limit(user_id: str, limit: int = 5) -> bool:
+async def check_rate_limit(user_id: str, limit: int = 10) -> bool:
     """Check if user has exceeded daily workout generation limit.
 
     Args:
         user_id: The user's unique ID.
-        limit: Max workouts per day (default 5).
+        limit: Max generations per day (default 10).
 
     Raises:
         RateLimitExceededError: If limit exceeded.

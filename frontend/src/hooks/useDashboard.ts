@@ -213,7 +213,12 @@ export function useDashboard(): UseDashboardReturn {
             }
         },
         onError: (e: Error) => {
-            setError(i18n.t("workout.generateError", { message: e.message }));
+            const errorMsg = e.message;
+            if (errorMsg.includes('rate_limit') || errorMsg.includes('429')) {
+                setError(i18n.t("common.dailyLimitReached"));
+            } else {
+                setError(i18n.t("workout.generateError", { message: errorMsg }));
+            }
         },
     });
 
@@ -257,7 +262,7 @@ export function useDashboard(): UseDashboardReturn {
         onError: (e: Error) => {
             const errorMsg = e.message;
             if (errorMsg.includes('rate_limit') || errorMsg.includes('429')) {
-                setError(i18n.t("weeklyPlan.generateRateLimit"));
+                setError(i18n.t("common.dailyLimitReached"));
             } else {
                 setError(i18n.t("weeklyPlan.generateFailed", { message: errorMsg }));
             }

@@ -22,7 +22,8 @@
     "minutes": "min",
     "times": "times",
     "hours": "h",
-    "points": "pts"
+    "points": "pts",
+    "dailyLimitReached": "Daily generation limit (10) reached. Please try again tomorrow."
   },
   "dashboard": {
     "subtitle": "AI-powered workout recommendations",

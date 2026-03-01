@@ -22,7 +22,8 @@
     "minutes": "분",
     "times": "회",
     "hours": "시간",
-    "points": "점"
+    "points": "점",
+    "dailyLimitReached": "일일 생성 한도(10회)에 도달했습니다. 내일 다시 시도해주세요."
   },
   "dashboard": {
     "subtitle": "AI 기반 워크아웃 추천",
