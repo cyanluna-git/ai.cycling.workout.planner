@@ -43,14 +43,6 @@ function getEventStyle(event: WeeklyEvent) {
 }
 
 /**
- * Format date as "DD"
- */
-function formatDate(dateStr: string): string {
-    const d = new Date(dateStr);
-    return `${d.getDate()}`;
-}
-
-/**
  * Check if date is today
  */
 function isToday(dateStr: string): boolean {
@@ -121,61 +113,68 @@ export function WeeklyCalendarCard({ calendar, isLoading, onSelectDate }: Weekly
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="flex flex-col gap-2">
-                    {days.map((day) => (
-                        <div
-                            key={day.date}
-                            onClick={() => onSelectDate?.(day.date)}
-                            className={`p-3 rounded-lg cursor-pointer transition-all hover:bg-muted/80 active:scale-[0.98] ${isToday(day.date) ? 'bg-primary/5 ring-2 ring-primary' : 'bg-muted/30'
-                                }`}
-                        >
-                            {/* Day header */}
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className={`text-sm font-semibold ${isToday(day.date) ? 'text-primary' : ''}`}>
-                                    {day.dayNameFull} {formatDate(day.date)}
-                                </span>
-                            </div>
+                <div className="flex flex-col divide-y divide-border/40">
+                    {days.map((day) => {
+                        const rows: (WeeklyEvent | null)[] = day.events.length > 0
+                            ? day.events
+                            : [null]; // null = rest day row
 
-                            <div className="space-y-1">
-                                {day.events.map((event) => (
+                        return rows.map((event, idx) => (
+                            <div
+                                key={`${day.date}-${event?.id ?? 'rest'}`}
+                                onClick={() => onSelectDate?.(day.date)}
+                                className="flex items-center gap-2 py-1.5 px-1 cursor-pointer hover:bg-muted/30 transition-colors"
+                            >
+                                {/* Day name — only on first row, invisible on subsequent rows */}
+                                <span
+                                    className={`w-24 shrink-0 text-sm font-semibold ${
+                                        idx === 0 && isToday(day.date)
+                                            ? 'text-primary'
+                                            : idx > 0
+                                                ? 'invisible'
+                                                : ''
+                                    }`}
+                                >
+                                    {day.dayNameFull}
+                                </span>
+
+                                {/* Event or rest day */}
+                                {event === null ? (
+                                    <span className="text-xs text-muted-foreground">
+                                        {t('calendar.restDay')}
+                                    </span>
+                                ) : (
                                     <div
-                                        key={event.id}
-                                        className="text-xs p-1.5 rounded text-left leading-tight"
+                                        className="flex items-center gap-1.5 min-w-0 flex-1 rounded px-2 py-1 text-xs"
                                         style={getEventStyle(event)}
                                         title={`${event.name}\n${event.is_actual ? t('calendar.completedActivity') : t('calendar.plannedWorkout')}`}
                                     >
-                                        <div className="flex items-center gap-1">
-                                            {event.is_actual ? (
-                                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-200 text-green-800 mr-1">
-                                                    {t('calendar.doneLabel')}
-                                                </span>
-                                            ) : (
-                                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-200 text-blue-800 mr-1">
-                                                    {t('calendar.planLabel')}
-                                                </span>
-                                            )}
-                                            <span className="flex items-center gap-0.5">
-                                                <span>{getEventIconNode(event)}</span>
-                                                <span>{cleanWorkoutName(event.name)}</span>
+                                        {/* Badge */}
+                                        {event.is_actual ? (
+                                            <span className="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-200 text-green-800">
+                                                {t('calendar.doneLabel')}
                                             </span>
-                                        </div>
+                                        ) : (
+                                            <span className="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-200 text-blue-800">
+                                                {t('calendar.planLabel')}
+                                            </span>
+                                        )}
+                                        {/* Icon */}
+                                        <span className="shrink-0">{getEventIconNode(event)}</span>
+                                        {/* Name — truncate */}
+                                        <span className="truncate">{cleanWorkoutName(event.name)}</span>
+                                        {/* TSS + duration inline */}
                                         {event.tss ? (
-                                            <div className="mt-0.5 opacity-80 text-[9px] pl-3">
+                                            <span className="shrink-0 text-[10px] opacity-70 ml-auto whitespace-nowrap">
                                                 TSS {event.tss}
-                                                {event.duration_minutes ? ` • ${event.duration_minutes}m` : ''}
-                                            </div>
+                                                {event.duration_minutes ? ` · ${event.duration_minutes}m` : ''}
+                                            </span>
                                         ) : null}
                                     </div>
-                                ))}
+                                )}
                             </div>
-
-                            {day.events.length === 0 && (
-                                <div className="text-xs text-muted-foreground">
-                                    {t('calendar.restDay')}
-                                </div>
-                            )}
-                        </div>
-                    ))}
+                        ));
+                    })}
                 </div>
 
                 {/* Legend */}
