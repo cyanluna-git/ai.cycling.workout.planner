@@ -184,7 +184,11 @@
     "refreshSuccess": "컨디션 데이터가 업데이트되었습니다.",
     "refreshFailed": "컨디션 데이터 새로고침에 실패했습니다.",
     "wearableHint": "Garmin, Wahoo, Polar, Whoop 등의 웨어러블 기기를 Intervals.icu에 연동하면 HRV, 수면, 안정시 심박 데이터를 확인할 수 있습니다.",
-    "wearableHintLink": "웨어러블 연동 설정하기"
+    "wearableHintLink": "웨어러블 연동 설정하기",
+    "trendTitle": "7일 트렌드",
+    "trendCTL": "CTL (체력)",
+    "trendATL": "ATL (피로)",
+    "trendTSB": "TSB (컨디션)"
   },
   "wellnessCard": {
     "title": "웰니스 상태",

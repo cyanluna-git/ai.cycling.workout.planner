@@ -1,7 +1,7 @@
 """Tests for data processor."""
 
 import pytest
-from datetime import date
+from datetime import date, timedelta
 
 from src.services.data_processor import DataProcessor, TrainingMetrics, WellnessMetrics
 
@@ -197,3 +197,83 @@ class TestDataProcessor:
         result = processor.check_existing_workout(events, date(2024, 12, 15))
 
         assert result is None
+
+
+class TestCtlHistory:
+    """Tests for calculate_ctl_history method."""
+
+    def test_ctl_history_returns_7_entries(self, processor):
+        """Test that history returns exactly 7 entries by default."""
+        today = date.today()
+        activities = [
+            {
+                "start_date_local": (today - timedelta(days=i)).isoformat(),
+                "icu_ctl": 60.0 + i,
+                "icu_atl": 50.0 + i,
+            }
+            for i in range(10)
+        ]
+
+        result = processor.calculate_ctl_history(activities)
+
+        assert len(result) == 7
+        # First entry should be oldest (6 days ago), last should be today
+        assert result[0]["date"] == (today - timedelta(days=6)).isoformat()
+        assert result[-1]["date"] == today.isoformat()
+
+    def test_ctl_history_tsb_calculation(self, processor):
+        """Test that TSB is correctly calculated as CTL - ATL."""
+        today = date.today()
+        activities = [
+            {
+                "start_date_local": today.isoformat(),
+                "icu_ctl": 70.0,
+                "icu_atl": 80.0,
+            },
+        ]
+
+        result = processor.calculate_ctl_history(activities, days=1)
+
+        assert len(result) == 1
+        assert result[0]["ctl"] == 70.0
+        assert result[0]["atl"] == 80.0
+        assert result[0]["tsb"] == -10.0
+
+    def test_ctl_history_gap_filling(self, processor):
+        """Test carry-forward gap filling when some days have no data."""
+        today = date.today()
+        # Only provide data for 3 days ago
+        activities = [
+            {
+                "start_date_local": (today - timedelta(days=3)).isoformat(),
+                "icu_ctl": 55.0,
+                "icu_atl": 60.0,
+            },
+        ]
+
+        result = processor.calculate_ctl_history(activities, days=5)
+
+        assert len(result) == 5
+        # Index 0 = 4 days ago: no data, should be 0
+        assert result[0]["ctl"] == 0.0
+        assert result[0]["atl"] == 0.0
+        assert result[0]["date"] == (today - timedelta(days=4)).isoformat()
+        # Index 1 = 3 days ago: has data
+        assert result[1]["ctl"] == 55.0
+        assert result[1]["atl"] == 60.0
+        assert result[1]["tsb"] == -5.0
+        assert result[1]["date"] == (today - timedelta(days=3)).isoformat()
+        # Index 2-4 = carry forward from 3 days ago
+        assert result[2]["ctl"] == 55.0
+        assert result[3]["ctl"] == 55.0
+        assert result[4]["ctl"] == 55.0
+
+    def test_ctl_history_empty_activities(self, processor):
+        """Test with no activities returns 7 entries of zeros."""
+        result = processor.calculate_ctl_history([])
+
+        assert len(result) == 7
+        for point in result:
+            assert point["ctl"] == 0.0
+            assert point["atl"] == 0.0
+            assert point["tsb"] == 0.0

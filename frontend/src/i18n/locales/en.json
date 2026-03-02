@@ -184,7 +184,11 @@
     "refreshSuccess": "Fitness data updated successfully.",
     "refreshFailed": "Failed to refresh fitness data.",
     "wearableHint": "Connect a wearable device (Garmin, Wahoo, Polar, Whoop) to Intervals.icu to see HRV, sleep, and resting heart rate data.",
-    "wearableHintLink": "Set up wearable connections"
+    "wearableHintLink": "Set up wearable connections",
+    "trendTitle": "7-Day Trend",
+    "trendCTL": "CTL (Fitness)",
+    "trendATL": "ATL (Fatigue)",
+    "trendTSB": "TSB (Form)"
   },
   "wellnessCard": {
     "title": "Wellness Status",

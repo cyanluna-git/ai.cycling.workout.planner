@@ -8,6 +8,15 @@ from pydantic import BaseModel, Field
 # --- Fitness ---
 
 
+class TrainingHistoryPoint(BaseModel):
+    """Single day of CTL/ATL/TSB history."""
+
+    date: str = Field(..., description="Date (YYYY-MM-DD)")
+    ctl: float = Field(..., description="CTL value")
+    atl: float = Field(..., description="ATL value")
+    tsb: float = Field(..., description="TSB value (CTL - ATL)")
+
+
 class TrainingMetrics(BaseModel):
     """Current training metrics."""
 
@@ -15,6 +24,9 @@ class TrainingMetrics(BaseModel):
     atl: float = Field(..., description="Acute Training Load (fatigue)")
     tsb: float = Field(..., description="Training Stress Balance (form)")
     form_status: str = Field(..., description="Form status (Fresh/Tired/Fatigued)")
+    ctl_history: Optional[List[TrainingHistoryPoint]] = Field(
+        None, description="7-day CTL/ATL/TSB trend history"
+    )
 
 
 class WellnessMetrics(BaseModel):

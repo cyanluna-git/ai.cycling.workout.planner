@@ -6,7 +6,7 @@ and analysis of wellness data.
 
 import logging
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
@@ -129,6 +129,54 @@ class DataProcessor:
 
         # Calculate from TSS values
         return self._calculate_from_tss(activities)
+
+    def calculate_ctl_history(
+        self, activities: list[dict], days: int = 7
+    ) -> list[dict]:
+        """Return daily CTL/ATL/TSB for the last N days from activity snapshots.
+
+        Groups activities by date, keeps the latest icu_ctl/icu_atl per day,
+        then builds a contiguous date range with carry-forward gap filling.
+
+        Args:
+            activities: List of activity objects from Intervals.icu.
+            days: Number of days to return (default: 7).
+
+        Returns:
+            List of dicts with date, ctl, atl, tsb (oldest first).
+        """
+        # Group activities by date, keep latest icu_ctl/icu_atl per day
+        date_to_metrics: dict[str, dict[str, float]] = {}
+        for act in activities:
+            date_str = (act.get("start_date_local") or "")[:10]
+            if not date_str:
+                continue
+            ctl = act.get("icu_ctl")
+            atl = act.get("icu_atl")
+            if ctl is None or atl is None:
+                continue
+            # Keep the latest activity's snapshot per date
+            date_to_metrics[date_str] = {"ctl": float(ctl), "atl": float(atl)}
+
+        # Build N-day list with carry-forward gap filling
+        result: list[dict] = []
+        today = date.today()
+        last_ctl, last_atl = 0.0, 0.0
+        for i in range(days - 1, -1, -1):  # oldest first
+            d = today - timedelta(days=i)
+            d_str = d.isoformat()
+            if d_str in date_to_metrics:
+                last_ctl = date_to_metrics[d_str]["ctl"]
+                last_atl = date_to_metrics[d_str]["atl"]
+            result.append(
+                {
+                    "date": d_str,
+                    "ctl": round(last_ctl, 1),
+                    "atl": round(last_atl, 1),
+                    "tsb": round(last_ctl - last_atl, 1),
+                }
+            )
+        return result
 
     def _calculate_from_tss(self, activities: list[dict]) -> TrainingMetrics:
         """Calculate metrics from TSS values using exponential moving average.

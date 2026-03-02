@@ -18,11 +18,19 @@ function getHeaders(token?: string, contentType?: string): HeadersInit {
 
 // --- Types ---
 
+export interface TrainingHistoryPoint {
+    date: string;
+    ctl: number;
+    atl: number;
+    tsb: number;
+}
+
 export interface TrainingMetrics {
     ctl: number;
     atl: number;
     tsb: number;
     form_status: string;
+    ctl_history?: TrainingHistoryPoint[];
 }
 
 export interface WellnessMetrics {
