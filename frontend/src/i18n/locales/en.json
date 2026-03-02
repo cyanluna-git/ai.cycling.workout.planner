@@ -179,7 +179,10 @@
     "atlGlossary": "Acute Training Load. Average training load over the past 7 days, representing your current fatigue. Higher means more fatigued.",
     "tsbGlossary": "Training Stress Balance = CTL - ATL. General guideline: +10 or above (recovered, ready for intensity) / -10 to +10 (moderate) / -10 or below (fatigued, rest needed). Individual variation exists; observe your own patterns.",
     "ftpGlossary": "Functional Threshold Power. Maximum power sustainable for about 1 hour. Typically estimated from a 20-min test x 0.95, used as the basis for training zones.",
-    "hrvGlossary": "Measures relative change from your personal baseline. Higher than usual = good recovery; lower than usual = fatigue/stress signal. Absolute values vary greatly between individuals."
+    "hrvGlossary": "Measures relative change from your personal baseline. Higher than usual = good recovery; lower than usual = fatigue/stress signal. Absolute values vary greatly between individuals.",
+    "refresh": "Refresh fitness data",
+    "refreshSuccess": "Fitness data updated successfully.",
+    "refreshFailed": "Failed to refresh fitness data."
   },
   "wellnessCard": {
     "title": "Wellness Status",

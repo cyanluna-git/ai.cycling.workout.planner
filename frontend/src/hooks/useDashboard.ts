@@ -63,6 +63,7 @@ interface DashboardState {
     syncResult: SyncResult | null;
     isLoading: boolean;
     isRegistering: boolean;
+    isRefreshingFitness: boolean;
     error: string | null;
     success: string | null;
     tssProgress: TssProgressData | null;
@@ -73,6 +74,7 @@ interface DashboardState {
 interface DashboardActions {
     handleGenerate: (request: WorkoutGenerateRequest) => Promise<void>;
     handleRegister: () => Promise<void>;
+    handleRefreshFitness: () => Promise<void>;
     handleSelectDate: (date: string) => Promise<void>;
     handleOnboardingComplete: () => void;
     handleGenerateWeeklyPlan: () => Promise<void>;
@@ -96,6 +98,7 @@ export function useDashboard(): UseDashboardReturn {
     const [isLoading, setIsLoading] = useState(false);
     const [isRegistering, setIsRegistering] = useState(false);
     const [isSyncingPlan, setIsSyncingPlan] = useState(false);
+    const [isRefreshingFitness, setIsRefreshingFitness] = useState(false);
     const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
@@ -315,6 +318,22 @@ export function useDashboard(): UseDashboardReturn {
         queryClient.invalidateQueries({ queryKey: queryKeys.apiConfigured() });
     }, [queryClient]);
 
+    const handleRefreshFitness = useCallback(async () => {
+        if (isRefreshingFitness || !session?.access_token) return;
+        setIsRefreshingFitness(true);
+        setError(null);
+        try {
+            const result = await fetchFitness(session.access_token, true);
+            queryClient.setQueryData(queryKeys.fitness(), result);
+            setCachedData('fitness', result);
+            setSuccess(i18n.t('fitness.refreshSuccess'));
+        } catch {
+            setError(i18n.t('fitness.refreshFailed'));
+        } finally {
+            setIsRefreshingFitness(false);
+        }
+    }, [isRefreshingFitness, session, queryClient]);
+
     const handleGenerate = useCallback(async (request: WorkoutGenerateRequest) => {
         setIsLoading(true);
         setError(null);
@@ -463,12 +482,14 @@ export function useDashboard(): UseDashboardReturn {
         syncResult,
         isLoading,
         isRegistering,
+        isRefreshingFitness,
         error,
         success,
         tssProgress,
         // Actions
         handleGenerate,
         handleRegister,
+        handleRefreshFitness,
         handleSelectDate,
         handleOnboardingComplete,
         handleGenerateWeeklyPlan,
