@@ -218,7 +218,19 @@
       "Fri",
       "Sat",
       "Sun"
-    ]
+    ],
+    "dayNamesFull": [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday"
+    ],
+    "restDay": "Rest Day",
+    "planLabel": "Plan",
+    "doneLabel": "Done"
   },
   "workout": {
     "todayTitle": "Today's Workout",
@@ -283,7 +295,10 @@
     "tssAchievementStatus": "{{status}}",
     "tssWarningUnachievable": "Reaching TSS target {{target}} is unlikely with {{days}} days remaining. Currently {{accumulated}}/{{target}} ({{pct}}%). Adjust target?",
     "currentWeekHint": "Mid-week plan: AI will create workouts for the remaining days based on what you've already done.",
-    "tooFewDaysError": "Not enough remaining days this week. Try next week instead."
+    "tooFewDaysError": "Not enough remaining days this week. Try next week instead.",
+    "weeklyProgress": "Weekly Progress",
+    "goalAchieved": "Weekly TSS goal achieved!",
+    "goalExceeded": "TSS goal exceeded - great work!"
   },
   "admin": {
     "back": "← Back",

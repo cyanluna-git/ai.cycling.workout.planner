@@ -218,7 +218,19 @@
       "금",
       "토",
       "일"
-    ]
+    ],
+    "dayNamesFull": [
+      "월요일",
+      "화요일",
+      "수요일",
+      "목요일",
+      "금요일",
+      "토요일",
+      "일요일"
+    ],
+    "restDay": "휴식일",
+    "planLabel": "계획",
+    "doneLabel": "완료"
   },
   "workout": {
     "todayTitle": "오늘의 워크아웃",
@@ -283,7 +295,10 @@
     "tssAchievementStatus": "{{status}}",
     "tssWarningUnachievable": "남은 {{days}}일로 목표 TSS {{target}} 달성이 어렵습니다. 현재 {{accumulated}}/{{target}} ({{pct}}%). 목표를 조정하시겠습니까?",
     "currentWeekHint": "주중 계획: 이미 완료한 운동을 반영하여 남은 요일의 워크아웃을 AI가 생성합니다.",
-    "tooFewDaysError": "이번 주 남은 운동 가능 일수가 부족합니다. 다음 주 계획을 생성해보세요."
+    "tooFewDaysError": "이번 주 남은 운동 가능 일수가 부족합니다. 다음 주 계획을 생성해보세요.",
+    "weeklyProgress": "주간 달성률",
+    "goalAchieved": "주간 TSS 목표 달성!",
+    "goalExceeded": "TSS 목표 초과 달성 - 대단해요!"
   },
   "admin": {
     "back": "← 뒤로",
