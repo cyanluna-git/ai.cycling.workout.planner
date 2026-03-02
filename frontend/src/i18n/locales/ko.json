@@ -359,7 +359,7 @@
   "landing": {
     "heroSubtitle": "당신의 TSB에 맞는 워크아웃, 매일 자동 생성",
     "heroTagline": "Intervals.icu 데이터 분석 / ZWO 자동 생성 / Wahoo·Garmin 즉시 전송",
-    "getStarted": "그냥 시작하기",
+    "getStarted": "시작하기",
     "pipeline1": "Intervals.icu",
     "pipeline2": "AI 분석",
     "pipeline3": "ZWO 생성",
@@ -384,7 +384,7 @@
     "faq2A": "\"다른 훈련으로 변경\" 버튼으로 재생성할 수 있습니다. 강도 조절도 가능합니다.",
     "faq3Q": "야외 훈련도 가능한가요?",
     "faq3A": "네. 실내/실외 선택 가능하며, Garmin/Wahoo에서 파워 기반 훈련이 됩니다.",
-    "freeStatement": "무료입니다",
+    "freeStatement": "바로 워크아웃을 시작하세요",
     "freeDesc": "Intervals.icu 계정만 있으면 바로 시작할 수 있습니다",
     "ctaButton": "시작하기"
   },
