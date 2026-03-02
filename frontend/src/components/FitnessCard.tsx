@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Info, ChevronRight, RefreshCw } from "lucide-react";
 import { getTsbIcon } from "@/lib/icon-maps";
 import type { TrainingMetrics, WellnessMetrics, AthleteProfile } from "@/lib/api";
+import { FitnessTrendChart } from "@/components/FitnessTrendChart";
 
 interface FitnessCardProps {
     training: TrainingMetrics;
@@ -157,6 +158,14 @@ export function FitnessCard({ training, wellness, profile, onRefresh, isRefreshi
                         )}
                     </div>
                 </div>
+
+                {/* CTL/ATL/TSB Trend Chart */}
+                {training.ctl_history && training.ctl_history.length > 0 && (
+                    <div>
+                        <div className="text-xs font-medium text-muted-foreground mb-2">{t('fitness.trendTitle')}</div>
+                        <FitnessTrendChart history={training.ctl_history} />
+                    </div>
+                )}
 
                 {/* Readiness - Single Bottom Section */}
                 <div className="pt-3 border-t">

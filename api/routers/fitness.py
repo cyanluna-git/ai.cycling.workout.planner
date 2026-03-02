@@ -6,6 +6,7 @@ from datetime import date, timedelta
 from ..schemas import (
     FitnessResponse,
     TrainingMetrics,
+    TrainingHistoryPoint,
     WellnessMetrics,
     AthleteProfile,
     ActivitiesResponse,
@@ -68,6 +69,7 @@ async def get_fitness(
 
         # Calculate metrics
         training = processor.calculate_training_metrics(activities)
+        ctl_history_raw = processor.calculate_ctl_history(activities, days=7)
         wellness = processor.analyze_wellness(wellness_data)
 
         # Extract profile data from nested structure
@@ -96,6 +98,9 @@ async def get_fitness(
             atl=training.atl,
             tsb=training.tsb,
             form_status=training.form_status,
+            ctl_history=[
+                TrainingHistoryPoint(**point) for point in ctl_history_raw
+            ],
         )
 
         wellness_data = WellnessMetrics(
