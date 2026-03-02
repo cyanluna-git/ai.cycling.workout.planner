@@ -204,7 +204,7 @@ Edit `api/main.py`:
 ```python
 origins = [
     "http://localhost:5173",  # Local dev
-    "http://localhost:3005",
+    "http://localhost:3101",
     "https://ai-cycling-workout-planner.vercel.app",  # Production
     "https://*.vercel.app",  # Preview deployments
 ]

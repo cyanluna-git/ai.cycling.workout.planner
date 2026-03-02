@@ -39,7 +39,7 @@ app.add_middleware(RequestLoggingMiddleware)
 origins = [
     "http://localhost:5173",  # Vite dev server
     "http://localhost:3000",  # Alternative dev
-    "http://localhost:3005",  # Alternative dev port
+    "http://localhost:3101",  # run.sh dev port (frontend)
     "http://localhost:8000",  # Default uvicorn
     "http://localhost:8005",  # Alternative dev port
     "https://*.vercel.app",  # Vercel preview deployments

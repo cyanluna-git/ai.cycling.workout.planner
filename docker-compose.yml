@@ -47,7 +47,7 @@ services:
       context: .
       dockerfile: Dockerfile.frontend
     ports:
-      - "${FRONTEND_PORT:-3005}:${FRONTEND_PORT:-3005}"
+      - "${FRONTEND_PORT:-3101}:${FRONTEND_PORT:-3101}"
     environment:
       - VITE_API_URL=http://localhost:${BACKEND_PORT:-8005}
       - VITE_SUPABASE_URL=${SUPABASE_URL}

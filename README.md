@@ -87,7 +87,7 @@ python run.py --docker
 
 **기본 포트:**
 - Backend: `http://localhost:8005`
-- Frontend: `http://localhost:3005`
+- Frontend: `http://localhost:3101`
 - API Docs: `http://localhost:8005/docs`
 
 ## ⚙️ 환경 변수 설정
@@ -97,7 +97,7 @@ python run.py --docker
 ```bash
 # 서버 포트
 BACKEND_PORT=8005
-FRONTEND_PORT=3005
+FRONTEND_PORT=3101
 DEBUG=true
 
 # Supabase (필수)

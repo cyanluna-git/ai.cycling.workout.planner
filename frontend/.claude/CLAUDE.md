@@ -4,7 +4,7 @@ React 19 + TypeScript SPA for AI Cycling Coach workout planning and visualizatio
 
 ## Overview
 
-Vite-based React 19 application (port 3005) with premium UI for workout generation, athlete fitness visualization, and integration with Intervals.icu.
+Vite-based React 19 application (port 3101) with premium UI for workout generation, athlete fitness visualization, and integration with Intervals.icu.
 
 ## Tech Stack
 
@@ -35,7 +35,7 @@ Vite-based React 19 application (port 3005) with premium UI for workout generati
 ## Commands
 
 ```bash
-pnpm dev                # Dev server (port 3005)
+pnpm dev                # Dev server (port 3101)
 pnpm build              # Production build
 pnpm lint               # ESLint
 pnpm test               # Vitest
