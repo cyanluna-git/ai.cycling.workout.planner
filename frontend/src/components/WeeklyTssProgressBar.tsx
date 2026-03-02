@@ -52,14 +52,17 @@ export function WeeklyTssProgressBar({ tssProgress, isLoading }: WeeklyTssProgre
     // Mount animation: 0 -> actual value after short delay
     useEffect(() => {
         if (!tssProgress || tssProgress.target <= 0) {
-            setAnimatedWidth(0);
-            return;
+            const reset = setTimeout(() => setAnimatedWidth(0), 0);
+            return () => clearTimeout(reset);
         }
-        setAnimatedWidth(0);
+        const resetTimer = setTimeout(() => setAnimatedWidth(0), 0);
         const timer = setTimeout(() => {
             setAnimatedWidth(cappedPercentage);
         }, 100);
-        return () => clearTimeout(timer);
+        return () => {
+            clearTimeout(resetTimer);
+            clearTimeout(timer);
+        };
     }, [cappedPercentage, tssProgress]);
 
     // Loading skeleton
