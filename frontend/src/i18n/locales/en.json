@@ -359,7 +359,7 @@
   "landing": {
     "heroSubtitle": "Workouts matched to your TSB, generated daily",
     "heroTagline": "Intervals.icu data in / ZWO files out / Auto-synced to Wahoo·Garmin",
-    "getStarted": "Get Started for Free",
+    "getStarted": "Get Started",
     "pipeline1": "Intervals.icu",
     "pipeline2": "AI Analysis",
     "pipeline3": "ZWO Generation",
@@ -384,7 +384,7 @@
     "faq2A": "Hit \"Try Different Workout\" to regenerate. You can also adjust intensity.",
     "faq3Q": "Does it work for outdoor rides?",
     "faq3A": "Yes. Indoor/outdoor selectable, power-based training works on Garmin/Wahoo.",
-    "freeStatement": "It's free",
+    "freeStatement": "Start your workouts now",
     "freeDesc": "All you need is an Intervals.icu account to get started",
     "ctaButton": "Get Started"
   },
