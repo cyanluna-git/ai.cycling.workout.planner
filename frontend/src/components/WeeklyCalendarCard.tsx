@@ -80,7 +80,9 @@ export function WeeklyCalendarCard({ calendar, isLoading, onSelectDate }: Weekly
 
     // Generate week days from week_start
     const weekStart = new Date(calendar.week_start);
-    const days: { date: string; dayName: string; events: WeeklyEvent[] }[] = [];
+    const dayNamesShort = t('calendar.dayNames', { returnObjects: true }) as string[];
+    const dayNamesFull = t('calendar.dayNamesFull', { returnObjects: true }) as string[];
+    const days: { date: string; dayName: string; dayNameFull: string; events: WeeklyEvent[] }[] = [];
 
     for (let i = 0; i < 7; i++) {
         const d = new Date(weekStart);
@@ -95,7 +97,8 @@ export function WeeklyCalendarCard({ calendar, isLoading, onSelectDate }: Weekly
         // Show planned first (top), then actual (bottom)
         days.push({
             date: dateStr,
-            dayName: (t('calendar.dayNames', { returnObjects: true }) as string[])[i],
+            dayName: dayNamesShort[i],
+            dayNameFull: dayNamesFull[i],
             events: [...plannedEvents, ...actualEvents]
         });
     }
@@ -105,7 +108,7 @@ export function WeeklyCalendarCard({ calendar, isLoading, onSelectDate }: Weekly
             <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                     <CardTitle className="text-lg">{t('calendar.title')}</CardTitle>
-                    <div className="flex gap-4 text-xs">
+                    <div className="flex flex-wrap gap-2 md:gap-4 text-xs">
                         <div className="flex items-center gap-1.5 bg-blue-100 px-2 py-1 rounded">
                             <span className="w-2 h-2 border border-dashed border-blue-500 rounded-sm"></span>
                             <span className="text-blue-700">{t('calendar.planned')} {calendar.planned_tss}</span>
@@ -118,17 +121,23 @@ export function WeeklyCalendarCard({ calendar, isLoading, onSelectDate }: Weekly
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="overflow-x-auto">
-                    <div className="grid grid-cols-7 gap-1 min-w-[640px]">
+                <div className="flex flex-col gap-2 md:grid md:grid-cols-7 md:gap-1">
                     {days.map((day) => (
                         <div
                             key={day.date}
                             onClick={() => onSelectDate?.(day.date)}
-                            className={`text-center p-3 rounded-lg min-h-[112px] cursor-pointer transition-all hover:bg-muted/80 active:scale-[0.98] ${isToday(day.date) ? 'bg-primary/5 ring-2 ring-primary' : 'bg-muted/30'
+                            className={`md:text-center p-3 rounded-lg md:min-h-[112px] cursor-pointer transition-all hover:bg-muted/80 active:scale-[0.98] ${isToday(day.date) ? 'bg-primary/5 ring-2 ring-primary' : 'bg-muted/30'
                                 }`}
                         >
-                            <div className="text-xs text-muted-foreground mb-1">{day.dayName}</div>
-                            <div className={`text-sm font-bold mb-2 ${isToday(day.date) ? 'text-primary' : ''}`}>
+                            {/* Mobile: full day name + date header */}
+                            <div className="flex items-center gap-2 mb-2 md:hidden">
+                                <span className={`text-sm font-semibold ${isToday(day.date) ? 'text-primary' : ''}`}>
+                                    {day.dayNameFull} {formatDate(day.date)}
+                                </span>
+                            </div>
+                            {/* Desktop: compact day name + date (unchanged) */}
+                            <div className="hidden md:block text-xs text-muted-foreground mb-1">{day.dayName}</div>
+                            <div className={`hidden md:block text-sm font-bold mb-2 ${isToday(day.date) ? 'text-primary' : ''}`}>
                                 {formatDate(day.date)}
                             </div>
 
@@ -136,25 +145,36 @@ export function WeeklyCalendarCard({ calendar, isLoading, onSelectDate }: Weekly
                                 {day.events.map((event) => (
                                     <div
                                         key={event.id}
-                                        className="text-[10px] p-1.5 rounded text-left truncate leading-tight"
+                                        className="text-xs md:text-[10px] p-1.5 rounded text-left md:truncate leading-tight"
                                         style={getEventStyle(event)}
                                         title={`${event.name}\n${event.is_actual ? t('calendar.completedActivity') : t('calendar.plannedWorkout')}`}
                                     >
                                         <div className="flex items-center gap-1">
+                                            {/* Mobile: plan/done badge */}
                                             {event.is_actual ? (
-                                                <Check className="h-3 w-3 text-green-600" />
+                                                <span className="md:hidden inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-200 text-green-800 mr-1">
+                                                    {t('calendar.doneLabel')}
+                                                </span>
                                             ) : (
-                                                <span className="opacity-60">•</span>
+                                                <span className="md:hidden inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-200 text-blue-800 mr-1">
+                                                    {t('calendar.planLabel')}
+                                                </span>
+                                            )}
+                                            {/* Desktop: check or dot icon (unchanged) */}
+                                            {event.is_actual ? (
+                                                <Check className="hidden md:inline h-3 w-3 text-green-600" />
+                                            ) : (
+                                                <span className="hidden md:inline opacity-60">•</span>
                                             )}
                                             <span className="flex items-center gap-0.5">
                                                 <span>{getEventIconNode(event)}</span>
-                                                <span className="truncate">
+                                                <span className="md:truncate">
                                                     {cleanWorkoutName(event.name)}
                                                 </span>
                                             </span>
                                         </div>
                                         {event.tss ? (
-                                            <div className="mt-0.5 opacity-80 text-[9px] pl-3">
+                                            <div className="mt-0.5 opacity-80 text-[9px] pl-3 md:pl-3">
                                                 TSS {event.tss}
                                                 {event.duration_minutes ? ` • ${event.duration_minutes}m` : ''}
                                             </div>
@@ -164,15 +184,19 @@ export function WeeklyCalendarCard({ calendar, isLoading, onSelectDate }: Weekly
                             </div>
 
                             {day.events.length === 0 && (
-                                <div className="text-xs text-muted-foreground pt-4">-</div>
+                                <>
+                                    <div className="md:hidden text-xs text-muted-foreground">
+                                        {t('calendar.restDay')}
+                                    </div>
+                                    <div className="hidden md:block text-xs text-muted-foreground pt-4">-</div>
+                                </>
                             )}
                         </div>
                     ))}
                 </div>
-                </div>
 
                 {/* Legend */}
-                <div className="flex justify-center gap-6 mt-3 pt-3 border-t text-xs text-muted-foreground">
+                <div className="flex flex-wrap justify-center gap-6 mt-3 pt-3 border-t text-xs text-muted-foreground">
                     <div className="flex items-center gap-1.5">
                         <Check className="h-3 w-3 text-green-600" />
                         <span>{t('calendar.completedLegend')}</span>
