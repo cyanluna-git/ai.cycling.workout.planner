@@ -264,8 +264,8 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                                         <li>{t('settings.apiGuideStep4')}</li>
                                     </ol>
                                     <div className="grid grid-cols-2 gap-2 pt-1">
-                                        <img src="/guide/intervals-api-01-settings.png" alt="Intervals.icu Settings menu" className="rounded-lg border w-full object-cover" />
-                                        <img src="/guide/intervals-api-02-api-key.png" alt="Intervals.icu API Key section" className="rounded-lg border w-full object-cover" />
+                                        <img src="/guide/intervals-api-01-settings.png" alt="Intervals.icu Settings menu" className="rounded-lg border w-full h-44 object-cover object-top" />
+                                        <img src="/guide/intervals-api-02-api-key.png" alt="Intervals.icu API Key section" className="rounded-lg border w-full h-44 object-cover object-top" />
                                     </div>
                                 </div>
                                 <div className="space-y-2">
@@ -308,7 +308,7 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                                     <li>권한 허용 화면에서 <span className="text-foreground font-medium">모두 허용</span> — 특히 Sleep, HRV, Weight 포함</li>
                                     <li>연동 완료 후 Intervals.icu에서 웰니스 데이터 자동 동기화</li>
                                 </ol>
-                                <img src="/guide/garmin-02-connect.png" alt="Garmin Connect 연동" className="rounded-lg border w-full object-cover mt-2" />
+                                <img src="/guide/garmin-02-connect.png" alt="Garmin Connect 연동" className="rounded-lg border max-w-[200px] w-full mx-auto block mt-2" />
                             </div>
                         </details>
 
@@ -330,7 +330,7 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                                 <p className="text-xs bg-muted/60 rounded px-3 py-2">
                                     💡 <span className="font-medium">Hammerhead Karoo</span>도 동일한 방식으로 연동합니다. Settings → Health → Hammerhead 선택.
                                 </p>
-                                <img src="/guide/wahoo-01-connect.png" alt="Wahoo 연동" className="rounded-lg border w-full object-cover mt-2" />
+                                <img src="/guide/wahoo-01-connect.png" alt="Wahoo 연동" className="rounded-lg border max-w-[200px] w-full mx-auto block mt-2" />
                             </div>
                         </details>
 
@@ -352,7 +352,7 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                                     <li>권한 화면에서 <span className="text-foreground font-medium">Activities · Wellness Data · Calendar 모두 Read + Update 체크</span> → OK</li>
                                     <li>이후 매일 자동으로 Apple Health 데이터가 Intervals.icu로 전송됨</li>
                                 </ol>
-                                <img src="/guide/healthfit-connect.png" alt="HealthFit Intervals.icu 권한 허용" className="rounded-lg border w-full max-w-xs mx-auto block object-cover mt-2" />
+                                <img src="/guide/healthfit-connect.png" alt="HealthFit Intervals.icu 권한 허용" className="rounded-lg border max-w-[200px] w-full mx-auto block mt-2" />
                             </div>
                         </details>
 
@@ -372,7 +372,7 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                                     <li>이 앱에서 워크아웃 생성 시 <span className="text-foreground font-medium">"Zwift에 업로드"</span> 체크</li>
                                     <li>Zwift 실행 → <span className="text-foreground font-medium">훈련 → 오늘의 워크아웃</span>에서 확인</li>
                                 </ol>
-                                <img src="/guide/zwift-01-connect.png" alt="Zwift 연동" className="rounded-lg border w-full object-cover mt-2" />
+                                <img src="/guide/zwift-01-connect.png" alt="Zwift 연동" className="rounded-lg border max-w-[200px] w-full h-40 object-cover object-top mx-auto block mt-2" />
                             </div>
                         </details>
 
