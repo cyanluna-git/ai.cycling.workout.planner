@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Info, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Info, ChevronRight, RefreshCw } from "lucide-react";
 import { getTsbIcon } from "@/lib/icon-maps";
 import type { TrainingMetrics, WellnessMetrics, AthleteProfile } from "@/lib/api";
 
@@ -8,9 +9,11 @@ interface FitnessCardProps {
     training: TrainingMetrics;
     wellness: WellnessMetrics;
     profile: AthleteProfile;
+    onRefresh?: () => void;
+    isRefreshing?: boolean;
 }
 
-export function FitnessCard({ training, wellness, profile }: FitnessCardProps) {
+export function FitnessCard({ training, wellness, profile, onRefresh, isRefreshing }: FitnessCardProps) {
     const { t } = useTranslation();
     // TSB color based on value
     const getTsbColor = (tsb: number) => {
@@ -31,9 +34,23 @@ export function FitnessCard({ training, wellness, profile }: FitnessCardProps) {
     return (
         <Card className="w-full">
             <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center gap-2">
-                    {t('fitness.title')}
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                        {t('fitness.title')}
+                    </CardTitle>
+                    {onRefresh && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={onRefresh}
+                            disabled={isRefreshing}
+                            aria-label={t('fitness.refresh')}
+                        >
+                            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                        </Button>
+                    )}
+                </div>
             </CardHeader>
             <CardContent className="space-y-4">
                 {/* Profile Section - Compact */}

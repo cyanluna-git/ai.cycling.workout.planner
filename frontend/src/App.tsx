@@ -69,10 +69,12 @@ function Dashboard() {
     isApiConfigured, fitness, workout, weeklyCalendar, weeklyPlan,
     achievements, isLoadingAchievements,
     currentWeekOffset, isLoadingCalendar, isLoadingPlan, isGeneratingPlan,
-    isRegisteringPlanAll, isSyncingPlan, isLoading, isRegistering, error, success,
-    handleGenerate, handleRegister, handleSelectDate, handleOnboardingComplete,
-    handleGenerateWeeklyPlan, handleDeleteWeeklyPlan, handleRegisterWeeklyPlanAll,
-    handleSyncWeeklyPlan, handleWeekNavigation, tssProgress,
+    isRegisteringPlanAll, isSyncingPlan, isLoading, isRegistering,
+    isRefreshingFitness, error, success,
+    handleGenerate, handleRegister, handleRefreshFitness, handleSelectDate,
+    handleOnboardingComplete, handleGenerateWeeklyPlan, handleDeleteWeeklyPlan,
+    handleRegisterWeeklyPlanAll, handleSyncWeeklyPlan, handleWeekNavigation,
+    tssProgress,
   } = useDashboard();
 
   if (isApiConfigured === false) {
@@ -132,7 +134,7 @@ function Dashboard() {
       <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           <div className="space-y-6">
-            {fitness ? <FitnessCard training={fitness.training} wellness={fitness.wellness} profile={fitness.profile} /> : <FitnessCardSkeleton />}
+            {fitness ? <FitnessCard training={fitness.training} wellness={fitness.wellness} profile={fitness.profile} onRefresh={handleRefreshFitness} isRefreshing={isRefreshingFitness} /> : <FitnessCardSkeleton />}
             {isLoadingCalendar ? <WeeklyCalendarSkeleton /> : <WeeklyCalendarCard calendar={weeklyCalendar} isLoading={false} onSelectDate={handleSelectDate} />}
             {(!workout && isLoading) ? <CoachLoadingAnimation /> : <TodayWorkoutCard workout={workout} onGenerate={handleGenerate} onRegister={handleRegister} isLoading={isLoading} isRegistering={isRegistering} isRegistered={!!success && (success.includes(t('common.registered')) || success.includes("Registered"))} ftp={fitness?.profile?.ftp ?? 250} error={error} success={success} />}
           </div>
