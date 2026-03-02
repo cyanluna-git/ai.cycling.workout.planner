@@ -11,7 +11,7 @@
  * - TrainingHistoryPoint type shape is correct in api.ts
  */
 
-import { describe, it, expect, vi, beforeAll } from 'vitest'
+import { describe, it, expect, beforeAll } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { FitnessTrendChart } from './FitnessTrendChart'
 import { FitnessCard } from './FitnessCard'
@@ -31,8 +31,8 @@ import koLocale from '../i18n/locales/ko.json'
 
 beforeAll(() => {
     // Provide a minimal ResizeObserver stub if jsdom does not supply one
-    if (typeof global.ResizeObserver === 'undefined') {
-        global.ResizeObserver = class {
+    if (typeof globalThis.ResizeObserver === 'undefined') {
+        globalThis.ResizeObserver = class {
             observe() {}
             unobserve() {}
             disconnect() {}

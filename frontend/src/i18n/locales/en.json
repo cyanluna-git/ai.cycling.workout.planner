@@ -188,7 +188,10 @@
     "trendTitle": "7-Day Trend",
     "trendCTL": "CTL (Fitness)",
     "trendATL": "ATL (Fatigue)",
-    "trendTSB": "TSB (Form)"
+    "trendTSB": "TSB (Form)",
+    "zonePeakForm": "Peak Form",
+    "zoneFatigue": "Accumulated Fatigue",
+    "zoneOverreached": "Overreached"
   },
   "wellnessCard": {
     "title": "Wellness Status",

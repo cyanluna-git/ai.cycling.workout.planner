@@ -188,7 +188,10 @@
     "trendTitle": "7일 트렌드",
     "trendCTL": "CTL (체력)",
     "trendATL": "ATL (피로)",
-    "trendTSB": "TSB (컨디션)"
+    "trendTSB": "TSB (컨디션)",
+    "zonePeakForm": "피크 폼",
+    "zoneFatigue": "피로 누적",
+    "zoneOverreached": "오버리치"
   },
   "wellnessCard": {
     "title": "웰니스 상태",
