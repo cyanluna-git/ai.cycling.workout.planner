@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CalendarDays, Bike, Moon, PartyPopper } from 'lucide-react'
+import { CalendarDays, Bike, Moon, PartyPopper, Watch, Zap, Activity } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -255,14 +255,18 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                             </div>
                         ) : (
                             <>
-                                <div className="p-4 rounded-lg bg-muted/50 border border-border">
-                                    <h4 className="font-medium mb-2">{t('settings.apiGuideTitle')}</h4>
+                                <div className="p-4 rounded-lg bg-muted/50 border border-border space-y-3">
+                                    <h4 className="font-medium">{t('settings.apiGuideTitle')}</h4>
                                     <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
                                         <li><a href="https://intervals.icu/settings" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Intervals.icu Settings</a> {t('settings.apiGuideStep1')}</li>
                                         <li>{t('settings.apiGuideStep2')}</li>
                                         <li>{t('settings.apiGuideStep3')}</li>
                                         <li>{t('settings.apiGuideStep4')}</li>
                                     </ol>
+                                    <div className="grid grid-cols-2 gap-2 pt-1">
+                                        <img src="/guide/intervals-api-01-settings.png" alt="Intervals.icu Settings menu" className="rounded-lg border w-full object-cover" />
+                                        <img src="/guide/intervals-api-02-api-key.png" alt="Intervals.icu API Key section" className="rounded-lg border w-full object-cover" />
+                                    </div>
                                 </div>
                                 <div className="space-y-2">
                                     <Label>{t('settings.apiKeyLabel')}</Label>
@@ -277,6 +281,104 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                         )}
                     </CardContent>
                 </Card>
+                {/* ── Device & App Connection Guide ── */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Activity className="h-5 w-5" />
+                            {t('settings.connectionGuideTitle')}
+                        </CardTitle>
+                        <p className="text-sm text-muted-foreground">{t('settings.connectionGuideDesc')}</p>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+
+                        {/* Garmin */}
+                        <details className="group rounded-lg border border-border overflow-hidden">
+                            <summary className="flex items-center justify-between gap-2 px-4 py-3 cursor-pointer select-none hover:bg-muted/40 transition-colors list-none">
+                                <span className="flex items-center gap-2 font-medium text-sm">
+                                    <Watch className="h-4 w-4 text-blue-500" />
+                                    Garmin Connect
+                                </span>
+                                <span className="text-muted-foreground text-xs group-open:rotate-180 transition-transform">▾</span>
+                            </summary>
+                            <div className="px-4 pb-4 pt-2 space-y-3 text-sm text-muted-foreground border-t border-border">
+                                <ol className="space-y-1.5 list-decimal list-inside">
+                                    <li>Intervals.icu → <span className="text-foreground font-medium">Settings → Health → Garmin Connect</span></li>
+                                    <li><span className="text-foreground font-medium">Connect Garmin</span> 버튼 클릭 후 Garmin 계정으로 로그인</li>
+                                    <li>권한 허용 화면에서 <span className="text-foreground font-medium">모두 허용</span> — 특히 Sleep, HRV, Weight 포함</li>
+                                    <li>연동 완료 후 Intervals.icu에서 웰니스 데이터 자동 동기화</li>
+                                </ol>
+                                <img src="/guide/garmin-02-connect.png" alt="Garmin Connect 연동" className="rounded-lg border w-full object-cover mt-2" />
+                            </div>
+                        </details>
+
+                        {/* Wahoo + Hammerhead */}
+                        <details className="group rounded-lg border border-border overflow-hidden">
+                            <summary className="flex items-center justify-between gap-2 px-4 py-3 cursor-pointer select-none hover:bg-muted/40 transition-colors list-none">
+                                <span className="flex items-center gap-2 font-medium text-sm">
+                                    <Zap className="h-4 w-4 text-red-500" />
+                                    Wahoo · Hammerhead
+                                </span>
+                                <span className="text-muted-foreground text-xs group-open:rotate-180 transition-transform">▾</span>
+                            </summary>
+                            <div className="px-4 pb-4 pt-2 space-y-3 text-sm text-muted-foreground border-t border-border">
+                                <ol className="space-y-1.5 list-decimal list-inside">
+                                    <li>Intervals.icu → <span className="text-foreground font-medium">Settings → Health → Wahoo</span></li>
+                                    <li><span className="text-foreground font-medium">Connect Wahoo</span> 버튼 클릭 후 Wahoo 계정으로 로그인</li>
+                                    <li>활동 동기화 권한 허용</li>
+                                </ol>
+                                <p className="text-xs bg-muted/60 rounded px-3 py-2">
+                                    💡 <span className="font-medium">Hammerhead Karoo</span>도 동일한 방식으로 연동합니다. Settings → Health → Hammerhead 선택.
+                                </p>
+                                <img src="/guide/wahoo-01-connect.png" alt="Wahoo 연동" className="rounded-lg border w-full object-cover mt-2" />
+                            </div>
+                        </details>
+
+                        {/* Apple Watch */}
+                        <details className="group rounded-lg border border-border overflow-hidden">
+                            <summary className="flex items-center justify-between gap-2 px-4 py-3 cursor-pointer select-none hover:bg-muted/40 transition-colors list-none">
+                                <span className="flex items-center gap-2 font-medium text-sm">
+                                    <Watch className="h-4 w-4 text-gray-500" />
+                                    Apple Watch
+                                </span>
+                                <span className="text-muted-foreground text-xs group-open:rotate-180 transition-transform">▾</span>
+                            </summary>
+                            <div className="px-4 pb-4 pt-2 space-y-3 text-sm text-muted-foreground border-t border-border">
+                                <p>Apple Watch 웰니스 데이터(HRV, 수면, 안정시 심박수)는 <span className="text-foreground font-medium">HealthFit</span> 앱을 통해 Intervals.icu로 전송됩니다.</p>
+                                <ol className="space-y-1.5 list-decimal list-inside">
+                                    <li>App Store에서 <span className="text-foreground font-medium">HealthFit</span> 설치 (유료 앱)</li>
+                                    <li>HealthFit 앱 → <span className="text-foreground font-medium">Settings → Upload → Intervals.icu</span></li>
+                                    <li>Intervals.icu API 키 입력 후 연동 진행</li>
+                                    <li>권한 화면에서 <span className="text-foreground font-medium">Activities · Wellness Data · Calendar 모두 Read + Update 체크</span> → OK</li>
+                                    <li>이후 매일 자동으로 Apple Health 데이터가 Intervals.icu로 전송됨</li>
+                                </ol>
+                                <img src="/guide/healthfit-connect.png" alt="HealthFit Intervals.icu 권한 허용" className="rounded-lg border w-full max-w-xs mx-auto block object-cover mt-2" />
+                            </div>
+                        </details>
+
+                        {/* Zwift */}
+                        <details className="group rounded-lg border border-border overflow-hidden">
+                            <summary className="flex items-center justify-between gap-2 px-4 py-3 cursor-pointer select-none hover:bg-muted/40 transition-colors list-none">
+                                <span className="flex items-center gap-2 font-medium text-sm">
+                                    <Bike className="h-4 w-4 text-orange-500" />
+                                    Zwift 워크아웃 업로드
+                                </span>
+                                <span className="text-muted-foreground text-xs group-open:rotate-180 transition-transform">▾</span>
+                            </summary>
+                            <div className="px-4 pb-4 pt-2 space-y-3 text-sm text-muted-foreground border-t border-border">
+                                <p>워크아웃 생성 시 <span className="text-foreground font-medium">Zwift에 업로드</span> 옵션을 체크하면 Intervals.icu를 통해 오늘의 워크아웃으로 자동 등록됩니다.</p>
+                                <ol className="space-y-1.5 list-decimal list-inside">
+                                    <li>Intervals.icu → <span className="text-foreground font-medium">Settings → Integrations → Zwift</span> 연동</li>
+                                    <li>이 앱에서 워크아웃 생성 시 <span className="text-foreground font-medium">"Zwift에 업로드"</span> 체크</li>
+                                    <li>Zwift 실행 → <span className="text-foreground font-medium">훈련 → 오늘의 워크아웃</span>에서 확인</li>
+                                </ol>
+                                <img src="/guide/zwift-01-connect.png" alt="Zwift 연동" className="rounded-lg border w-full object-cover mt-2" />
+                            </div>
+                        </details>
+
+                    </CardContent>
+                </Card>
+
             </div>
         </div>
     )

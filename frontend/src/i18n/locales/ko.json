@@ -125,6 +125,8 @@
     "apiNotConnected": "미설정",
     "apiConnectedMessage": "Intervals.icu에 정상적으로 연결되어 있습니다.",
     "apiResetKey": "API 키 재설정",
+    "connectionGuideTitle": "기기 & 앱 연동 가이드",
+    "connectionGuideDesc": "웨어러블과 트레이닝 앱을 Intervals.icu와 연결하는 방법",
     "apiGuideTitle": "API 키 발급 방법",
     "apiGuideStep1": "페이지로 이동",
     "apiGuideStep2": "\"Developer\" 탭 클릭",

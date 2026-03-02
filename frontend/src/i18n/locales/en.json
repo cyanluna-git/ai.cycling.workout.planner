@@ -125,6 +125,8 @@
     "apiNotConnected": "Not configured",
     "apiConnectedMessage": "Successfully connected to Intervals.icu.",
     "apiResetKey": "Reset API Key",
+    "connectionGuideTitle": "Device & App Connections",
+    "connectionGuideDesc": "How to sync your wearable and training apps with Intervals.icu",
     "apiGuideTitle": "How to Get Your API Key",
     "apiGuideStep1": "Go to the page",
     "apiGuideStep2": "Click the \"Developer\" tab",
