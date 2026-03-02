@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Bike } from 'lucide-react'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -118,7 +117,7 @@ export function AuthPage() {
             <div className="absolute top-4 right-4"><LanguageSwitcher /></div>
             <Card className="w-full max-w-md">
                 <CardHeader className="text-center">
-                    <CardTitle className="text-2xl flex items-center justify-center gap-2"><Bike className="h-6 w-6" /> AI Cycling Coach</CardTitle>
+                    <CardTitle className="text-2xl flex items-center justify-center gap-2"><img src="/logo-256.png" alt="" className="h-9 w-9 object-contain" /> AI Cycling Coach</CardTitle>
                     <p className="text-muted-foreground text-sm">
                         {mode === 'login' && t('auth.loginToStart')}
                         {mode === 'signup' && t('auth.createAccount')}

@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import {
-    Bike, Radio, Bot, Smartphone, Crosshair,
+    Radio, Bot, Smartphone, Crosshair,
     FileCode, ChevronRight, CalendarDays,
 } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -159,7 +159,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
             <footer className="border-t py-8">
                 <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
                     <div className="inline-flex items-center gap-1.5 mb-3">
-                        <Bike className="h-4 w-4" />
+                        <img src="/logo-256.png" alt="" className="h-5 w-5 object-contain" />
                         <span>AI Cycling Coach</span>
                     </div>
                     <div className="flex justify-center gap-4 text-xs">
