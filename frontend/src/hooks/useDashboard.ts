@@ -397,9 +397,11 @@ export function useDashboard(): UseDashboardReturn {
     }, [registerPlanAllMutation]);
 
     const handleWeekNavigation = useCallback((direction: 'prev' | 'next') => {
-        const newOffset = direction === 'next' ? currentWeekOffset + 1 : currentWeekOffset - 1;
-        setCurrentWeekOffset(newOffset);
-    }, [currentWeekOffset]);
+        setCurrentWeekOffset(prev => {
+            const next = direction === 'next' ? prev + 1 : prev - 1;
+            return Math.max(0, Math.min(1, next));
+        });
+    }, []);
 
     const handleSyncWeeklyPlan = useCallback(async (planId: string) => {
         setIsSyncingPlan(true);

@@ -125,26 +125,22 @@ export const WeeklyPlanCard = memo(function WeeklyPlanCard({
         }
     };
 
-    // Get week label based on offset
+    // Get week label based on offset (only 0 or 1)
     const getWeekLabel = () => {
-        if (currentWeekOffset === 0) return t('weeklyPlan.thisWeek');
-        if (currentWeekOffset === 1) return t('weeklyPlan.nextWeek');
-        if (currentWeekOffset === -1) return t('weeklyPlan.lastWeek');
-        if (currentWeekOffset > 1) return t('weeklyPlan.weeksLater', { count: currentWeekOffset });
-        return t('weeklyPlan.weeksAgo', { count: Math.abs(currentWeekOffset) });
+        return currentWeekOffset === 0 ? t('weeklyPlan.thisWeek') : t('weeklyPlan.nextWeek');
     };
 
-    // Get next week's date range for display
-    const getNextWeekRange = () => {
+    // Get week date range for display based on currentWeekOffset
+    const getWeekRange = () => {
         const today = new Date();
-        const daysUntilMonday = (8 - today.getDay()) % 7 || 7;
-        const nextMonday = new Date(today);
-        nextMonday.setDate(today.getDate() + daysUntilMonday);
-        const nextSunday = new Date(nextMonday);
-        nextSunday.setDate(nextMonday.getDate() + 6);
-
-        const formatDate = (d: Date) => `${d.getMonth() + 1}/${d.getDate()}`;
-        return `${formatDate(nextMonday)} ~ ${formatDate(nextSunday)}`;
+        const dayOfWeek = today.getDay();
+        const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const monday = new Date(today);
+        monday.setDate(today.getDate() + daysToMonday + (currentWeekOffset * 7));
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        const fmt = (d: Date) => `${d.getMonth() + 1}/${d.getDate()}`;
+        return `${fmt(monday)} ~ ${fmt(sunday)}`;
     };
 
     if (isLoading || isGenerating) {
@@ -157,32 +153,29 @@ export const WeeklyPlanCard = memo(function WeeklyPlanCard({
                 <CardHeader>
                     {/* Week Navigation */}
                     {onWeekNavigation && (
-                        <div className="flex items-center justify-center gap-4 mb-3">
+                        <div className="flex items-center justify-center gap-2 mb-3">
                             <Button
-                                variant="outline"
+                                variant={currentWeekOffset === 0 ? "default" : "outline"}
                                 className="h-11 sm:h-9 transition-all active:scale-95"
-                                onClick={() => onWeekNavigation('prev')}
-                                disabled={isLoading}
+                                onClick={() => currentWeekOffset !== 0 && onWeekNavigation('prev')}
+                                disabled={currentWeekOffset === 0}
                             >
-                                {t("weeklyPlan.prevWeek")}
+                                {t("weeklyPlan.thisWeek")}
                             </Button>
-                            <div className="text-sm font-medium px-4 py-2 bg-primary/10 rounded-md">
-                                {getWeekLabel()}
-                            </div>
                             <Button
-                                variant="outline"
+                                variant={currentWeekOffset === 1 ? "default" : "outline"}
                                 className="h-11 sm:h-9 transition-all active:scale-95"
-                                onClick={() => onWeekNavigation('next')}
-                                disabled={isLoading}
+                                onClick={() => currentWeekOffset !== 1 && onWeekNavigation('next')}
+                                disabled={currentWeekOffset === 1}
                             >
-                                {t("weeklyPlan.nextWeekBtn")}
+                                {t("weeklyPlan.nextWeek")}
                             </Button>
                         </div>
                     )}
 
                     <CardTitle>{t("weeklyPlan.title")}</CardTitle>
                     <CardDescription>
-                        {getWeekLabel()} ({getNextWeekRange()}) - {t("weeklyPlan.createPrompt")}
+                        {getWeekLabel()} ({getWeekRange()}) - {t("weeklyPlan.createPrompt")}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -232,25 +225,22 @@ export const WeeklyPlanCard = memo(function WeeklyPlanCard({
             <CardHeader className="pb-3">
                 {/* Week Navigation */}
                 {onWeekNavigation && (
-                    <div className="flex items-center justify-center gap-4 mb-3">
+                    <div className="flex items-center justify-center gap-2 mb-3">
                         <Button
-                            variant="outline"
+                            variant={currentWeekOffset === 0 ? "default" : "outline"}
                             className="h-11 sm:h-9 transition-all active:scale-95"
-                            onClick={() => onWeekNavigation('prev')}
-                            disabled={isLoading}
+                            onClick={() => currentWeekOffset !== 0 && onWeekNavigation('prev')}
+                            disabled={currentWeekOffset === 0}
                         >
-                            {t("weeklyPlan.prevWeek")}
+                            {t("weeklyPlan.thisWeek")}
                         </Button>
-                        <div className="text-sm font-medium px-4 py-2 bg-primary/10 rounded-md">
-                            {getWeekLabel()}
-                        </div>
                         <Button
-                            variant="outline"
+                            variant={currentWeekOffset === 1 ? "default" : "outline"}
                             className="h-11 sm:h-9 transition-all active:scale-95"
-                            onClick={() => onWeekNavigation('next')}
-                            disabled={isLoading}
+                            onClick={() => currentWeekOffset !== 1 && onWeekNavigation('next')}
+                            disabled={currentWeekOffset === 1}
                         >
-                            {t("weeklyPlan.nextWeekBtn")}
+                            {t("weeklyPlan.nextWeek")}
                         </Button>
                     </div>
                 )}
