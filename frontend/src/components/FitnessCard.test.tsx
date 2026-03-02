@@ -430,3 +430,110 @@ describe('FitnessCard — existing content not broken by refresh addition', () =
         expect(screen.getByText('250W')).toBeInTheDocument()
     })
 })
+
+// ---------------------------------------------------------------------------
+// FitnessCard — wearable connection guidance (task #224)
+// ---------------------------------------------------------------------------
+
+const noWearableWellness: WellnessMetrics = {
+    ...mockWellness,
+    hrv: null,
+    rhr: null,
+    sleep_hours: null,
+    sleep_score: null,
+}
+
+describe('i18n locale files — wearable hint keys', () => {
+    it('en.json has fitness.wearableHint as a non-empty string', () => {
+        const fitness = (enLocale as Record<string, unknown>).fitness as Record<string, unknown>
+        expect(typeof fitness.wearableHint).toBe('string')
+        expect((fitness.wearableHint as string).length).toBeGreaterThan(0)
+    })
+
+    it('en.json has fitness.wearableHintLink as a non-empty string', () => {
+        const fitness = (enLocale as Record<string, unknown>).fitness as Record<string, unknown>
+        expect(typeof fitness.wearableHintLink).toBe('string')
+        expect((fitness.wearableHintLink as string).length).toBeGreaterThan(0)
+    })
+
+    it('ko.json has fitness.wearableHint as a non-empty string', () => {
+        const fitness = (koLocale as Record<string, unknown>).fitness as Record<string, unknown>
+        expect(typeof fitness.wearableHint).toBe('string')
+        expect((fitness.wearableHint as string).length).toBeGreaterThan(0)
+    })
+
+    it('ko.json has fitness.wearableHintLink as a non-empty string', () => {
+        const fitness = (koLocale as Record<string, unknown>).fitness as Record<string, unknown>
+        expect(typeof fitness.wearableHintLink).toBe('string')
+        expect((fitness.wearableHintLink as string).length).toBeGreaterThan(0)
+    })
+})
+
+describe('FitnessCard — wearable hint banner', () => {
+    it('shows wearable hint when hrv, sleep_hours, and rhr are all null', () => {
+        render(
+            <FitnessCard
+                training={mockTraining}
+                wellness={noWearableWellness}
+                profile={mockProfile}
+            />
+        )
+        expect(screen.getByText(/Connect a wearable/i)).toBeInTheDocument()
+    })
+
+    it('shows wearable hint link pointing to intervals.icu/settings', () => {
+        const { container } = render(
+            <FitnessCard
+                training={mockTraining}
+                wellness={noWearableWellness}
+                profile={mockProfile}
+            />
+        )
+        const link = container.querySelector('a[href="https://intervals.icu/settings"]')
+        expect(link).not.toBeNull()
+    })
+
+    it('does NOT show wearable hint when hrv is present', () => {
+        render(
+            <FitnessCard
+                training={mockTraining}
+                wellness={{ ...noWearableWellness, hrv: 65 }}
+                profile={mockProfile}
+            />
+        )
+        expect(screen.queryByText(/Connect a wearable/i)).toBeNull()
+    })
+
+    it('does NOT show wearable hint when sleep_hours is present', () => {
+        render(
+            <FitnessCard
+                training={mockTraining}
+                wellness={{ ...noWearableWellness, sleep_hours: 7.0 }}
+                profile={mockProfile}
+            />
+        )
+        expect(screen.queryByText(/Connect a wearable/i)).toBeNull()
+    })
+
+    it('does NOT show wearable hint when rhr is present', () => {
+        render(
+            <FitnessCard
+                training={mockTraining}
+                wellness={{ ...noWearableWellness, rhr: 55 }}
+                profile={mockProfile}
+            />
+        )
+        expect(screen.queryByText(/Connect a wearable/i)).toBeNull()
+    })
+
+    it('does NOT show wearable hint when full wearable data is present (normal case)', () => {
+        render(
+            <FitnessCard
+                training={mockTraining}
+                wellness={mockWellness}
+                profile={mockProfile}
+            />
+        )
+        expect(screen.queryByText(/Connect a wearable/i)).toBeNull()
+    })
+})

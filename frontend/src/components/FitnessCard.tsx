@@ -111,6 +111,22 @@ export function FitnessCard({ training, wellness, profile, onRefresh, isRefreshi
                     {/* Right: Wellness Metrics */}
                     <div className="space-y-2">
                         <div className="text-xs font-medium text-muted-foreground mb-1">{t('fitness.wellness')}</div>
+                        {wellness.hrv == null && wellness.sleep_hours == null && wellness.rhr == null ? (
+                            <div className="p-3 bg-muted/30 rounded-lg flex flex-col gap-1.5">
+                                <div className="flex items-start gap-1.5">
+                                    <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-muted-foreground" />
+                                    <span className="text-xs text-muted-foreground leading-relaxed">{t('fitness.wearableHint')}</span>
+                                </div>
+                                <a
+                                    href="https://intervals.icu/settings"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs text-primary underline-offset-2 hover:underline ml-5"
+                                >
+                                    {t('fitness.wearableHintLink')}
+                                </a>
+                            </div>
+                        ) : null}
                         {wellness.hrv != null && (
                             <div className="flex justify-between items-baseline">
                                 <span className="text-sm text-muted-foreground">HRV</span>
