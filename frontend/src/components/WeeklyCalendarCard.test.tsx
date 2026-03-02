@@ -1,15 +1,16 @@
 /**
- * Tests for WeeklyCalendarCard component — Mobile layout refactor (task #212)
+ * Tests for WeeklyCalendarCard component — Compact row layout (task #219)
  *
  * Covers:
  * - i18n keys: dayNamesFull, restDay, planLabel, doneLabel exist in both locales
- * - Mobile plan/done badge elements are present in the DOM (md:hidden pattern)
- * - Mobile rest day text is in the DOM when a day has no events
- * - Event name does NOT have md:truncate class at the outer wrapper level (only inner span)
- * - Desktop container has md:grid and md:grid-cols-7 classes
- * - Mobile day header (md:hidden) shows full day name
- * - Loading state renders skeleton and not real content
- * - null calendar renders nothing
+ * - Compact row layout: day name + badge + workout name + TSS inline
+ * - Rest day rows
+ * - Plan/Done badge elements
+ * - Event name truncation
+ * - Event style (planned vs actual)
+ * - onSelectDate callback
+ * - Legend footer
+ * - Loading / null states
  */
 
 import { describe, it, expect, vi } from 'vitest'
@@ -158,74 +159,82 @@ describe('WeeklyCalendarCard', () => {
     })
 
     // -----------------------------------------------------------------------
-    // Desktop container classes
+    // Compact row container layout
     // -----------------------------------------------------------------------
 
-    it('renders container with flex flex-col layout (unified vertical layout)', () => {
+    it('renders container with flex flex-col divide-y layout', () => {
         const { container } = render(
             <WeeklyCalendarCard calendar={makeCalendar()} isLoading={false} />
         )
-        const gridContainer = container.querySelector('.flex.flex-col.gap-2')
-        expect(gridContainer).not.toBeNull()
+        const rowContainer = container.querySelector('.flex.flex-col.divide-y')
+        expect(rowContainer).not.toBeNull()
     })
 
-    it('renders grid container with flex flex-col gap-2 classes for mobile stacking', () => {
+    it('renders 7 rows when all days are rest days (one row per day)', () => {
         const { container } = render(
             <WeeklyCalendarCard calendar={makeCalendar()} isLoading={false} />
         )
-        const mobileContainer = container.querySelector('.flex.flex-col.gap-2')
-        expect(mobileContainer).not.toBeNull()
+        // Each day has exactly one row (rest day)
+        const rows = container.querySelectorAll('.flex.items-center.gap-2.py-1\\.5.px-1')
+        expect(rows.length).toBe(7)
+    })
+
+    it('renders 8 rows when one day has 2 events and rest are rest days', () => {
+        const { container } = render(
+            <WeeklyCalendarCard
+                calendar={makeCalendar({ events: [plannedEvent, actualEvent] })}
+                isLoading={false}
+            />
+        )
+        // Monday has 2 events (2 rows), other 6 days have 1 row each = 8 total
+        const rows = container.querySelectorAll('.flex.items-center.gap-2.py-1\\.5.px-1')
+        expect(rows.length).toBe(8)
     })
 
     // -----------------------------------------------------------------------
-    // Mobile day header (full name)
+    // Day name column (w-24)
     // -----------------------------------------------------------------------
 
-    it('renders day header element with full day name text for all 7 days', () => {
+    it('renders day name spans with w-24 fixed width for all 7 days', () => {
         const { container } = render(
             <WeeklyCalendarCard calendar={makeCalendar()} isLoading={false} />
         )
-        // Day headers: class="flex items-center gap-2 mb-2"
-        const dayHeaders = container.querySelectorAll('.flex.items-center.gap-2.mb-2')
-        expect(dayHeaders.length).toBe(7)
+        const dayNameSpans = container.querySelectorAll('.w-24.shrink-0')
+        expect(dayNameSpans.length).toBe(7)
     })
 
-    it('shows full day name "Monday" in the mobile header for the first day', () => {
+    it('shows full day name "Monday" in the day name column for the first day', () => {
         render(<WeeklyCalendarCard calendar={makeCalendar()} isLoading={false} />)
-        // i18n en locale: dayNamesFull[0] = "Monday"
         expect(screen.getByText(/Monday/)).toBeInTheDocument()
     })
 
-    // -----------------------------------------------------------------------
-    // Desktop day header (compact, hidden on mobile)
-    // -----------------------------------------------------------------------
-
-    it('renders day headers showing full day name (unified layout, no desktop-only compact header)', () => {
+    it('makes second row day name invisible when a day has multiple events', () => {
         const { container } = render(
-            <WeeklyCalendarCard calendar={makeCalendar()} isLoading={false} />
+            <WeeklyCalendarCard
+                calendar={makeCalendar({ events: [plannedEvent, actualEvent] })}
+                isLoading={false}
+            />
         )
-        // Unified layout: no hidden md:block compact headers — all days use full name headers
-        const compactHeaders = container.querySelectorAll('.hidden.md\\:block.text-xs.text-muted-foreground.mb-1')
-        expect(compactHeaders.length).toBe(0)
+        const invisibleDayNames = container.querySelectorAll('.w-24.shrink-0.invisible')
+        // Monday has 2 events, so 2nd row day name should be invisible
+        expect(invisibleDayNames.length).toBe(1)
     })
 
     // -----------------------------------------------------------------------
-    // Rest day display (mobile)
+    // Rest day display
     // -----------------------------------------------------------------------
 
     it('shows rest day text element in the DOM when a day has no events', () => {
         // Calendar with no events — all 7 days are rest days
-        const { container } = render(
+        render(
             <WeeklyCalendarCard calendar={makeCalendar()} isLoading={false} />
         )
-        // 7 rest day texts — use getAllByText since "Rest Day" appears once per empty day
         const restDayTexts = screen.getAllByText('Rest Day')
         expect(restDayTexts.length).toBe(7)
     })
 
     it('shows the rest day i18n text "Rest Day" when a day has no events', () => {
         render(<WeeklyCalendarCard calendar={makeCalendar()} isLoading={false} />)
-        // "Rest Day" appears 7 times (once per day in mobile view)
         const restDayTexts = screen.getAllByText('Rest Day')
         expect(restDayTexts.length).toBe(7)
     })
@@ -243,7 +252,7 @@ describe('WeeklyCalendarCard', () => {
     })
 
     // -----------------------------------------------------------------------
-    // Plan / Done badges (mobile)
+    // Plan / Done badges
     // -----------------------------------------------------------------------
 
     it('renders plan badge element for a planned event', () => {
@@ -253,7 +262,6 @@ describe('WeeklyCalendarCard', () => {
                 isLoading={false}
             />
         )
-        // Plan badge: class="inline-flex ... bg-blue-200" (no md:hidden — always visible)
         const planBadges = container.querySelectorAll('.inline-flex.bg-blue-200')
         expect(planBadges.length).toBeGreaterThan(0)
     })
@@ -276,7 +284,6 @@ describe('WeeklyCalendarCard', () => {
                 isLoading={false}
             />
         )
-        // en locale: calendar.planLabel = "Plan"
         expect(screen.getByText('Plan')).toBeInTheDocument()
     })
 
@@ -287,7 +294,6 @@ describe('WeeklyCalendarCard', () => {
                 isLoading={false}
             />
         )
-        // en locale: calendar.doneLabel = "Done"
         expect(screen.getByText('Done')).toBeInTheDocument()
     })
 
@@ -314,67 +320,29 @@ describe('WeeklyCalendarCard', () => {
     })
 
     // -----------------------------------------------------------------------
-    // Event name truncation: md:truncate is on the inner span only
+    // Event name truncation
     // -----------------------------------------------------------------------
 
-    it('event name span has no truncate class (full text always visible in unified layout)', () => {
+    it('event name span has truncate class for compact row layout', () => {
         const { container } = render(
             <WeeklyCalendarCard
                 calendar={makeCalendar({ events: [plannedEvent] })}
                 isLoading={false}
             />
         )
-        // Unified layout: no truncation on any screen size
-        const truncateSpans = container.querySelectorAll('.truncate, .md\\:truncate')
-        expect(truncateSpans.length).toBe(0)
+        const truncateSpans = container.querySelectorAll('.truncate')
+        expect(truncateSpans.length).toBeGreaterThan(0)
     })
 
-    it('event wrapper div has md:truncate (desktop-only) but no unconditional truncate class', () => {
+    it('event wrapper div uses min-w-0 flex-1 for truncation to work', () => {
         const { container } = render(
             <WeeklyCalendarCard
                 calendar={makeCalendar({ events: [plannedEvent] })}
                 isLoading={false}
             />
         )
-        // The outer event div uses md:truncate (desktop breakpoint only) — this is correct behavior.
-        // It must NOT have plain "truncate" (which would truncate on mobile too).
-        const eventDivs = container.querySelectorAll('.p-1\\.5.rounded')
+        const eventDivs = container.querySelectorAll('.min-w-0.flex-1')
         expect(eventDivs.length).toBeGreaterThan(0)
-        eventDivs.forEach(div => {
-            // Plain "truncate" (no breakpoint prefix) would break mobile — ensure it's absent
-            expect(div.classList.contains('truncate')).toBe(false)
-        })
-    })
-
-    // -----------------------------------------------------------------------
-    // Desktop check/dot icons are hidden on mobile
-    // -----------------------------------------------------------------------
-
-    it('done badge is shown for actual events (no desktop-only check icon)', () => {
-        const { container } = render(
-            <WeeklyCalendarCard
-                calendar={makeCalendar({ events: [actualEvent] })}
-                isLoading={false}
-            />
-        )
-        // Unified layout: badge visible everywhere, no hidden md:inline check icon
-        const hiddenIcons = container.querySelectorAll('.hidden.md\\:inline')
-        expect(hiddenIcons.length).toBe(0)
-        const doneBadge = container.querySelector('.bg-green-200')
-        expect(doneBadge).not.toBeNull()
-    })
-
-    it('plan badge is shown for planned events (no desktop-only dot bullet)', () => {
-        const { container } = render(
-            <WeeklyCalendarCard
-                calendar={makeCalendar({ events: [plannedEvent] })}
-                isLoading={false}
-            />
-        )
-        const hiddenSpans = container.querySelectorAll('.hidden.md\\:inline')
-        expect(hiddenSpans.length).toBe(0)
-        const planBadge = container.querySelector('.bg-blue-200')
-        expect(planBadge).not.toBeNull()
     })
 
     // -----------------------------------------------------------------------
@@ -392,6 +360,17 @@ describe('WeeklyCalendarCard', () => {
         expect(screen.getByText(/TSS 80/)).toBeInTheDocument()
     })
 
+    it('shows duration inline with TSS', () => {
+        render(
+            <WeeklyCalendarCard
+                calendar={makeCalendar({ events: [plannedEvent] })}
+                isLoading={false}
+            />
+        )
+        // plannedEvent: tss=80, duration_minutes=60 → "TSS 80 · 60m"
+        expect(screen.getByText(/TSS 80 · 60m/)).toBeInTheDocument()
+    })
+
     // -----------------------------------------------------------------------
     // Event style — planned vs actual
     // -----------------------------------------------------------------------
@@ -403,8 +382,6 @@ describe('WeeklyCalendarCard', () => {
                 isLoading={false}
             />
         )
-        // The event div gets inline style from getEventStyle
-        // Planned: borderLeft '3px dashed #3b82f6'
         const eventDivs = container.querySelectorAll('[style*="dashed"]')
         expect(eventDivs.length).toBeGreaterThan(0)
     })
@@ -416,7 +393,6 @@ describe('WeeklyCalendarCard', () => {
                 isLoading={false}
             />
         )
-        // Actual: borderLeft '3px solid #22c55e'
         const eventDivs = container.querySelectorAll('[style*="solid"]')
         expect(eventDivs.length).toBeGreaterThan(0)
     })
@@ -425,7 +401,7 @@ describe('WeeklyCalendarCard', () => {
     // onSelectDate callback
     // -----------------------------------------------------------------------
 
-    it('calls onSelectDate with the day date string when a day cell is clicked', async () => {
+    it('calls onSelectDate with the day date string when a row is clicked', async () => {
         const { userEvent } = await import('@testing-library/user-event')
         const onSelectDate = vi.fn()
         const user = userEvent.setup()
@@ -438,9 +414,9 @@ describe('WeeklyCalendarCard', () => {
             />
         )
 
-        // Click the first day cell (Monday = WEEK_START)
-        const dayCells = container.querySelectorAll('.cursor-pointer')
-        await user.click(dayCells[0])
+        // Click the first row (Monday = WEEK_START)
+        const rows = container.querySelectorAll('.cursor-pointer')
+        await user.click(rows[0])
         expect(onSelectDate).toHaveBeenCalledWith(WEEK_START)
     })
 
