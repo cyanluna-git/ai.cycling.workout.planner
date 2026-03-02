@@ -1,11 +1,11 @@
 {
-  "start_date_local": "2026-01-18T00:00:00",
+  "start_date_local": "2026-03-15T00:00:00",
   "category": "WORKOUT",
-  "name": "Long Zone 2 Ride",
-  "description": "Long Zone 2 ride to build aerobic base and improve fat oxidation. Essential for recovery and overall endurance.",
+  "name": "[AICoach] Gcn Zero To Hero Plan - Week 5 Recovery 7 Sat Or Sun Free Ride",
+  "description": "Endurance ride to finish the week",
   "type": "Ride",
-  "moving_time": 7200,
-  "icu_training_load": 96,
+  "moving_time": 5400,
+  "icu_training_load": 54,
   "filename": "workout.zwo",
-  "file_contents_base64": "<680 chars>"
+  "file_contents_base64": "<460 chars>"
 }
