@@ -190,6 +190,7 @@
     "trendATL": "ATL (Fatigue)",
     "trendTSB": "TSB (Form)",
     "zonePeakForm": "Peak Form",
+    "zoneOptimal": "Optimal",
     "zoneFatigue": "Accumulated Fatigue",
     "zoneOverreached": "Overreached"
   },
