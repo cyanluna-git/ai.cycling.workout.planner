@@ -304,11 +304,11 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                             <div className="px-4 pb-4 pt-2 space-y-3 text-sm text-muted-foreground border-t border-border">
                                 <ol className="space-y-1.5 list-decimal list-inside">
                                     <li>Intervals.icu → <span className="text-foreground font-medium">Settings → Health → Garmin Connect</span></li>
-                                    <li><span className="text-foreground font-medium">Connect Garmin</span> 버튼 클릭 후 Garmin 계정으로 로그인</li>
-                                    <li>권한 허용 화면에서 <span className="text-foreground font-medium">모두 허용</span> — 특히 Sleep, HRV, Weight 포함</li>
-                                    <li>연동 완료 후 Intervals.icu에서 웰니스 데이터 자동 동기화</li>
+                                    <li><span className="text-foreground font-medium">Connect Garmin</span> {t('settings.guideGarminStep2After')}</li>
+                                    <li>{t('settings.guideGarminStep3Before')} <span className="text-foreground font-medium">{t('settings.guideGarminStep3AllowAll')}</span> {t('settings.guideGarminStep3After')}</li>
+                                    <li>{t('settings.guideGarminStep4')}</li>
                                 </ol>
-                                <img src="/guide/garmin-02-connect.png" alt="Garmin Connect 연동" className="rounded-lg border max-w-[200px] w-full mx-auto block mt-2" />
+                                <img src="/guide/garmin-02-connect.png" alt="Garmin Connect" className="rounded-lg border max-w-[200px] w-full mx-auto block mt-2" />
                             </div>
                         </details>
 
@@ -324,13 +324,13 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                             <div className="px-4 pb-4 pt-2 space-y-3 text-sm text-muted-foreground border-t border-border">
                                 <ol className="space-y-1.5 list-decimal list-inside">
                                     <li>Intervals.icu → <span className="text-foreground font-medium">Settings → Health → Wahoo</span></li>
-                                    <li><span className="text-foreground font-medium">Connect Wahoo</span> 버튼 클릭 후 Wahoo 계정으로 로그인</li>
-                                    <li>활동 동기화 권한 허용</li>
+                                    <li><span className="text-foreground font-medium">Connect Wahoo</span> {t('settings.guideWahooStep2After')}</li>
+                                    <li>{t('settings.guideWahooStep3')}</li>
                                 </ol>
                                 <p className="text-xs bg-muted/60 rounded px-3 py-2">
-                                    💡 <span className="font-medium">Hammerhead Karoo</span>도 동일한 방식으로 연동합니다. Settings → Health → Hammerhead 선택.
+                                    💡 <span className="font-medium">Hammerhead Karoo</span> {t('settings.guideWahooHammerheadTip')}
                                 </p>
-                                <img src="/guide/wahoo-01-connect.png" alt="Wahoo 연동" className="rounded-lg border max-w-[200px] w-full mx-auto block mt-2" />
+                                <img src="/guide/wahoo-01-connect.png" alt="Wahoo" className="rounded-lg border max-w-[200px] w-full mx-auto block mt-2" />
                             </div>
                         </details>
 
@@ -344,15 +344,15 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                                 <span className="text-muted-foreground text-xs group-open:rotate-180 transition-transform">▾</span>
                             </summary>
                             <div className="px-4 pb-4 pt-2 space-y-3 text-sm text-muted-foreground border-t border-border">
-                                <p>Apple Watch 웰니스 데이터(HRV, 수면, 안정시 심박수)는 <span className="text-foreground font-medium">HealthFit</span> 앱을 통해 Intervals.icu로 전송됩니다.</p>
+                                <p>{t('settings.guideAppleWatchIntroBefore')} <span className="text-foreground font-medium">HealthFit</span> {t('settings.guideAppleWatchIntroAfter')}</p>
                                 <ol className="space-y-1.5 list-decimal list-inside">
-                                    <li>App Store에서 <span className="text-foreground font-medium">HealthFit</span> 설치 (유료 앱)</li>
-                                    <li>HealthFit 앱 → <span className="text-foreground font-medium">Settings → Upload → Intervals.icu</span></li>
-                                    <li>Intervals.icu API 키 입력 후 연동 진행</li>
-                                    <li>권한 화면에서 <span className="text-foreground font-medium">Activities · Wellness Data · Calendar 모두 Read + Update 체크</span> → OK</li>
-                                    <li>이후 매일 자동으로 Apple Health 데이터가 Intervals.icu로 전송됨</li>
+                                    <li>{t('settings.guideAppleWatchStep1Before')} <span className="text-foreground font-medium">HealthFit</span> {t('settings.guideAppleWatchStep1After')}</li>
+                                    <li>HealthFit → <span className="text-foreground font-medium">Settings → Upload → Intervals.icu</span></li>
+                                    <li>{t('settings.guideAppleWatchStep3')}</li>
+                                    <li>{t('settings.guideAppleWatchStep4Before')} <span className="text-foreground font-medium">Activities · Wellness Data · Calendar — Read + Update</span> → OK</li>
+                                    <li>{t('settings.guideAppleWatchStep5')}</li>
                                 </ol>
-                                <img src="/guide/healthfit-connect.png" alt="HealthFit Intervals.icu 권한 허용" className="rounded-lg border max-w-[200px] w-full mx-auto block mt-2" />
+                                <img src="/guide/healthfit-connect.png" alt="HealthFit" className="rounded-lg border max-w-[200px] w-full mx-auto block mt-2" />
                             </div>
                         </details>
 
@@ -361,18 +361,18 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                             <summary className="flex items-center justify-between gap-2 px-4 py-3 cursor-pointer select-none hover:bg-muted/40 transition-colors list-none">
                                 <span className="flex items-center gap-2 font-medium text-sm">
                                     <Bike className="h-4 w-4 text-orange-500" />
-                                    Zwift 워크아웃 업로드
+                                    {t('settings.guideZwiftTitle')}
                                 </span>
                                 <span className="text-muted-foreground text-xs group-open:rotate-180 transition-transform">▾</span>
                             </summary>
                             <div className="px-4 pb-4 pt-2 space-y-3 text-sm text-muted-foreground border-t border-border">
-                                <p>워크아웃 생성 시 <span className="text-foreground font-medium">Zwift에 업로드</span> 옵션을 체크하면 Intervals.icu를 통해 오늘의 워크아웃으로 자동 등록됩니다.</p>
+                                <p>{t('settings.guideZwiftIntroBefore')} <span className="text-foreground font-medium">{t('settings.guideZwiftUploadLabel')}</span> {t('settings.guideZwiftIntroAfter')}</p>
                                 <ol className="space-y-1.5 list-decimal list-inside">
-                                    <li>Intervals.icu → <span className="text-foreground font-medium">Settings → Integrations → Zwift</span> 연동</li>
-                                    <li>이 앱에서 워크아웃 생성 시 <span className="text-foreground font-medium">"Zwift에 업로드"</span> 체크</li>
-                                    <li>Zwift 실행 → <span className="text-foreground font-medium">훈련 → 오늘의 워크아웃</span>에서 확인</li>
+                                    <li>Intervals.icu → <span className="text-foreground font-medium">Settings → Integrations → Zwift</span> {t('settings.guideZwiftStep1Suffix')}</li>
+                                    <li>{t('settings.guideZwiftStep2Before')} <span className="text-foreground font-medium">"{t('settings.guideZwiftUploadLabel')}"</span> {t('settings.guideZwiftStep2Check')}</li>
+                                    <li>{t('settings.guideZwiftStep3Before')} <span className="text-foreground font-medium">{t('settings.guideZwiftTodaysWorkout')}</span> {t('settings.guideZwiftStep3Suffix')}</li>
                                 </ol>
-                                <img src="/guide/zwift-01-connect.png" alt="Zwift 연동" className="rounded-lg border max-w-[200px] w-full h-40 object-cover object-top mx-auto block mt-2" />
+                                <img src="/guide/zwift-01-connect.png" alt="Zwift" className="rounded-lg border max-w-[200px] w-full h-40 object-cover object-top mx-auto block mt-2" />
                             </div>
                         </details>
 
