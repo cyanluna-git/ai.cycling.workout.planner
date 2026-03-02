@@ -192,6 +192,9 @@ export function AuthPage() {
                     </div>
                 </CardContent>
             </Card>
+            <p className="mt-4 text-center text-xs text-muted-foreground">
+                <a href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</a>
+            </p>
         </div>
     )
 }
