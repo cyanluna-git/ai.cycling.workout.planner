@@ -1,6 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
-import { Bike } from "lucide-react";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { FitnessCard } from "@/components/FitnessCard";
 import { TodayWorkoutCard } from "@/components/TodayWorkoutCard";
@@ -108,7 +107,7 @@ function Dashboard() {
         <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
           {/* Top row: Title + User actions */}
           <div className="flex justify-between items-center">
-            <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2"><Bike className="h-6 w-6" /> AI Cycling Coach</h1>
+            <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2"><img src="/logo-256.png" alt="" className="h-8 w-8 object-contain" /> AI Cycling Coach</h1>
             <div className="flex items-center gap-1 sm:gap-2">
               <LanguageSwitcher />
               <Button variant="ghost" onClick={signOut} className="h-11 sm:h-9 text-xs sm:text-sm transition-all active:scale-95">
