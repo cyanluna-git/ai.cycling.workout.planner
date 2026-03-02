@@ -161,12 +161,11 @@ describe('WeeklyCalendarCard', () => {
     // Desktop container classes
     // -----------------------------------------------------------------------
 
-    it('renders grid container with md:grid md:grid-cols-7 classes', () => {
+    it('renders container with flex flex-col layout (unified vertical layout)', () => {
         const { container } = render(
             <WeeklyCalendarCard calendar={makeCalendar()} isLoading={false} />
         )
-        // The responsive container should have all four classes
-        const gridContainer = container.querySelector('.md\\:grid.md\\:grid-cols-7')
+        const gridContainer = container.querySelector('.flex.flex-col.gap-2')
         expect(gridContainer).not.toBeNull()
     })
 
@@ -182,14 +181,13 @@ describe('WeeklyCalendarCard', () => {
     // Mobile day header (full name)
     // -----------------------------------------------------------------------
 
-    it('renders mobile day header element (md:hidden) with full day name text', () => {
+    it('renders day header element with full day name text for all 7 days', () => {
         const { container } = render(
             <WeeklyCalendarCard calendar={makeCalendar()} isLoading={false} />
         )
-        // The mobile header divs: class="flex items-center gap-2 mb-2 md:hidden"
-        const mobileHeaders = container.querySelectorAll('.md\\:hidden.flex.items-center')
-        // Expect 7 such headers (one per day)
-        expect(mobileHeaders.length).toBe(7)
+        // Day headers: class="flex items-center gap-2 mb-2"
+        const dayHeaders = container.querySelectorAll('.flex.items-center.gap-2.mb-2')
+        expect(dayHeaders.length).toBe(7)
     })
 
     it('shows full day name "Monday" in the mobile header for the first day', () => {
@@ -202,16 +200,13 @@ describe('WeeklyCalendarCard', () => {
     // Desktop day header (compact, hidden on mobile)
     // -----------------------------------------------------------------------
 
-    it('renders desktop compact day name using hidden md:block pattern', () => {
+    it('renders day headers showing full day name (unified layout, no desktop-only compact header)', () => {
         const { container } = render(
             <WeeklyCalendarCard calendar={makeCalendar()} isLoading={false} />
         )
-        // Desktop short name divs: class="hidden md:block text-xs text-muted-foreground mb-1"
-        // The rest day desktop divs also have hidden md:block text-xs text-muted-foreground,
-        // so there are 14 total (7 day headers + 7 rest day desktop divs).
-        // We narrow to day header by looking for mb-1 which only the day name header has.
-        const desktopDayNameDivs = container.querySelectorAll('.hidden.md\\:block.text-xs.text-muted-foreground.mb-1')
-        expect(desktopDayNameDivs.length).toBe(7)
+        // Unified layout: no hidden md:block compact headers — all days use full name headers
+        const compactHeaders = container.querySelectorAll('.hidden.md\\:block.text-xs.text-muted-foreground.mb-1')
+        expect(compactHeaders.length).toBe(0)
     })
 
     // -----------------------------------------------------------------------
@@ -223,10 +218,9 @@ describe('WeeklyCalendarCard', () => {
         const { container } = render(
             <WeeklyCalendarCard calendar={makeCalendar()} isLoading={false} />
         )
-        // Mobile rest day: class="md:hidden text-xs text-muted-foreground"
-        // There should be 7 such elements (one per empty day)
-        const restDayElements = container.querySelectorAll('.md\\:hidden.text-xs.text-muted-foreground')
-        expect(restDayElements.length).toBe(7)
+        // 7 rest day texts — use getAllByText since "Rest Day" appears once per empty day
+        const restDayTexts = screen.getAllByText('Rest Day')
+        expect(restDayTexts.length).toBe(7)
     })
 
     it('shows the rest day i18n text "Rest Day" when a day has no events', () => {
@@ -252,26 +246,26 @@ describe('WeeklyCalendarCard', () => {
     // Plan / Done badges (mobile)
     // -----------------------------------------------------------------------
 
-    it('renders plan badge (md:hidden) element for a planned event', () => {
+    it('renders plan badge element for a planned event', () => {
         const { container } = render(
             <WeeklyCalendarCard
                 calendar={makeCalendar({ events: [plannedEvent] })}
                 isLoading={false}
             />
         )
-        // Plan badge: class contains "md:hidden inline-flex ... bg-blue-200"
-        const planBadges = container.querySelectorAll('.md\\:hidden.inline-flex')
+        // Plan badge: class="inline-flex ... bg-blue-200" (no md:hidden — always visible)
+        const planBadges = container.querySelectorAll('.inline-flex.bg-blue-200')
         expect(planBadges.length).toBeGreaterThan(0)
     })
 
-    it('renders done badge (md:hidden) element for an actual/completed event', () => {
+    it('renders done badge element for an actual/completed event', () => {
         const { container } = render(
             <WeeklyCalendarCard
                 calendar={makeCalendar({ events: [actualEvent] })}
                 isLoading={false}
             />
         )
-        const doneBadges = container.querySelectorAll('.md\\:hidden.inline-flex')
+        const doneBadges = container.querySelectorAll('.inline-flex.bg-green-200')
         expect(doneBadges.length).toBeGreaterThan(0)
     })
 
@@ -323,16 +317,16 @@ describe('WeeklyCalendarCard', () => {
     // Event name truncation: md:truncate is on the inner span only
     // -----------------------------------------------------------------------
 
-    it('event name span has md:truncate class (truncation is desktop-only)', () => {
+    it('event name span has no truncate class (full text always visible in unified layout)', () => {
         const { container } = render(
             <WeeklyCalendarCard
                 calendar={makeCalendar({ events: [plannedEvent] })}
                 isLoading={false}
             />
         )
-        // The span wrapping cleanWorkoutName(event.name) should have md:truncate
-        const truncateSpans = container.querySelectorAll('.md\\:truncate')
-        expect(truncateSpans.length).toBeGreaterThan(0)
+        // Unified layout: no truncation on any screen size
+        const truncateSpans = container.querySelectorAll('.truncate, .md\\:truncate')
+        expect(truncateSpans.length).toBe(0)
     })
 
     it('event wrapper div has md:truncate (desktop-only) but no unconditional truncate class', () => {
@@ -356,27 +350,31 @@ describe('WeeklyCalendarCard', () => {
     // Desktop check/dot icons are hidden on mobile
     // -----------------------------------------------------------------------
 
-    it('renders desktop check icon with hidden md:inline classes for actual events', () => {
+    it('done badge is shown for actual events (no desktop-only check icon)', () => {
         const { container } = render(
             <WeeklyCalendarCard
                 calendar={makeCalendar({ events: [actualEvent] })}
                 isLoading={false}
             />
         )
-        // Check icon: class="hidden md:inline h-3 w-3 text-green-600"
-        const checkIcons = container.querySelectorAll('.hidden.md\\:inline')
-        expect(checkIcons.length).toBeGreaterThan(0)
+        // Unified layout: badge visible everywhere, no hidden md:inline check icon
+        const hiddenIcons = container.querySelectorAll('.hidden.md\\:inline')
+        expect(hiddenIcons.length).toBe(0)
+        const doneBadge = container.querySelector('.bg-green-200')
+        expect(doneBadge).not.toBeNull()
     })
 
-    it('renders desktop dot bullet with hidden md:inline classes for planned events', () => {
+    it('plan badge is shown for planned events (no desktop-only dot bullet)', () => {
         const { container } = render(
             <WeeklyCalendarCard
                 calendar={makeCalendar({ events: [plannedEvent] })}
                 isLoading={false}
             />
         )
-        const dotSpans = container.querySelectorAll('.hidden.md\\:inline')
-        expect(dotSpans.length).toBeGreaterThan(0)
+        const hiddenSpans = container.querySelectorAll('.hidden.md\\:inline')
+        expect(hiddenSpans.length).toBe(0)
+        const planBadge = container.querySelector('.bg-blue-200')
+        expect(planBadge).not.toBeNull()
     })
 
     // -----------------------------------------------------------------------
