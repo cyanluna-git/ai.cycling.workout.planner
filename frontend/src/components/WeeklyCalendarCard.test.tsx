@@ -192,20 +192,20 @@ describe('WeeklyCalendarCard', () => {
     })
 
     // -----------------------------------------------------------------------
-    // Day name column (w-24)
+    // Day name column (w-14)
     // -----------------------------------------------------------------------
 
-    it('renders day name spans with w-24 fixed width for all 7 days', () => {
+    it('renders day name spans with w-14 fixed width for all 7 days', () => {
         const { container } = render(
             <WeeklyCalendarCard calendar={makeCalendar()} isLoading={false} />
         )
-        const dayNameSpans = container.querySelectorAll('.w-24.shrink-0')
+        const dayNameSpans = container.querySelectorAll('.w-14.shrink-0')
         expect(dayNameSpans.length).toBe(7)
     })
 
-    it('shows full day name "Monday" in the day name column for the first day', () => {
+    it('shows abbreviated day name "Mon" in the day name column for the first day', () => {
         render(<WeeklyCalendarCard calendar={makeCalendar()} isLoading={false} />)
-        expect(screen.getByText(/Monday/)).toBeInTheDocument()
+        expect(screen.getByText(/^Mon$/)).toBeInTheDocument()
     })
 
     it('makes second row day name invisible when a day has multiple events', () => {
@@ -215,7 +215,7 @@ describe('WeeklyCalendarCard', () => {
                 isLoading={false}
             />
         )
-        const invisibleDayNames = container.querySelectorAll('.w-24.shrink-0.invisible')
+        const invisibleDayNames = container.querySelectorAll('.w-14.shrink-0.invisible')
         // Monday has 2 events, so 2nd row day name should be invisible
         expect(invisibleDayNames.length).toBe(1)
     })

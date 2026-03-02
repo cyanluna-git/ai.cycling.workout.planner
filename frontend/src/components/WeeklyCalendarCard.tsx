@@ -98,19 +98,7 @@ export function WeeklyCalendarCard({ calendar, isLoading, onSelectDate }: Weekly
     return (
         <Card>
             <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">{t('calendar.title')}</CardTitle>
-                    <div className="flex flex-wrap gap-2 md:gap-4 text-xs">
-                        <div className="flex items-center gap-1.5 bg-blue-100 px-2 py-1 rounded">
-                            <span className="w-2 h-2 border border-dashed border-blue-500 rounded-sm"></span>
-                            <span className="text-blue-700">{t('calendar.planned')} {calendar.planned_tss}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 bg-green-100 px-2 py-1 rounded">
-                            <span className="w-2 h-2 bg-green-500 rounded-sm"></span>
-                            <span className="text-green-700">{t('calendar.completed')} {calendar.actual_tss}</span>
-                        </div>
-                    </div>
-                </div>
+                <CardTitle className="text-lg">{t('calendar.title')}</CardTitle>
             </CardHeader>
             <CardContent>
                 <div className="flex flex-col divide-y divide-border/40">
@@ -127,7 +115,7 @@ export function WeeklyCalendarCard({ calendar, isLoading, onSelectDate }: Weekly
                             >
                                 {/* Day name — only on first row, invisible on subsequent rows */}
                                 <span
-                                    className={`w-24 shrink-0 text-sm font-semibold ${
+                                    className={`w-14 shrink-0 text-sm font-semibold ${
                                         idx === 0 && isToday(day.date)
                                             ? 'text-primary'
                                             : idx > 0
@@ -135,7 +123,7 @@ export function WeeklyCalendarCard({ calendar, isLoading, onSelectDate }: Weekly
                                                 : ''
                                     }`}
                                 >
-                                    {day.dayNameFull}
+                                    {day.dayName}
                                 </span>
 
                                 {/* Event or rest day */}
