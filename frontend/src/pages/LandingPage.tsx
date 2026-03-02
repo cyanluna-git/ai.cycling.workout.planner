@@ -158,9 +158,12 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
 
             <footer className="border-t py-8">
                 <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-                    <div className="inline-flex items-center gap-1.5">
+                    <div className="inline-flex items-center gap-1.5 mb-3">
                         <Bike className="h-4 w-4" />
                         <span>AI Cycling Coach</span>
+                    </div>
+                    <div className="flex justify-center gap-4 text-xs">
+                        <a href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</a>
                     </div>
                 </div>
             </footer>

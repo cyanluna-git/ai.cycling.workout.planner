@@ -23,6 +23,7 @@ const SettingsPage = lazy(() => import("@/pages/SettingsPage").then(m => ({ defa
 const OnboardingPage = lazy(() => import("@/pages/OnboardingPage").then(m => ({ default: m.OnboardingPage })));
 const LandingPage = lazy(() => import("@/pages/LandingPage").then(m => ({ default: m.LandingPage })));
 const AdminPage = lazy(() => import("@/pages/AdminPage").then(m => ({ default: m.AdminPage })));
+const PrivacyPage = lazy(() => import("@/pages/PrivacyPage").then(m => ({ default: m.PrivacyPage })));
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
@@ -156,6 +157,15 @@ function AppContent() {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     return hashParams.get('type') === 'recovery';
   });
+
+  // Public static routes — accessible without auth
+  if (window.location.pathname === '/privacy') {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <PrivacyPage />
+      </Suspense>
+    );
+  }
 
   if (loading) {
     return (
