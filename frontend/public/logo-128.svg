@@ -1,17 +1,27 @@
 <svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Rear wheel (C-shape): center (33,90), radius 22, gap at right ±45° -->
-  <path d="M 49,74 A 22,22 0 1,0 49,106"
+  <!-- Rear wheel (C-shape): center (34,90), radius 22, gap at right ±45° -->
+  <path d="M 50,74 A 22,22 0 1,0 50,106"
         stroke="#3d3d3d" stroke-width="7" stroke-linecap="round" fill="none"/>
 
-  <!-- Front wheel (full circle): center (96,90), radius 22 -->
-  <circle cx="96" cy="90" r="22" stroke="#3d3d3d" stroke-width="7" fill="none"/>
+  <!-- Front wheel (full circle): center (94,90), radius 22 -->
+  <circle cx="94" cy="90" r="22" stroke="#3d3d3d" stroke-width="7" fill="none"/>
 
-  <!-- Rider leg/thigh (orange, left side descending toward pedal) -->
-  <path d="M 40,75 C 36,83 30,92 27,100 C 24,108 27,113 32,113 C 37,113 42,109 44,102 C 46,95 46,85 42,77 Z"
-        fill="#E87820"/>
-
-  <!-- Rider body (orange, aero tuck position) -->
-  <path d="M 84,42 C 92,42 99,49 100,58 C 101,67 96,75 88,77 C 76,79 60,78 46,76 C 34,74 26,69 25,62 C 24,55 28,48 35,46 C 42,44 53,41 65,41 C 73,40 79,41 84,42 Z"
+  <!-- Rider body (orange) — aero tuck, single smooth path
+       Outer: left shoulder → back → hip → leg down → leg up → belly → arm protrusion → shoulder -->
+  <path d="
+    M 86,44
+    C 76,44 66,46 56,50
+    C 46,54 38,62 34,72
+    C 32,78 30,84 28,92
+    C 26,100 26,108 32,112
+    C 36,116 42,116 46,110
+    C 50,104 52,96 52,86
+    C 54,78 60,74 68,72
+    C 76,70 84,68 92,66
+    C 98,64 104,58 102,50
+    C 100,44 96,40 90,42
+    C 88,42 86,42 86,44
+    Z"
         fill="#E87820"/>
 
   <!-- Head (dark gray circle) -->
