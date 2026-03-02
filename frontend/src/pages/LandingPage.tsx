@@ -20,7 +20,8 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
             {/* HERO */}
             <div className="container mx-auto px-4 pt-20 pb-16">
                 <div className="text-center max-w-3xl mx-auto">
-                    <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">
+                    <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight flex items-center justify-center gap-3">
+                        <img src="/logo-256.png" alt="" className="h-12 w-12 md:h-14 md:w-14 object-contain" />
                         AI Cycling Coach
                     </h1>
                     <p className="text-xl md:text-2xl font-medium mb-3">
