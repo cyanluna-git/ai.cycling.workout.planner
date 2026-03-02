@@ -182,7 +182,9 @@
     "hrvGlossary": "개인의 평균 HRV 대비 상대적 변화를 봅니다. 평소보다 높으면 회복 잘 됨, 평소보다 낮으면 피로/스트레스 신호입니다. 절대값은 사람마다 크게 다릅니다.",
     "refresh": "컨디션 데이터 새로고침",
     "refreshSuccess": "컨디션 데이터가 업데이트되었습니다.",
-    "refreshFailed": "컨디션 데이터 새로고침에 실패했습니다."
+    "refreshFailed": "컨디션 데이터 새로고침에 실패했습니다.",
+    "wearableHint": "Garmin, Wahoo, Polar, Whoop 등의 웨어러블 기기를 Intervals.icu에 연동하면 HRV, 수면, 안정시 심박 데이터를 확인할 수 있습니다.",
+    "wearableHintLink": "웨어러블 연동 설정하기"
   },
   "wellnessCard": {
     "title": "웰니스 상태",
@@ -203,7 +205,9 @@
     "respiration": "호흡수",
     "bodyFat": "체지방",
     "readiness": "오늘의 준비도",
-    "perMinute": "/분"
+    "perMinute": "/분",
+    "wearableHint": "Garmin, Wahoo, Polar, Whoop 등의 웨어러블 기기를 Intervals.icu에 연동하면 HRV, 수면, 안정시 심박 데이터를 확인할 수 있습니다.",
+    "wearableHintLink": "웨어러블 연동 설정하기"
   },
   "calendar": {
     "title": "이번 주 현황",

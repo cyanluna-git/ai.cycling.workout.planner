@@ -1,6 +1,6 @@
 import { type ReactNode, createElement } from "react";
 import { useTranslation } from 'react-i18next';
-import { Smile, Minus, Frown, Flame, Moon } from "lucide-react";
+import { Smile, Minus, Frown, Flame, Moon, Info } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { WellnessMetrics } from "@/lib/api";
 
@@ -46,6 +46,7 @@ export function WellnessCard({ wellness, className }: WellnessCardProps) {
     const hasSubjectiveData = wellness.soreness != null || wellness.fatigue != null || wellness.stress != null || wellness.mood != null || wellness.motivation != null;
     const hasHealthData = wellness.spo2 != null || wellness.systolic != null || wellness.respiration != null;
     const hasSleepData = wellness.sleep_hours != null || wellness.sleep_score != null;
+    const hasWearableData = wellness.hrv != null || wellness.rhr != null || wellness.sleep_hours != null || wellness.sleep_score != null;
 
     return (
         <Card className={className}>
@@ -55,6 +56,24 @@ export function WellnessCard({ wellness, className }: WellnessCardProps) {
                 </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+                {/* Wearable hint — shown when no wearable metrics available */}
+                {!hasWearableData && (
+                    <div className="p-3 bg-muted/30 rounded-lg flex flex-col gap-1.5">
+                        <div className="flex items-start gap-1.5">
+                            <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground leading-relaxed">{t('wellnessCard.wearableHint')}</span>
+                        </div>
+                        <a
+                            href="https://intervals.icu/settings"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-primary underline-offset-2 hover:underline ml-5"
+                        >
+                            {t('wellnessCard.wearableHintLink')}
+                        </a>
+                    </div>
+                )}
+
                 {/* Primary Metrics Row */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {wellness.hrv != null && (

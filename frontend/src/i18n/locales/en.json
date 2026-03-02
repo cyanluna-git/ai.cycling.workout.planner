@@ -182,7 +182,9 @@
     "hrvGlossary": "Measures relative change from your personal baseline. Higher than usual = good recovery; lower than usual = fatigue/stress signal. Absolute values vary greatly between individuals.",
     "refresh": "Refresh fitness data",
     "refreshSuccess": "Fitness data updated successfully.",
-    "refreshFailed": "Failed to refresh fitness data."
+    "refreshFailed": "Failed to refresh fitness data.",
+    "wearableHint": "Connect a wearable device (Garmin, Wahoo, Polar, Whoop) to Intervals.icu to see HRV, sleep, and resting heart rate data.",
+    "wearableHintLink": "Set up wearable connections"
   },
   "wellnessCard": {
     "title": "Wellness Status",
@@ -203,7 +205,9 @@
     "respiration": "Respiration",
     "bodyFat": "Body Fat",
     "readiness": "Today's Readiness",
-    "perMinute": "/min"
+    "perMinute": "/min",
+    "wearableHint": "Connect a wearable device (Garmin, Wahoo, Polar, Whoop) to Intervals.icu to see HRV, sleep, and resting heart rate data.",
+    "wearableHintLink": "Set up wearable connections"
   },
   "calendar": {
     "title": "This Week's Overview",
