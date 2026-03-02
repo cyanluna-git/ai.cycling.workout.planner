@@ -20,18 +20,18 @@ test.describe('i18n - Landing Page', () => {
   test('language switcher changes to Korean', async ({ page }) => {
     // In English mode, button shows KO
     await page.getByRole('button', { name: /KO/ }).click();
-    await expect(page.getByText(/무료로 시작하기/)).toBeVisible();
+    await expect(page.getByText(/그냥 시작하기/)).toBeVisible();
     await expect(page.getByText('혹시 이런 고민 있으신가요?')).toBeVisible();
   });
 
   test('language persists in localStorage', async ({ page }) => {
     // Switch to Korean
     await page.getByRole('button', { name: /KO/ }).click();
-    await expect(page.getByText(/무료로 시작하기/)).toBeVisible();
+    await expect(page.getByText(/그냥 시작하기/)).toBeVisible();
     await page.reload();
     await page.waitForLoadState('networkidle');
     // Should still be Korean (persisted in localStorage)
-    await expect(page.getByText(/무료로 시작하기/)).toBeVisible();
+    await expect(page.getByText(/그냥 시작하기/)).toBeVisible();
   });
 });
 
@@ -81,7 +81,7 @@ test.describe('i18n - Language Switcher', () => {
 
     // Switch to Korean
     await page.getByRole('button', { name: /KO/ }).click();
-    await expect(page.getByText(/무료로 시작하기/)).toBeVisible();
+    await expect(page.getByText(/그냥 시작하기/)).toBeVisible();
 
     // Switch back to English
     await page.getByRole('button', { name: /EN/ }).click();
