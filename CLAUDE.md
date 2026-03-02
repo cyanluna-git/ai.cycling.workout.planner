@@ -13,7 +13,7 @@ AI Cycling Coach — Personalized workout generation platform integrating with I
 - `api/` — FastAPI endpoints (routers, services)
 - `tests/` — pytest test suite
 - `supabase/` — Database migrations
-- `run.py` — Dev launcher (backend 8005 + frontend 3005)
+- `run.py` — Dev launcher (backend 8005 + frontend 3101)
 - `.claude/rules/` — Shared coding conventions
 
 ## Tech Stack & Key Dependencies
@@ -26,7 +26,7 @@ AI Cycling Coach — Personalized workout generation platform integrating with I
 ## Architecture
 
 ```
-Browser → React (port 3005, Vite)
+Browser → React (port 3101, Vite)
        → FastAPI (port 8005, Supabase auth)
        → Intervals.icu (athlete data)
        → LLM via Vercel AI Gateway
@@ -61,7 +61,7 @@ Weekly Plans (api/routers/plans.py)
 
 ### Development
 ```bash
-python run.py              # Backend (8005) + Frontend (3005)
+python run.py              # Backend (8005) + Frontend (3101)
 python run.py backend      # Backend only
 python run.py frontend     # Frontend only
 python run.py --docker     # Docker Compose
