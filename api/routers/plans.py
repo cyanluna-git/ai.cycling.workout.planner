@@ -969,6 +969,18 @@ async def get_today_workout(user: dict = Depends(get_current_user)):
     if weekly_plan_result and weekly_plan_result.data:
         weekly_tss_target = weekly_plan_result.data.get("weekly_tss_target")
 
+    # Fallback to user_settings.weekly_tss_target if no weekly plan or plan has no target
+    if not weekly_tss_target:
+        settings_result = (
+            supabase.table("user_settings")
+            .select("weekly_tss_target")
+            .eq("user_id", user["id"])
+            .maybe_single()
+            .execute()
+        )
+        if settings_result and settings_result.data:
+            weekly_tss_target = settings_result.data.get("weekly_tss_target")
+
     # Days remaining (including today)
     days_remaining = (week_end - today).days + 1
 
