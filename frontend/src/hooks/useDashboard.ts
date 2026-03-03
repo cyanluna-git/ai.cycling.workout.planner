@@ -35,6 +35,7 @@ import {
     type WeeklyCalendarData,
     type WeeklyPlan,
     type SyncResult,
+    type TodayWorkout,
 
     fetchTodayPlan,
 } from "@/lib/api";
@@ -190,9 +191,14 @@ export function useDashboard(): UseDashboardReturn {
     // Fetch today's plan (for TSS tracking)
     const { data: todayPlanData } = useQuery({
         queryKey: queryKeys.todayPlan(),
-        queryFn: () => fetchTodayPlan(session?.access_token || ''),
+        queryFn: async () => {
+            const result = await fetchTodayPlan(session?.access_token || '');
+            setCachedData('todayPlan', result);
+            return result;
+        },
         enabled: !!session?.access_token,
         staleTime: 30 * 60 * 1000, // 30 minutes
+        placeholderData: () => getCachedData<TodayWorkout>('todayPlan'),
     });
 
     // Build TSS progress from todayPlanData

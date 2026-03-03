@@ -956,30 +956,30 @@ async def get_today_workout(user: dict = Depends(get_current_user)):
         if w.get("status") == "completed"
     )
 
-    # Get weekly plan for TSS target
-    weekly_plan_result = (
-        supabase.table("weekly_plans")
-        .select("*")
+    # Get TSS target: prefer user_settings (most up-to-date), fall back to weekly_plans
+    weekly_tss_target = None
+    settings_result = (
+        supabase.table("user_settings")
+        .select("weekly_tss_target")
         .eq("user_id", user["id"])
-        .eq("week_start", week_start.isoformat())
         .maybe_single()
         .execute()
     )
-    weekly_tss_target = None
-    if weekly_plan_result and weekly_plan_result.data:
-        weekly_tss_target = weekly_plan_result.data.get("weekly_tss_target")
+    if settings_result and settings_result.data:
+        weekly_tss_target = settings_result.data.get("weekly_tss_target")
 
-    # Fallback to user_settings.weekly_tss_target if no weekly plan or plan has no target
+    # Fallback to weekly_plans.weekly_tss_target if user_settings has no target
     if not weekly_tss_target:
-        settings_result = (
-            supabase.table("user_settings")
+        weekly_plan_result = (
+            supabase.table("weekly_plans")
             .select("weekly_tss_target")
             .eq("user_id", user["id"])
+            .eq("week_start", week_start.isoformat())
             .maybe_single()
             .execute()
         )
-        if settings_result and settings_result.data:
-            weekly_tss_target = settings_result.data.get("weekly_tss_target")
+        if weekly_plan_result and weekly_plan_result.data:
+            weekly_tss_target = weekly_plan_result.data.get("weekly_tss_target")
 
     # Days remaining (including today)
     days_remaining = (week_end - today).days + 1

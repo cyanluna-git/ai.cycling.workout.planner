@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/contexts/AuthContext'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/queryClient'
+import { removeCachedData } from '@/lib/queryCache'
 
 const API_BASE = import.meta.env.VITE_API_URL || ''
 
@@ -88,6 +89,7 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
             });
             if (res.ok) {
                 setMessage(t('settings.settingsSaved'));
+                removeCachedData('todayPlan');
                 queryClient.invalidateQueries({ queryKey: queryKeys.todayPlan() });
                 queryClient.invalidateQueries({ queryKey: queryKeys.weeklyCalendar() });
             }
@@ -139,6 +141,8 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
             });
             if (res.ok) {
                 setMessage(t("settings.weeklyAvailability.saveSuccess"));
+                removeCachedData('todayPlan');
+                queryClient.invalidateQueries({ queryKey: queryKeys.todayPlan() });
             } else {
                 setMessage(t("settings.weeklyAvailability.saveError"));
             }
