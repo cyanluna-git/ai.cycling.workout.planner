@@ -26,3 +26,11 @@ export function setCachedData<T>(key: string, data: T): void {
     // Intentionally ignored -- localStorage may be full or disabled
   }
 }
+
+export function removeCachedData(key: string): void {
+  try {
+    localStorage.removeItem(CACHE_PREFIX + key);
+  } catch {
+    // Intentionally ignored -- localStorage may be unavailable
+  }
+}
