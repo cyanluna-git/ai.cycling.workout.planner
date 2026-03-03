@@ -67,6 +67,10 @@ interface DashboardState {
     error: string | null;
     success: string | null;
     tssProgress: TssProgressData | null;
+    tssAccumulated: number;
+    tssTarget: number;
+    trainingDaysCompleted: number;
+    trainingDaysTarget: number;
     achievements: AchievementsData | null;
     isLoadingAchievements: boolean;
 }
@@ -185,7 +189,7 @@ export function useDashboard(): UseDashboardReturn {
 
     // Fetch today's plan (for TSS tracking)
     const { data: todayPlanData } = useQuery({
-        queryKey: [...queryKeys.weeklyPlan("today-plan")],
+        queryKey: queryKeys.todayPlan(),
         queryFn: () => fetchTodayPlan(session?.access_token || ''),
         enabled: !!session?.access_token,
         staleTime: 30 * 60 * 1000, // 30 minutes
@@ -202,6 +206,15 @@ export function useDashboard(): UseDashboardReturn {
             warning: todayPlanData.achievement_warning || undefined,
         }
         : null;
+
+    // Computed values for WeeklyProgressSummary (uses weeklyCalendar as source of truth)
+    const tssAccumulated = weeklyCalendar?.actual_tss ?? 0;
+    const tssTarget = todayPlanData?.weekly_tss_target ?? 0;
+    // Count unique dates with actual events for accurate day count
+    const trainingDaysCompletedUnique = weeklyCalendar
+        ? new Set(weeklyCalendar.events.filter(e => e.is_actual).map(e => e.date)).size
+        : 0;
+    const trainingDaysTarget = 6; // default if not available from settings
 
     // Mutations
     const generateMutation = useMutation({
@@ -486,6 +499,10 @@ export function useDashboard(): UseDashboardReturn {
         error,
         success,
         tssProgress,
+        tssAccumulated,
+        tssTarget,
+        trainingDaysCompleted: trainingDaysCompletedUnique,
+        trainingDaysTarget,
         // Actions
         handleGenerate,
         handleRegister,

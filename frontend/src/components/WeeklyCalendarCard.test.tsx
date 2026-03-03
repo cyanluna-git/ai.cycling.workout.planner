@@ -128,6 +128,37 @@ describe('i18n locale files — new calendar keys', () => {
         const calendar = (koLocale as Record<string, unknown>).calendar as Record<string, unknown>
         expect(/[\u{1F000}-\u{1FFFF}]/u.test(calendar.restDay as string)).toBe(false)
     })
+
+    // New i18n keys for progress summary
+    it('en.json has calendar.tssLabel string', () => {
+        const calendar = (enLocale as Record<string, unknown>).calendar as Record<string, unknown>
+        expect(typeof calendar.tssLabel).toBe('string')
+    })
+
+    it('en.json has calendar.trainingLabel string', () => {
+        const calendar = (enLocale as Record<string, unknown>).calendar as Record<string, unknown>
+        expect(typeof calendar.trainingLabel).toBe('string')
+    })
+
+    it('en.json has calendar.tssProgress string', () => {
+        const calendar = (enLocale as Record<string, unknown>).calendar as Record<string, unknown>
+        expect(typeof calendar.tssProgress).toBe('string')
+    })
+
+    it('en.json has calendar.trainingDays string', () => {
+        const calendar = (enLocale as Record<string, unknown>).calendar as Record<string, unknown>
+        expect(typeof calendar.trainingDays).toBe('string')
+    })
+
+    it('ko.json has calendar.tssProgress string', () => {
+        const calendar = (koLocale as Record<string, unknown>).calendar as Record<string, unknown>
+        expect(typeof calendar.tssProgress).toBe('string')
+    })
+
+    it('ko.json has calendar.trainingDays string', () => {
+        const calendar = (koLocale as Record<string, unknown>).calendar as Record<string, unknown>
+        expect(typeof calendar.trainingDays).toBe('string')
+    })
 })
 
 // ---------------------------------------------------------------------------
@@ -428,5 +459,191 @@ describe('WeeklyCalendarCard', () => {
         render(<WeeklyCalendarCard calendar={makeCalendar()} isLoading={false} />)
         expect(screen.getByText('Completed activities')).toBeInTheDocument()
         expect(screen.getByText('Planned workouts')).toBeInTheDocument()
+    })
+
+    // -----------------------------------------------------------------------
+    // WeeklyProgressSummary in header
+    // -----------------------------------------------------------------------
+
+    it('renders progress summary in header when tss props are provided', () => {
+        const { container } = render(
+            <WeeklyCalendarCard
+                calendar={makeCalendar()}
+                isLoading={false}
+                tssAccumulated={400}
+                tssTarget={600}
+                trainingDaysCompleted={3}
+                trainingDaysTarget={6}
+            />
+        )
+        // Desktop rings container should exist
+        const desktopRings = container.querySelector('.hidden.md\\:flex')
+        expect(desktopRings).not.toBeNull()
+    })
+
+    it('shows TSS progress label in header', () => {
+        render(
+            <WeeklyCalendarCard
+                calendar={makeCalendar()}
+                isLoading={false}
+                tssAccumulated={400}
+                tssTarget={600}
+                trainingDaysCompleted={3}
+                trainingDaysTarget={6}
+            />
+        )
+        // i18n: "400/600 TSS"
+        const labels = screen.getAllByText('400/600 TSS')
+        expect(labels.length).toBeGreaterThan(0)
+    })
+
+    it('shows training days label in header', () => {
+        render(
+            <WeeklyCalendarCard
+                calendar={makeCalendar()}
+                isLoading={false}
+                tssAccumulated={400}
+                tssTarget={600}
+                trainingDaysCompleted={3}
+                trainingDaysTarget={6}
+            />
+        )
+        // i18n: "3/6 days"
+        const labels = screen.getAllByText('3/6 days')
+        expect(labels.length).toBeGreaterThan(0)
+    })
+
+    it('renders header with flex justify-between for title and progress summary', () => {
+        const { container } = render(
+            <WeeklyCalendarCard
+                calendar={makeCalendar()}
+                isLoading={false}
+                tssAccumulated={400}
+                tssTarget={600}
+            />
+        )
+        const headerFlex = container.querySelector('.flex.justify-between.items-start')
+        expect(headerFlex).not.toBeNull()
+    })
+
+    // -----------------------------------------------------------------------
+    // Shield additions — TSS display edge cases
+    // -----------------------------------------------------------------------
+
+    it('does not render TSS span when event tss is null/undefined', () => {
+        const noTssEvent = {
+            ...plannedEvent,
+            id: 'evt-notss',
+            tss: null as unknown as number,
+        }
+        const { container } = render(
+            <WeeklyCalendarCard
+                calendar={makeCalendar({ events: [noTssEvent] })}
+                isLoading={false}
+            />
+        )
+        // When tss is falsy, no TSS text should appear
+        const tssTexts = container.querySelectorAll('[class*="opacity-70"]')
+        expect(tssTexts.length).toBe(0)
+    })
+
+    it('shows TSS without duration when duration_minutes is null', () => {
+        const noMinutesEvent = {
+            ...plannedEvent,
+            id: 'evt-noduration',
+            tss: 60,
+            duration_minutes: null as unknown as number,
+        }
+        render(
+            <WeeklyCalendarCard
+                calendar={makeCalendar({ events: [noMinutesEvent] })}
+                isLoading={false}
+            />
+        )
+        // TSS should appear, but not with "· Xm" suffix
+        expect(screen.getByText(/TSS 60/)).toBeInTheDocument()
+        expect(screen.queryByText(/TSS 60 · /)).toBeNull()
+    })
+
+    it('renders WeeklyProgressSummary skeleton in loading header', () => {
+        const { container } = render(
+            <WeeklyCalendarCard
+                calendar={null}
+                isLoading={true}
+                tssAccumulated={300}
+                tssTarget={600}
+            />
+        )
+        // Skeleton circles should be present from WeeklyProgressSummary isLoading
+        const skeletons = container.querySelectorAll('.rounded-full')
+        expect(skeletons.length).toBeGreaterThan(0)
+    })
+
+    it('renders one row per event when multiple events are on different days', () => {
+        const wednesdayEvent = {
+            ...actualEvent,
+            id: 'evt-wed',
+            date: '2026-02-18', // Wednesday of test week
+        }
+        const { container } = render(
+            <WeeklyCalendarCard
+                calendar={makeCalendar({ events: [plannedEvent, wednesdayEvent] })}
+                isLoading={false}
+            />
+        )
+        // Monday: 1 row (planned), Wed: 1 row (actual), other 5 days: rest → 7 total
+        const rows = container.querySelectorAll('.flex.items-center.gap-2.py-1\\.5.px-1')
+        expect(rows.length).toBe(7)
+    })
+
+    it('renders actual_tss field present in WeeklyCalendarData type', () => {
+        const calendarWithActualTss = makeCalendar({
+            actual_tss: 350,
+            events: [actualEvent],
+        })
+        // Verify actual_tss is accessible on the data structure
+        expect(calendarWithActualTss.actual_tss).toBe(350)
+    })
+
+    it('shows no rest days when all 7 days have events', () => {
+        const allDayEvents = Array.from({ length: 7 }, (_, i) => {
+            const d = new Date('2026-02-16')
+            d.setDate(d.getDate() + i)
+            return {
+                ...actualEvent,
+                id: `evt-day-${i}`,
+                date: d.toISOString().slice(0, 10),
+            }
+        })
+        render(
+            <WeeklyCalendarCard
+                calendar={makeCalendar({ events: allDayEvents })}
+                isLoading={false}
+            />
+        )
+        // No rest day text should appear
+        const restDayTexts = screen.queryAllByText('Rest Day')
+        expect(restDayTexts.length).toBe(0)
+    })
+
+    it('header always renders "This Week\'s Overview" title in loading state', () => {
+        render(
+            <WeeklyCalendarCard calendar={null} isLoading={true} />
+        )
+        expect(screen.getByText("This Week's Overview")).toBeInTheDocument()
+    })
+
+    it('orders planned events before actual events on same day', () => {
+        const { container } = render(
+            <WeeklyCalendarCard
+                calendar={makeCalendar({ events: [actualEvent, plannedEvent] })}
+                isLoading={false}
+            />
+        )
+        // Find the two event rows for Monday
+        const badges = container.querySelectorAll('.inline-flex')
+        // First badge should be Plan (blue), second should be Done (green)
+        expect(badges[0].classList.contains('bg-blue-200')).toBe(true)
+        expect(badges[1].classList.contains('bg-green-200')).toBe(true)
     })
 })

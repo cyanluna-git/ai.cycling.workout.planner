@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAuth } from '@/contexts/AuthContext'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/queryClient'
 
 const API_BASE = import.meta.env.VITE_API_URL || ''
 
@@ -24,6 +26,7 @@ interface ApiKeysCheck { intervals_configured: boolean; }
 export function SettingsPage({ onBack }: { onBack: () => void }) {
     const { t } = useTranslation();
     const { session, signOut } = useAuth()
+    const queryClient = useQueryClient()
     const [settings, setSettings] = useState<Settings>({
         ftp: 200, max_hr: 190, lthr: 170, training_goal: '',
         exclude_barcode_workouts: false, training_style: 'auto',
@@ -83,7 +86,11 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                 method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
                 body: JSON.stringify(settings),
             });
-            if (res.ok) setMessage(t('settings.settingsSaved'));
+            if (res.ok) {
+                setMessage(t('settings.settingsSaved'));
+                queryClient.invalidateQueries({ queryKey: queryKeys.todayPlan() });
+                queryClient.invalidateQueries({ queryKey: queryKeys.weeklyCalendar() });
+            }
         } catch { setMessage(t('common.saveFailed')); } finally { setSaving(false); }
     }
 

@@ -5,7 +5,6 @@ import { FitnessCard } from "@/components/FitnessCard";
 import { TodayWorkoutCard } from "@/components/TodayWorkoutCard";
 import { WeeklyCalendarCard } from "@/components/WeeklyCalendarCard";
 import { WeeklyPlanCard } from "@/components/WeeklyPlanCard";
-import { WeeklyTssProgressBar } from "@/components/WeeklyTssProgressBar";
 import { AchievementBadges } from "@/components/AchievementBadges";
 import { FitnessCardSkeleton, WeeklyCalendarSkeleton, WeeklyPlanSkeleton } from '@/components/LoadingSkeletons';
 import { CoachLoadingAnimation } from "@/components/CoachLoadingAnimation";
@@ -74,7 +73,7 @@ function Dashboard() {
     handleGenerate, handleRegister, handleRefreshFitness, handleSelectDate,
     handleOnboardingComplete, handleGenerateWeeklyPlan, handleDeleteWeeklyPlan,
     handleRegisterWeeklyPlanAll, handleSyncWeeklyPlan, handleWeekNavigation,
-    tssProgress,
+    tssAccumulated, tssTarget, trainingDaysCompleted, trainingDaysTarget,
   } = useDashboard();
 
   if (isApiConfigured === false) {
@@ -130,12 +129,11 @@ function Dashboard() {
           </div>
         </div>
       </header>
-      <WeeklyTssProgressBar tssProgress={tssProgress} isLoading={isLoadingPlan} />
       <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           <div className="space-y-6">
             {fitness ? <FitnessCard training={fitness.training} wellness={fitness.wellness} profile={fitness.profile} onRefresh={handleRefreshFitness} isRefreshing={isRefreshingFitness} /> : <FitnessCardSkeleton />}
-            {isLoadingCalendar ? <WeeklyCalendarSkeleton /> : <WeeklyCalendarCard calendar={weeklyCalendar} isLoading={false} onSelectDate={handleSelectDate} />}
+            {isLoadingCalendar ? <WeeklyCalendarSkeleton /> : <WeeklyCalendarCard calendar={weeklyCalendar} isLoading={false} onSelectDate={handleSelectDate} tssAccumulated={tssAccumulated} tssTarget={tssTarget} trainingDaysCompleted={trainingDaysCompleted} trainingDaysTarget={trainingDaysTarget} />}
             {(!workout && isLoading) ? <CoachLoadingAnimation /> : <TodayWorkoutCard workout={workout} onGenerate={handleGenerate} onRegister={handleRegister} isLoading={isLoading} isRegistering={isRegistering} isRegistered={!!success && (success.includes(t('common.registered')) || success.includes("Registered"))} ftp={fitness?.profile?.ftp ?? 250} error={error} success={success} />}
           </div>
           <div className="space-y-4">
