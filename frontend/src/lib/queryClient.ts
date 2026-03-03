@@ -30,5 +30,6 @@ export const queryKeys = {
     weekStartDate ? ['weeklyPlan', weekStartDate] : ['weeklyPlan'] as const,
   todayWorkout: (date?: string) =>
     date ? ['todayWorkout', date] : ['todayWorkout'] as const,
+  todayPlan: () => ['weeklyPlan', 'today-plan'] as const,
   apiConfigured: () => ['apiConfigured'] as const,
 };

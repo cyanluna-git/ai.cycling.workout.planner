@@ -272,7 +272,11 @@
     ],
     "restDay": "Rest Day",
     "planLabel": "Plan",
-    "doneLabel": "Done"
+    "doneLabel": "Done",
+    "tssLabel": "TSS",
+    "trainingLabel": "Training",
+    "tssProgress": "{{accumulated}}/{{target}} TSS",
+    "trainingDays": "{{completed}}/{{target}} days"
   },
   "workout": {
     "todayTitle": "Today's Workout",

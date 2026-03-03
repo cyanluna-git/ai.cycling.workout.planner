@@ -5,11 +5,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getEventTypeIcon } from "@/lib/icon-maps";
 import type { WeeklyCalendarData, WeeklyEvent } from "@/lib/api";
 import { cleanWorkoutName } from "@/lib/workout-utils";
+import { WeeklyProgressSummary } from "@/components/WeeklyProgressSummary";
 
 interface WeeklyCalendarCardProps {
     calendar: WeeklyCalendarData | null;
     isLoading: boolean;
     onSelectDate?: (date: string) => void;
+    tssAccumulated?: number;
+    tssTarget?: number;
+    trainingDaysCompleted?: number;
+    trainingDaysTarget?: number;
 }
 
 // DAY_NAMES now from i18n
@@ -51,13 +56,30 @@ function isToday(dateStr: string): boolean {
     return today.toDateString() === d.toDateString();
 }
 
-export function WeeklyCalendarCard({ calendar, isLoading, onSelectDate }: WeeklyCalendarCardProps) {
+export function WeeklyCalendarCard({
+    calendar,
+    isLoading,
+    onSelectDate,
+    tssAccumulated = 0,
+    tssTarget = 0,
+    trainingDaysCompleted = 0,
+    trainingDaysTarget = 6,
+}: WeeklyCalendarCardProps) {
     const { t } = useTranslation();
     if (isLoading) {
         return (
             <Card>
                 <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">{t('calendar.title')}</CardTitle>
+                    <div className="flex justify-between items-center">
+                        <CardTitle className="text-lg">{t('calendar.title')}</CardTitle>
+                        <WeeklyProgressSummary
+                            tssAccumulated={0}
+                            tssTarget={0}
+                            trainingDaysCompleted={0}
+                            trainingDaysTarget={trainingDaysTarget}
+                            isLoading={true}
+                        />
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <div className="animate-pulse space-y-2">
@@ -98,7 +120,17 @@ export function WeeklyCalendarCard({ calendar, isLoading, onSelectDate }: Weekly
     return (
         <Card>
             <CardHeader className="pb-2">
-                <CardTitle className="text-lg">{t('calendar.title')}</CardTitle>
+                <div className="flex justify-between items-start">
+                    <CardTitle className="text-lg">{t('calendar.title')}</CardTitle>
+                    <WeeklyProgressSummary
+                        tssAccumulated={tssAccumulated}
+                        tssTarget={tssTarget}
+                        trainingDaysCompleted={trainingDaysCompleted}
+                        trainingDaysTarget={trainingDaysTarget}
+                        isLoading={false}
+                    />
+                </div>
+                {/* Mobile progress bars (rendered inside CardHeader, not CardContent) */}
             </CardHeader>
             <CardContent>
                 <div className="flex flex-col divide-y divide-border/40">

@@ -272,7 +272,11 @@
     ],
     "restDay": "휴식일",
     "planLabel": "계획",
-    "doneLabel": "완료"
+    "doneLabel": "완료",
+    "tssLabel": "TSS",
+    "trainingLabel": "트레이닝",
+    "tssProgress": "{{accumulated}}/{{target}} TSS",
+    "trainingDays": "{{completed}}/{{target}}일"
   },
   "workout": {
     "todayTitle": "오늘의 워크아웃",
