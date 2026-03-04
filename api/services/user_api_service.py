@@ -113,6 +113,35 @@ async def increment_usage(user_id: str) -> None:
         logger.info("Continuing without usage tracking")
 
 
+async def get_user_id_by_athlete_id(athlete_id: str) -> Optional[str]:
+    """Look up user_id from an Intervals.icu athlete_id.
+
+    Used by webhook receiver to map incoming athlete events to users.
+
+    Args:
+        athlete_id: Intervals.icu athlete identifier (e.g. "i154786").
+
+    Returns:
+        The user_id string, or None if no matching user found.
+    """
+    try:
+        supabase = get_supabase_admin_client()
+        result = (
+            supabase.table("user_api_keys")
+            .select("user_id")
+            .eq("intervals_oauth_athlete_id", athlete_id)
+            .maybe_single()
+            .execute()
+        )
+        data = result.data if result else None
+        if data:
+            return data["user_id"]
+        return None
+    except Exception as e:
+        logger.warning(f"Failed to look up user for athlete_id {athlete_id}: {e}")
+        return None
+
+
 async def get_user_api_keys(user_id: str) -> UserApiKeysData:
     """Retrieve user's API keys from database.
 

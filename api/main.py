@@ -8,7 +8,7 @@ from datetime import datetime
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import workout, fitness, auth, settings, admin, plans, profiles, intervals_oauth
+from .routers import workout, fitness, auth, settings, admin, plans, profiles, intervals_oauth, webhooks
 from starlette.middleware.base import BaseHTTPMiddleware
 from .i18n import get_language
 
@@ -64,6 +64,7 @@ app.include_router(plans.router, prefix="/api", tags=["plans"])
 app.include_router(admin.router, prefix="/api", tags=["admin"])
 app.include_router(profiles.router, prefix="/api", tags=["profiles"])
 app.include_router(intervals_oauth.router, prefix="/api", tags=["intervals-oauth"])
+app.include_router(webhooks.router, prefix="/api", tags=["webhooks"])
 
 
 def _get_git_info():
