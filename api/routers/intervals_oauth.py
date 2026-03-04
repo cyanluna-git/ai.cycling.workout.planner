@@ -90,7 +90,7 @@ async def get_oauth_url(user: dict = Depends(get_current_user)):
         f"?client_id={INTERVALS_CLIENT_ID}"
         f"&redirect_uri={INTERVALS_REDIRECT_URI}"
         f"&response_type=code"
-        f"&scope=ACTIVITY:READ,WELLNESS:READ,CALENDAR:WRITE"
+        f"&scope=ACTIVITY:READ,WELLNESS:READ,CALENDAR:WRITE,SETTINGS:READ"
         f"&state={state}"
     )
 
