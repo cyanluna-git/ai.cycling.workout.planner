@@ -115,7 +115,8 @@ export function AuthPage() {
     return (
         <div className="min-h-screen bg-background flex items-center justify-center p-4 relative">
             <div className="absolute top-4 right-4"><LanguageSwitcher /></div>
-            <Card className="w-full max-w-md">
+            <div className="flex flex-col items-center w-full max-w-md gap-4">
+            <Card className="w-full">
                 <CardHeader className="text-center">
                     <CardTitle className="text-2xl flex items-center justify-center gap-2"><img src="/logo-256.png" alt="" className="h-9 w-9 object-contain" /> AI Cycling Coach</CardTitle>
                     <p className="text-muted-foreground text-sm">
@@ -191,9 +192,10 @@ export function AuthPage() {
                     </div>
                 </CardContent>
             </Card>
-            <p className="mt-4 text-center text-xs text-muted-foreground">
+            <p className="text-center text-xs text-muted-foreground">
                 <a href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</a>
             </p>
+            </div>
         </div>
     )
 }
