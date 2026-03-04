@@ -72,7 +72,7 @@ function Dashboard() {
     isRegisteringPlanAll, isSyncingPlan, isLoading, isRegistering,
     isRefreshingFitness, error, success,
     handleGenerate, handleRegister, handleRefreshFitness, handleSelectDate,
-    handleOnboardingComplete, handleGenerateWeeklyPlan, handleDeleteWeeklyPlan,
+    handleGenerateWeeklyPlan, handleDeleteWeeklyPlan,
     handleRegisterWeeklyPlanAll, handleSyncWeeklyPlan, handleWeekNavigation,
     tssAccumulated, tssTarget, trainingDaysCompleted, trainingDaysTarget,
   } = useDashboard();
@@ -80,7 +80,7 @@ function Dashboard() {
   if (isApiConfigured === false) {
     return (
       <Suspense fallback={<PageLoader />}>
-        <OnboardingPage onComplete={handleOnboardingComplete} accessToken={session?.access_token || ""} />
+        <OnboardingPage accessToken={session?.access_token || ""} />
       </Suspense>
     );
   }

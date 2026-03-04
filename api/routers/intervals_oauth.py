@@ -7,6 +7,7 @@ Handles the OAuth authorization flow:
   4. GET  /api/auth/intervals/status     — Check connection status
 """
 
+import base64
 import logging
 import os
 import uuid
@@ -129,8 +130,6 @@ async def oauth_callback(
         raise HTTPException(status_code=400, detail="OAuth state expired. Please try again.")
 
     # Exchange code for token
-    import base64
-
     credentials = base64.b64encode(
         f"{INTERVALS_CLIENT_ID}:{INTERVALS_CLIENT_SECRET}".encode()
     ).decode()
@@ -203,6 +202,8 @@ async def disconnect_oauth(user: dict = Depends(get_current_user)):
             "intervals_access_token": None,
             "intervals_oauth_athlete_id": None,
             "intervals_refresh_token": None,
+            "intervals_api_key": None,
+            "athlete_id": None,
         },
         on_conflict="user_id",
     ).execute()
