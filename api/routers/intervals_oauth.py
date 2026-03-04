@@ -163,8 +163,12 @@ async def oauth_callback(
 
     token_data = token_response.json()
     access_token = token_data.get("access_token")
-    # Intervals.icu returns athlete ID under the "athlete" key
-    athlete_id = token_data.get("athlete")
+    # Intervals.icu returns athlete as a dict {"id": "i154786", "name": "..."}
+    athlete_data = token_data.get("athlete")
+    if isinstance(athlete_data, dict):
+        athlete_id = athlete_data.get("id")
+    else:
+        athlete_id = athlete_data
 
     if not access_token or not athlete_id:
         logger.error(f"OAuth token response missing fields: {list(token_data.keys())}")
