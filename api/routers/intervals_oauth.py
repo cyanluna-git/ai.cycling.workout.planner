@@ -162,13 +162,15 @@ async def oauth_callback(
         )
 
     token_data = token_response.json()
+    logger.info(f"OAuth token response keys: {list(token_data.keys())}")
     access_token = token_data.get("access_token")
-    athlete_id = token_data.get("athlete_id")
+    athlete_id = token_data.get("athlete_id") or token_data.get("athleteId") or token_data.get("id")
 
     if not access_token or not athlete_id:
+        logger.error(f"OAuth token response missing fields: {list(token_data.keys())}")
         raise HTTPException(
             status_code=400,
-            detail="Invalid token response from Intervals.icu.",
+            detail=f"Invalid token response from Intervals.icu. Fields: {list(token_data.keys())}",
         )
 
     # Save token + athlete_id, clear state
