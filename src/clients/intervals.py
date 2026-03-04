@@ -63,8 +63,15 @@ class IntervalsClient:
         """
         session = requests.Session()
 
-        # Set up basic auth (username: "API_KEY", password: actual API key)
-        session.auth = ("API_KEY", self.config.api_key)
+        # Set authentication based on auth_mode
+        if self.config.auth_mode == "bearer":
+            # OAuth: use Bearer token
+            session.headers.update(
+                {"Authorization": f"Bearer {self.config.api_key}"}
+            )
+        else:
+            # Legacy: Basic Auth (username: "API_KEY", password: actual API key)
+            session.auth = ("API_KEY", self.config.api_key)
 
         # Set default headers
         session.headers.update(

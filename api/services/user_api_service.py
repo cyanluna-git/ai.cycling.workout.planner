@@ -27,6 +27,8 @@ class UserApiKeysData:
 
     intervals_api_key: Optional[str] = None
     athlete_id: Optional[str] = None
+    intervals_access_token: Optional[str] = None
+    intervals_oauth_athlete_id: Optional[str] = None
 
 
 @dataclass
@@ -129,7 +131,10 @@ async def get_user_api_keys(user_id: str) -> UserApiKeysData:
     try:
         result = (
             supabase.table("user_api_keys")
-            .select("intervals_api_key, athlete_id")
+            .select(
+                "intervals_api_key, athlete_id, "
+                "intervals_access_token, intervals_oauth_athlete_id"
+            )
             .eq("user_id", user_id)
             .maybe_single()
             .execute()
@@ -151,6 +156,8 @@ async def get_user_api_keys(user_id: str) -> UserApiKeysData:
         return UserApiKeysData(
             intervals_api_key=data.get("intervals_api_key"),
             athlete_id=data.get("athlete_id"),
+            intervals_access_token=data.get("intervals_access_token"),
+            intervals_oauth_athlete_id=data.get("intervals_oauth_athlete_id"),
         )
     except UserApiServiceError:
         raise
@@ -192,7 +199,9 @@ async def get_user_settings(user_id: str) -> UserSettingsData:
 
 
 async def get_user_intervals_client(user_id: str) -> IntervalsClient:
-    """Create an IntervalsClient configured with user's API keys.
+    """Create an IntervalsClient configured with user's credentials.
+
+    Prefers OAuth (bearer) token if available, falls back to legacy API key.
 
     Args:
         user_id: The user's unique ID.
@@ -201,21 +210,30 @@ async def get_user_intervals_client(user_id: str) -> IntervalsClient:
         Configured IntervalsClient instance.
 
     Raises:
-        UserApiServiceError: If Intervals.icu keys are not configured.
+        UserApiServiceError: If no Intervals.icu credentials are configured.
     """
     api_keys = await get_user_api_keys(user_id)
 
-    if not api_keys.intervals_api_key or not api_keys.athlete_id:
-        raise UserApiServiceError(
-            "Intervals.icu API 키가 설정되지 않았습니다. 설정 페이지에서 입력해주세요."
+    # Prefer OAuth token
+    if api_keys.intervals_access_token and api_keys.intervals_oauth_athlete_id:
+        config = IntervalsConfig(
+            api_key=api_keys.intervals_access_token,
+            athlete_id=api_keys.intervals_oauth_athlete_id,
+            auth_mode="bearer",
         )
+        return IntervalsClient(config)
 
-    config = IntervalsConfig(
-        api_key=api_keys.intervals_api_key,
-        athlete_id=api_keys.athlete_id,
+    # Fall back to legacy API key
+    if api_keys.intervals_api_key and api_keys.athlete_id:
+        config = IntervalsConfig(
+            api_key=api_keys.intervals_api_key,
+            athlete_id=api_keys.athlete_id,
+        )
+        return IntervalsClient(config)
+
+    raise UserApiServiceError(
+        "Intervals.icu API 키가 설정되지 않았습니다. 설정 페이지에서 입력해주세요."
     )
-
-    return IntervalsClient(config)
 
 
 def get_server_llm_client() -> LLMClient:

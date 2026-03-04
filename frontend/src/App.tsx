@@ -22,6 +22,7 @@ const OnboardingPage = lazy(() => import("@/pages/OnboardingPage").then(m => ({ 
 const LandingPage = lazy(() => import("@/pages/LandingPage").then(m => ({ default: m.LandingPage })));
 const AdminPage = lazy(() => import("@/pages/AdminPage").then(m => ({ default: m.AdminPage })));
 const PrivacyPage = lazy(() => import("@/pages/PrivacyPage").then(m => ({ default: m.PrivacyPage })));
+const OAuthCallbackPage = lazy(() => import("@/pages/OAuthCallbackPage").then(m => ({ default: m.OAuthCallbackPage })));
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
@@ -148,7 +149,7 @@ function Dashboard() {
 
 function AppContent() {
   const { t } = useTranslation();
-  const { user, loading } = useAuth();
+  const { user, session, loading } = useAuth();
   const [showLanding, setShowLanding] = useState(true);
   const [showResetPassword, setShowResetPassword] = useState(() => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
@@ -191,6 +192,18 @@ function AppContent() {
     return (
       <Suspense fallback={<PageLoader />}>
         <AuthPage />
+      </Suspense>
+    );
+  }
+
+  // OAuth callback route — must be after auth check (user is logged in)
+  if (window.location.pathname === '/auth/callback') {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <OAuthCallbackPage
+          accessToken={session?.access_token || ""}
+          onComplete={() => { window.location.href = "/"; }}
+        />
       </Suspense>
     );
   }

@@ -479,3 +479,47 @@ export async function finalizeWeeklyPlan(token: string, planId: string): Promise
     if (!res.ok) throw new Error('Failed to finalize plan');
     return res.json();
 }
+
+// --- Intervals.icu OAuth ---
+
+export async function fetchOAuthUrl(token: string): Promise<{ authorize_url: string; state: string }> {
+    const res = await fetch(`${API_BASE}/api/auth/intervals/url`, {
+        headers: getHeaders(token),
+    });
+    if (!res.ok) throw new Error('Failed to fetch OAuth URL');
+    return res.json();
+}
+
+export async function submitOAuthCallback(
+    token: string,
+    code: string,
+    state: string,
+): Promise<{ success: boolean; athlete_id: string }> {
+    const res = await fetch(`${API_BASE}/api/auth/intervals/callback`, {
+        method: 'POST',
+        headers: getHeaders(token, 'application/json'),
+        body: JSON.stringify({ code, state }),
+    });
+    if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.detail || 'OAuth callback failed');
+    }
+    return res.json();
+}
+
+export async function disconnectOAuth(token: string): Promise<{ success: boolean }> {
+    const res = await fetch(`${API_BASE}/api/auth/intervals/disconnect`, {
+        method: 'POST',
+        headers: getHeaders(token),
+    });
+    if (!res.ok) throw new Error('Failed to disconnect OAuth');
+    return res.json();
+}
+
+export async function fetchOAuthStatus(token: string): Promise<{ connected: boolean; method: string; athlete_id: string | null }> {
+    const res = await fetch(`${API_BASE}/api/auth/intervals/status`, {
+        headers: getHeaders(token),
+    });
+    if (!res.ok) throw new Error('Failed to fetch OAuth status');
+    return res.json();
+}

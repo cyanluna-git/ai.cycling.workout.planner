@@ -419,6 +419,19 @@
     "freeDesc": "Intervals.icu 계정만 있으면 바로 시작할 수 있습니다",
     "ctaButton": "시작하기"
   },
+  "oauth": {
+    "connectButton": "Intervals.icu 연결하기",
+    "connected": "연결됨",
+    "connectedVia": "{{method}}로 연결됨",
+    "disconnect": "연결 해제",
+    "disconnected": "Intervals.icu 연결이 해제되었습니다.",
+    "connecting": "연결 중...",
+    "error": "연결 실패: {{message}}",
+    "denied": "접근이 거부되었습니다.",
+    "manualApiKey": "수동 API 키 입력 (고급)",
+    "processing": "Intervals.icu에 연결하는 중...",
+    "success": "연결 완료!"
+  },
   "update": {
     "announcement": "업데이트",
     "newFeatures": "새로운 기능을 소개합니다:",

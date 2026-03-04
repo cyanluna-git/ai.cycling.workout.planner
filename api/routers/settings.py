@@ -73,10 +73,13 @@ async def get_settings(user: dict = Depends(get_current_user)):
         .execute()
     )
 
-    # Get api keys (just check if configured)
+    # Get api keys (just check if configured — include OAuth columns)
     api_keys_result = (
         supabase.table("user_api_keys")
-        .select("intervals_api_key, athlete_id")
+        .select(
+            "intervals_api_key, athlete_id, "
+            "intervals_access_token, intervals_oauth_athlete_id"
+        )
         .eq("user_id", user["id"])
         .maybe_single()
         .execute()
@@ -84,6 +87,15 @@ async def get_settings(user: dict = Depends(get_current_user)):
 
     settings_data = settings_result.data if settings_result else {}
     api_keys_data = api_keys_result.data if api_keys_result else {}
+
+    # api_keys_configured: (api_key AND athlete_id) OR (access_token AND oauth_athlete_id)
+    has_api_key = bool(
+        api_keys_data.get("intervals_api_key") and api_keys_data.get("athlete_id")
+    )
+    has_oauth = bool(
+        api_keys_data.get("intervals_access_token")
+        and api_keys_data.get("intervals_oauth_athlete_id")
+    )
 
     return UserSettingsResponse(
         settings=UserSettings(
@@ -103,9 +115,7 @@ async def get_settings(user: dict = Depends(get_current_user)):
             weekly_plan_day=settings_data.get("weekly_plan_day", 0),
             weekly_availability=_normalize_availability(settings_data.get("weekly_availability", DEFAULT_WEEKLY_AVAILABILITY)),
         ),
-        api_keys_configured=bool(
-            api_keys_data.get("intervals_api_key") and api_keys_data.get("athlete_id")
-        ),
+        api_keys_configured=has_api_key or has_oauth,
     )
 
 
@@ -192,23 +202,30 @@ async def update_api_keys(
 
 @router.get("/settings/api-keys/check")
 async def check_api_keys(user: dict = Depends(get_current_user)):
-    """Check if Intervals.icu API keys are configured."""
+    """Check if Intervals.icu API keys are configured (API key or OAuth)."""
     supabase = get_supabase_admin_client()
 
     result = (
         supabase.table("user_api_keys")
-        .select("intervals_api_key, athlete_id")
+        .select(
+            "intervals_api_key, athlete_id, "
+            "intervals_access_token, intervals_oauth_athlete_id"
+        )
         .eq("user_id", user["id"])
         .maybe_single()
         .execute()
     )
 
-    print(f"[DEBUG] check_api_keys result: {result}")
     data = result.data if result else {}
-    print(f"[DEBUG] check_api_keys data: {data}")
+
+    has_api_key = bool(
+        data.get("intervals_api_key") and data.get("athlete_id")
+    )
+    has_oauth = bool(
+        data.get("intervals_access_token")
+        and data.get("intervals_oauth_athlete_id")
+    )
 
     return {
-        "intervals_configured": bool(
-            data.get("intervals_api_key") and data.get("athlete_id")
-        ),
+        "intervals_configured": has_api_key or has_oauth,
     }
