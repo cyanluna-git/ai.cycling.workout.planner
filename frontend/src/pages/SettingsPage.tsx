@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CalendarDays, Bike, Moon, PartyPopper, Watch, Zap, Activity } from 'lucide-react'
+import { CalendarDays, Bike, Moon, PartyPopper, Watch, Zap, Activity, Loader2, ChevronDown } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/queryClient'
 import { removeCachedData } from '@/lib/queryCache'
+import { fetchOAuthUrl, fetchOAuthStatus, disconnectOAuth } from '@/lib/api'
 
 const API_BASE = import.meta.env.VITE_API_URL || ''
 
@@ -44,7 +45,10 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
         },
     })
     const [apiKeys, setApiKeys] = useState({ intervals_api_key: '', athlete_id: '' })
-    const [apiKeysCheck, setApiKeysCheck] = useState<ApiKeysCheck | null>(null)
+    const [, setApiKeysCheck] = useState<ApiKeysCheck | null>(null)
+    const [oauthStatus, setOauthStatus] = useState<{ connected: boolean; method: string; athlete_id: string | null } | null>(null)
+    const [isOAuthLoading, setIsOAuthLoading] = useState(false)
+    const [isDisconnecting, setIsDisconnecting] = useState(false)
     const [saving, setSaving] = useState(false)
     const [message, setMessage] = useState<string | null>(null)
 
@@ -76,9 +80,43 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
         } catch { console.error('Failed to check API keys'); }
     }, [session?.access_token]);
 
+    const checkOAuthStatus = useCallback(async () => {
+        if (!session?.access_token) return;
+        try {
+            const data = await fetchOAuthStatus(session.access_token);
+            setOauthStatus(data);
+        } catch { console.error('Failed to check OAuth status'); }
+    }, [session?.access_token]);
+
     useEffect(() => {
-        if (session?.access_token) { fetchSettings(); checkApiKeys(); }
-    }, [session?.access_token, fetchSettings, checkApiKeys])
+        if (session?.access_token) { fetchSettings(); checkApiKeys(); checkOAuthStatus(); }
+    }, [session?.access_token, fetchSettings, checkApiKeys, checkOAuthStatus])
+
+    const handleOAuthConnect = async () => {
+        if (!session?.access_token) return;
+        setIsOAuthLoading(true);
+        try {
+            const data = await fetchOAuthUrl(session.access_token);
+            localStorage.setItem('intervals_oauth_state', data.state);
+            window.location.href = data.authorize_url;
+        } catch {
+            setMessage(t('oauth.error', { message: 'Failed to start OAuth' }));
+            setIsOAuthLoading(false);
+        }
+    };
+
+    const handleDisconnect = async () => {
+        if (!session?.access_token) return;
+        setIsDisconnecting(true);
+        try {
+            await disconnectOAuth(session.access_token);
+            setOauthStatus({ connected: false, method: 'none', athlete_id: null });
+            checkApiKeys();
+            setMessage(t('oauth.disconnected'));
+        } catch {
+            setMessage(t('common.error'));
+        } finally { setIsDisconnecting(false); }
+    };
 
     const saveSettings = async () => {
         setSaving(true); setMessage(null);
@@ -251,43 +289,96 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                 <Card>
                     <CardHeader>
                         <CardTitle>{t('settings.apiTitle')}</CardTitle>
-                        {apiKeysCheck && (
+                        {oauthStatus && (
                             <div className="text-sm text-muted-foreground">
-                                {t('settings.apiStatus')} {apiKeysCheck.intervals_configured ? t('settings.apiConnected') : t('settings.apiNotConnected')}
+                                {t('settings.apiStatus')}{' '}
+                                {oauthStatus.connected ? t('settings.apiConnected') : t('settings.apiNotConnected')}
                             </div>
                         )}
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {apiKeysCheck?.intervals_configured ? (
+                        {/* OAuth connected */}
+                        {oauthStatus?.connected && oauthStatus.method === 'oauth' && (
                             <div className="text-center py-4">
                                 <div className="mb-2 flex justify-center"><PartyPopper className="h-10 w-10 text-primary" /></div>
                                 <p className="text-sm text-muted-foreground">{t('settings.apiConnectedMessage')}</p>
-                                <Button variant="outline" size="sm" className="mt-4" onClick={() => setApiKeysCheck({ intervals_configured: false })}>{t('settings.apiResetKey')}</Button>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    {t('oauth.connectedVia', { method: 'OAuth' })} &middot; {oauthStatus.athlete_id}
+                                </p>
+                                <span className="inline-block mt-2 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+                                    OAuth
+                                </span>
+                                <div className="mt-4">
+                                    <Button variant="outline" size="sm" onClick={handleDisconnect} disabled={isDisconnecting}>
+                                        {isDisconnecting ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
+                                        {t('oauth.disconnect')}
+                                    </Button>
+                                </div>
                             </div>
-                        ) : (
+                        )}
+
+                        {/* API key connected */}
+                        {oauthStatus?.connected && oauthStatus.method === 'api_key' && (
+                            <div className="text-center py-4">
+                                <div className="mb-2 flex justify-center"><PartyPopper className="h-10 w-10 text-primary" /></div>
+                                <p className="text-sm text-muted-foreground">{t('settings.apiConnectedMessage')}</p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    {t('oauth.connectedVia', { method: 'API Key' })} &middot; {oauthStatus.athlete_id}
+                                </p>
+                                <span className="inline-block mt-2 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                                    API Key
+                                </span>
+                                <div className="mt-4">
+                                    <Button variant="outline" size="sm" onClick={() => { setApiKeysCheck({ intervals_configured: false }); setOauthStatus({ connected: false, method: 'none', athlete_id: null }); }}>
+                                        {t('settings.apiResetKey')}
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Not connected */}
+                        {(!oauthStatus?.connected) && (
                             <>
-                                <div className="p-4 rounded-lg bg-muted/50 border border-border space-y-3">
-                                    <h4 className="font-medium">{t('settings.apiGuideTitle')}</h4>
-                                    <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                                        <li><a href="https://intervals.icu/settings" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Intervals.icu Settings</a> {t('settings.apiGuideStep1')}</li>
-                                        <li>{t('settings.apiGuideStep2')}</li>
-                                        <li>{t('settings.apiGuideStep3')}</li>
-                                        <li>{t('settings.apiGuideStep4')}</li>
-                                    </ol>
-                                    <div className="grid grid-cols-2 gap-2 pt-1">
-                                        <img src="/guide/intervals-api-01-settings.png" alt="Intervals.icu Settings menu" className="rounded-lg border w-full h-44 object-cover object-top" />
-                                        <img src="/guide/intervals-api-02-api-key.png" alt="Intervals.icu API Key section" className="rounded-lg border w-full h-44 object-cover object-top" />
+                                {/* Primary: OAuth Connect */}
+                                <Button className="w-full h-11" onClick={handleOAuthConnect} disabled={isOAuthLoading}>
+                                    {isOAuthLoading ? (
+                                        <><Loader2 className="h-4 w-4 animate-spin mr-2" /> {t('oauth.connecting')}</>
+                                    ) : (
+                                        t('oauth.connectButton')
+                                    )}
+                                </Button>
+
+                                {/* Secondary: Manual API Key (collapsible) */}
+                                <details className="group">
+                                    <summary className="flex items-center gap-2 cursor-pointer select-none text-sm text-muted-foreground hover:text-foreground transition-colors list-none">
+                                        <ChevronDown className="h-4 w-4 group-open:rotate-180 transition-transform" />
+                                        {t('oauth.manualApiKey')}
+                                    </summary>
+                                    <div className="mt-4 space-y-4 border-t border-border pt-4">
+                                        <div className="p-4 rounded-lg bg-muted/50 border border-border space-y-3">
+                                            <h4 className="font-medium">{t('settings.apiGuideTitle')}</h4>
+                                            <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                                                <li><a href="https://intervals.icu/settings" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Intervals.icu Settings</a> {t('settings.apiGuideStep1')}</li>
+                                                <li>{t('settings.apiGuideStep2')}</li>
+                                                <li>{t('settings.apiGuideStep3')}</li>
+                                                <li>{t('settings.apiGuideStep4')}</li>
+                                            </ol>
+                                            <div className="grid grid-cols-2 gap-2 pt-1">
+                                                <img src="/guide/intervals-api-01-settings.png" alt="Intervals.icu Settings menu" className="rounded-lg border w-full h-44 object-cover object-top" />
+                                                <img src="/guide/intervals-api-02-api-key.png" alt="Intervals.icu API Key section" className="rounded-lg border w-full h-44 object-cover object-top" />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>{t('settings.apiKeyLabel')}</Label>
+                                            <Input type="password" placeholder={t('settings.apiKeyPlaceholder')} value={apiKeys.intervals_api_key} onChange={(e) => setApiKeys({ ...apiKeys, intervals_api_key: e.target.value })} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Athlete ID</Label>
+                                            <Input placeholder={t('settings.athleteIdPlaceholder')} value={apiKeys.athlete_id} onChange={(e) => setApiKeys({ ...apiKeys, athlete_id: e.target.value })} />
+                                        </div>
+                                        <Button onClick={saveApiKeys} disabled={saving}>{saving ? t('common.saving') : t('settings.saveApiKey')}</Button>
                                     </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>{t('settings.apiKeyLabel')}</Label>
-                                    <Input type="password" placeholder={t('settings.apiKeyPlaceholder')} value={apiKeys.intervals_api_key} onChange={(e) => setApiKeys({ ...apiKeys, intervals_api_key: e.target.value })} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Athlete ID</Label>
-                                    <Input placeholder={t('settings.athleteIdPlaceholder')} value={apiKeys.athlete_id} onChange={(e) => setApiKeys({ ...apiKeys, athlete_id: e.target.value })} />
-                                </div>
-                                <Button onClick={saveApiKeys} disabled={saving}>{saving ? t('common.saving') : t('settings.saveApiKey')}</Button>
+                                </details>
                             </>
                         )}
                     </CardContent>

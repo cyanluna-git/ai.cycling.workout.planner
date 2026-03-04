@@ -15,6 +15,7 @@ class IntervalsConfig:
     api_key: str
     athlete_id: str
     base_url: str = "https://intervals.icu/api/v1"
+    auth_mode: str = "api_key"  # "api_key" (Basic Auth) or "bearer" (OAuth)
 
 
 @dataclass

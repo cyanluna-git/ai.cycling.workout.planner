@@ -419,6 +419,19 @@
     "freeDesc": "All you need is an Intervals.icu account to get started",
     "ctaButton": "Get Started"
   },
+  "oauth": {
+    "connectButton": "Connect with Intervals.icu",
+    "connected": "Connected",
+    "connectedVia": "Connected via {{method}}",
+    "disconnect": "Disconnect",
+    "disconnected": "Intervals.icu disconnected.",
+    "connecting": "Connecting...",
+    "error": "Connection failed: {{message}}",
+    "denied": "Access was denied.",
+    "manualApiKey": "Manual API Key (Advanced)",
+    "processing": "Connecting to Intervals.icu...",
+    "success": "Successfully connected!"
+  },
   "update": {
     "announcement": "Update",
     "newFeatures": "Introducing new features:",
