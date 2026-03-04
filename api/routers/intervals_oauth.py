@@ -170,6 +170,9 @@ async def oauth_callback(
     else:
         athlete_id = athlete_data
 
+    granted_scope = token_data.get("scope", "")
+    logger.info(f"OAuth token granted scope: {granted_scope}")
+
     if not access_token or not athlete_id:
         logger.error(f"OAuth token response missing fields: {list(token_data.keys())}")
         raise HTTPException(
