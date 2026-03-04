@@ -215,7 +215,10 @@ async def disconnect_oauth(user: dict = Depends(get_current_user)):
     ).execute()
 
     clear_user_cache(user["id"])
-    logger.info(f"OAuth disconnected for user {user['id']}")
+    logger.info(
+        f"OAuth disconnected for user {user['id']}. "
+        "Webhook events for this athlete will be ignored (athlete_id lookup returns no user)."
+    )
 
     return {"success": True}
 
