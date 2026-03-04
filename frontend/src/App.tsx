@@ -77,12 +77,16 @@ function Dashboard() {
     tssAccumulated, tssTarget, trainingDaysCompleted, trainingDaysTarget,
   } = useDashboard();
 
-  if (isApiConfigured === false) {
-    return (
-      <Suspense fallback={<PageLoader />}>
-        <OnboardingPage accessToken={session?.access_token || ""} />
-      </Suspense>
-    );
+  // null = still checking; false = not connected → block entry until connected
+  if (isApiConfigured !== true) {
+    if (isApiConfigured === false) {
+      return (
+        <Suspense fallback={<PageLoader />}>
+          <OnboardingPage accessToken={session?.access_token || ""} />
+        </Suspense>
+      );
+    }
+    return <PageLoader />;
   }
 
   if (showSettings) {
