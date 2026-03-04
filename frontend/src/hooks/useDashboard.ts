@@ -142,7 +142,7 @@ export function useDashboard(): UseDashboardReturn {
             setCachedData('fitness', result);
             return result;
         },
-        enabled: !!session?.access_token,
+        enabled: !!session?.access_token && isApiConfigured === true,
         staleTime: 2 * 60 * 60 * 1000, // 2 hours
         placeholderData: () => getCachedData<FitnessData>('fitness'),
     });
@@ -158,7 +158,7 @@ export function useDashboard(): UseDashboardReturn {
             setCachedData('weeklyCalendar', result);
             return result;
         },
-        enabled: !!session?.access_token,
+        enabled: !!session?.access_token && isApiConfigured === true,
         staleTime: 2 * 60 * 60 * 1000, // 2 hours
         placeholderData: () => getCachedData<WeeklyCalendarData>('weeklyCalendar'),
     });
@@ -175,7 +175,7 @@ export function useDashboard(): UseDashboardReturn {
             setCachedData(`weeklyPlan-${weekStartDate}`, result);
             return result;
         },
-        enabled: !!session?.access_token,
+        enabled: !!session?.access_token && isApiConfigured === true,
         staleTime: 2 * 60 * 60 * 1000, // 2 hours
         placeholderData: () => getCachedData<WeeklyPlan>(`weeklyPlan-${weekStartDate}`),
     });
@@ -184,7 +184,7 @@ export function useDashboard(): UseDashboardReturn {
     const { data: todayWorkoutData } = useQuery({
         queryKey: queryKeys.todayWorkout(),
         queryFn: () => fetchTodaysWorkout(session?.access_token || ''),
-        enabled: !!session?.access_token,
+        enabled: !!session?.access_token && isApiConfigured === true,
         staleTime: 1 * 60 * 60 * 1000, // 1 hour
     });
 
@@ -196,7 +196,7 @@ export function useDashboard(): UseDashboardReturn {
             setCachedData('todayPlan', result);
             return result;
         },
-        enabled: !!session?.access_token,
+        enabled: !!session?.access_token && isApiConfigured === true,
         staleTime: 30 * 60 * 1000, // 30 minutes
         placeholderData: () => getCachedData<TodayWorkout>('todayPlan'),
     });
@@ -478,7 +478,7 @@ export function useDashboard(): UseDashboardReturn {
             setCachedData('achievements', result);
             return result;
         },
-        enabled: !!session?.access_token,
+        enabled: !!session?.access_token && isApiConfigured === true,
         staleTime: 1000 * 60 * 30, // 30 min
         placeholderData: () => getCachedData<AchievementsData>('achievements'),
     });
