@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Info, ChevronRight, RefreshCw } from "lucide-react";
 import { getTsbIcon } from "@/lib/icon-maps";
+import { getBlendedReadiness } from "@/lib/readiness";
 import type { TrainingMetrics, WellnessMetrics, AthleteProfile } from "@/lib/api";
 import { FitnessTrendChart } from "@/components/FitnessTrendChart";
 
@@ -167,18 +168,30 @@ export function FitnessCard({ training, wellness, profile, onRefresh, isRefreshi
                     </div>
                 )}
 
-                {/* Readiness - Single Bottom Section */}
-                <div className="pt-3 border-t">
-                    <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm text-muted-foreground">{t('fitness.readiness')}</span>
-                            <span className="text-xs text-muted-foreground">{training.form_status}</span>
+                {/* Readiness - Single Blended Label */}
+                {(() => {
+                    const blended = getBlendedReadiness(
+                        training.tsb,
+                        training.form_status,
+                        wellness.readiness,
+                        wellness.readiness_score,
+                    );
+                    return (
+                        <div className="pt-3 border-t">
+                            <div className="flex justify-between items-center">
+                                <span className="text-sm text-muted-foreground">{t('fitness.readiness')}</span>
+                                <span className={`font-bold ${getReadinessColor(blended.label)}`}>
+                                    {blended.label}
+                                </span>
+                            </div>
+                            {blended.subText && (
+                                <div className="text-xs text-muted-foreground mt-1 text-right">
+                                    {blended.subText}
+                                </div>
+                            )}
                         </div>
-                        <span className={`font-bold ${getReadinessColor(wellness.readiness)}`}>
-                            {wellness.readiness}
-                        </span>
-                    </div>
-                </div>
+                    );
+                })()}
 
                 {/* NEW: Glossary Section */}
                 <details className="mt-4 pt-4 border-t">
