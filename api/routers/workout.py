@@ -18,6 +18,7 @@ sys.path.insert(0, str(__file__).replace("/api/routers/workout.py", ""))
 
 from src.clients.intervals import IntervalsAPIError
 from src.services.workout_generator import WorkoutGenerator
+from src.services.fatigue_detector import compute_baseline, detect_acute_fatigue
 from .auth import get_current_user
 from ..services.user_api_service import (
     get_user_intervals_client,
@@ -71,7 +72,36 @@ async def generate_workout(
 
         # Get current metrics
         activities = intervals.get_recent_activities(days=42)
-        wellness_data = intervals.get_recent_wellness(days=7)
+        wellness_data = intervals.get_recent_wellness(days=28)
+
+        # --- Acute fatigue detection ---
+        fatigue_signal = None
+        try:
+            if wellness_data:
+                # wellness_data is newest-first from Intervals.icu
+                sorted_wellness = sorted(
+                    wellness_data,
+                    key=lambda x: x.get("id", ""),
+                    reverse=True,
+                )
+                baseline = compute_baseline(sorted_wellness)
+                # Today's values = first entry
+                today_entry = sorted_wellness[0]
+                today_hrv = today_entry.get("hrv") or today_entry.get("hrvSDNN")
+                today_rhr = today_entry.get("restingHR")
+                fatigue_signal = detect_acute_fatigue(
+                    today_hrv=float(today_hrv) if today_hrv is not None else None,
+                    today_rhr=float(today_rhr) if today_rhr is not None else None,
+                    hrv_baseline=baseline["hrv_baseline"],
+                    rhr_baseline=baseline["rhr_baseline"],
+                )
+                if fatigue_signal.is_fatigued:
+                    logger.warning(
+                        f"Acute fatigue detected for user {user['id']}: "
+                        f"{fatigue_signal.context_text}"
+                    )
+        except Exception as e:
+            logger.warning(f"Fatigue detection failed (non-fatal): {e}")
 
         # Calculate Weekly TSS (Mon -> Today) and Yesterday's Load
         weekly_tss = sum(
@@ -111,6 +141,7 @@ async def generate_workout(
             duration=request.duration,
             weekly_tss=weekly_tss,
             yesterday_load=yesterday_load,
+            fatigue_override=fatigue_signal,
         )
 
         # Parse workout text to extract steps
