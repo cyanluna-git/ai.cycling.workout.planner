@@ -18,6 +18,7 @@ from ..clients.llm import LLMClient
 from ..config import UserProfile
 from ..constants import WORKOUT_PREFIX, WORKOUT_FALLBACK_NAME
 from .data_processor import TrainingMetrics, WellnessMetrics
+from .fatigue_detector import FatigueSignal
 from .validator import WorkoutValidator, ValidationResult
 from .workout_skeleton import WorkoutSkeleton, parse_skeleton_from_dict
 from .protocol_builder import ProtocolBuilder, build_intervals_icu_json
@@ -499,6 +500,7 @@ Select the best profile and provide customization if needed.
         duration: int = 60,
         weekly_tss: int = 0,
         yesterday_load: int = 0,
+        fatigue_override: Optional[FatigueSignal] = None,
     ) -> GeneratedWorkout:
         """Generate a workout using Profile DB (preferred) or module assembly (fallback).
 
@@ -537,6 +539,15 @@ Select the best profile and provide customization if needed.
             else:
                 intensity = "hard"
 
+        # --- Acute fatigue override ---
+        # Force intensity to "easy" when HRV/RHR signals acute fatigue,
+        # regardless of what TSB-based auto-resolution decided above.
+        if fatigue_override and fatigue_override.is_fatigued:
+            logger.warning(
+                f"Fatigue override: forcing intensity from '{intensity}' to 'easy'"
+            )
+            intensity = "easy"
+
         # Use passed duration
         target_duration = duration
 
@@ -554,6 +565,10 @@ Select the best profile and provide customization if needed.
         if wellness_metrics.readiness:
             wellness_lines.append(f"- Readiness: {wellness_metrics.readiness}")
         wellness_text = "\n".join(wellness_lines) if wellness_lines else "No data available"
+
+        # Append fatigue context so the LLM knows about the override
+        if fatigue_override and fatigue_override.is_fatigued:
+            wellness_text += f"\n- {fatigue_override.context_text}"
 
         goal_desc = self.profile.training_goal or "General Fitness"
         if intensity and intensity != "auto":
