@@ -46,8 +46,9 @@ function resolveFeatureIcon(iconName?: string): ReactNode {
  * - Option to dismiss or view details
  */
 export function UpdateAnnouncementModal() {
-  const { t } = useTranslation();
-  const initialUpdate = hasNewVersion() ? getLatestUpdate() : null;
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language || "en";
+  const initialUpdate = hasNewVersion() ? getLatestUpdate(lang) : null;
   const [update] = useState<VersionUpdate | null>(initialUpdate);
   const [open, setOpen] = useState(initialUpdate !== null);
 
@@ -71,7 +72,7 @@ export function UpdateAnnouncementModal() {
             <DialogTitle className="text-xl">{update.title}</DialogTitle>
           </div>
           <DialogDescription className="text-muted-foreground">
-            {new Date(update.date).toLocaleDateString("ko-KR", {
+            {new Date(update.date).toLocaleDateString(lang === "ko" ? "ko-KR" : "en-US", {
               year: "numeric",
               month: "long",
               day: "numeric",
