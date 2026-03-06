@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
+import { pwaRuntimeCaching } from './src/pwa/runtimeCaching'
 
 
 function getGitInfo() {
@@ -29,17 +30,7 @@ export default defineConfig({
       manifest: false, // Use existing manifest.json in public/
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        runtimeCaching: [
-          {
-            urlPattern: /^\/api\//,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-cache',
-              expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 },
-              networkTimeoutSeconds: 10,
-            },
-          },
-        ],
+        runtimeCaching: pwaRuntimeCaching,
       },
     }),
   ],
