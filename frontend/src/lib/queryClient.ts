@@ -31,5 +31,6 @@ export const queryKeys = {
   todayWorkout: (date?: string) =>
     date ? ['todayWorkout', date] : ['todayWorkout'] as const,
   todayPlan: () => ['weeklyPlan', 'today-plan'] as const,
+  settingsBootstrap: () => ['settingsBootstrap'] as const,
   apiConfigured: () => ['apiConfigured'] as const,
 };

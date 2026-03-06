@@ -141,7 +141,32 @@ export interface SportSettings {
     pace_threshold: number | null;
 
     // Sport type
-    sport_types: string[];
+  sport_types: string[];
+}
+
+export interface UserSettingsData {
+    ftp: number;
+    max_hr: number;
+    lthr: number;
+    training_goal: string;
+    exclude_barcode_workouts?: boolean;
+    training_style?: string;
+    preferred_duration?: number;
+    training_focus?: string;
+    weekly_tss_target?: number | null;
+    weekly_availability?: Record<string, "available" | "unavailable" | "rest">;
+}
+
+export interface IntervalsConnectionStatus {
+    connected: boolean;
+    method: string;
+    athlete_id: string | null;
+}
+
+export interface SettingsBootstrapResponse {
+    settings: UserSettingsData;
+    api_keys_configured: boolean;
+    intervals_connection: IntervalsConnectionStatus;
 }
 
 // --- API Functions ---
@@ -165,15 +190,19 @@ export async function fetchSportSettings(token: string, sport: string = 'Ride'):
 
 export async function checkApiConfigured(token: string): Promise<boolean> {
     try {
-        const res = await fetch(`${API_BASE}/api/settings`, {
-            headers: getHeaders(token),
-        });
-        if (!res.ok) return false;
-        const data = await res.json();
+        const data = await fetchSettingsBootstrap(token);
         return data.api_keys_configured === true;
     } catch {
         return false;
     }
+}
+
+export async function fetchSettingsBootstrap(token: string): Promise<SettingsBootstrapResponse> {
+    const res = await fetch(`${API_BASE}/api/settings`, {
+        headers: getHeaders(token),
+    });
+    if (!res.ok) throw new Error('Failed to fetch settings');
+    return res.json();
 }
 
 export async function generateWorkout(

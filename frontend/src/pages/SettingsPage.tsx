@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { CalendarDays, Bike, Moon, PartyPopper, Watch, Zap, Activity, Loader2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -7,78 +7,70 @@ import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAuth } from '@/contexts/AuthContext'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/queryClient'
 import { removeCachedData } from '@/lib/queryCache'
-import { fetchOAuthUrl, fetchOAuthStatus, disconnectOAuth } from '@/lib/api'
+import { disconnectOAuth, fetchOAuthUrl, fetchSettingsBootstrap, type IntervalsConnectionStatus, type UserSettingsData } from '@/lib/api'
 
 const API_BASE = import.meta.env.VITE_API_URL || ''
 
-interface Settings {
-    ftp: number; max_hr: number; lthr: number; training_goal: string;
-    exclude_barcode_workouts?: boolean; training_style?: string;
-    preferred_duration?: number; training_focus?: string;
-    weekly_tss_target?: number | null;
-    weekly_availability?: Record<string, "available" | "unavailable" | "rest">;
+const DEFAULT_SETTINGS: UserSettingsData = {
+    ftp: 200,
+    max_hr: 190,
+    lthr: 170,
+    training_goal: '',
+    exclude_barcode_workouts: false,
+    training_style: 'auto',
+    preferred_duration: 60,
+    training_focus: 'maintain',
+    weekly_tss_target: null,
+    weekly_availability: {
+        "0": "available",
+        "1": "available",
+        "2": "available",
+        "3": "available",
+        "4": "available",
+        "5": "available",
+        "6": "available",
+    },
+}
+
+function getConnectionMethodLabel(method: string) {
+    if (method === 'api_key') return 'API Key'
+    if (method === 'oauth') return 'OAuth'
+    return method
 }
 
 export function SettingsPage({ onBack }: { onBack: () => void }) {
     const { t } = useTranslation();
     const { session, signOut } = useAuth()
     const queryClient = useQueryClient()
-    const [settings, setSettings] = useState<Settings>({
-        ftp: 200, max_hr: 190, lthr: 170, training_goal: '',
-        exclude_barcode_workouts: false, training_style: 'auto',
-        preferred_duration: 60, training_focus: 'maintain',
-        weekly_tss_target: null,
-        weekly_availability: {
-            "0": "available",
-            "1": "available",
-            "2": "available",
-            "3": "available",
-            "4": "available",
-            "5": "available",
-            "6": "available",
-        },
-    })
-    const [oauthStatus, setOauthStatus] = useState<{ connected: boolean; method: string; athlete_id: string | null } | null>(null)
+    const [settings, setSettings] = useState<UserSettingsData>(DEFAULT_SETTINGS)
     const [isOAuthLoading, setIsOAuthLoading] = useState(false)
     const [isDisconnecting, setIsDisconnecting] = useState(false)
     const [saving, setSaving] = useState(false)
     const [message, setMessage] = useState<string | null>(null)
 
-    const fetchSettings = useCallback(async () => {
-        try {
-            const res = await fetch(`${API_BASE}/api/settings`, { headers: { Authorization: `Bearer ${session?.access_token}` } });
-            if (res.ok) {
-                const data = await res.json();
-                setSettings({
-                    ...data.settings,
-                    weekly_availability: data.settings.weekly_availability || {
-                        "0": "available",
-                        "1": "available",
-                        "2": "available",
-                        "3": "available",
-                        "4": "available",
-                        "5": "available",
-                        "6": "available",
-                    }
-                });
-            }
-        } catch { console.error('Failed to fetch settings'); }
-    }, [session?.access_token]);
-
-    const checkOAuthStatus = useCallback(async () => {
-        if (!session?.access_token) return;
-        try {
-            const data = await fetchOAuthStatus(session.access_token);
-            setOauthStatus(data);
-        } catch { console.error('Failed to check OAuth status'); }
-    }, [session?.access_token]);
+    const { data: settingsBootstrap, isLoading: isLoadingSettingsBootstrap } = useQuery({
+        queryKey: queryKeys.settingsBootstrap(),
+        queryFn: () => fetchSettingsBootstrap(session?.access_token || ''),
+        enabled: !!session?.access_token,
+        staleTime: 5 * 60 * 1000,
+        refetchOnWindowFocus: false,
+    })
 
     useEffect(() => {
-        if (session?.access_token) { fetchSettings(); checkOAuthStatus(); }
-    }, [session?.access_token, fetchSettings, checkOAuthStatus])
+        if (!settingsBootstrap?.settings) return
+        setSettings({
+            ...DEFAULT_SETTINGS,
+            ...settingsBootstrap.settings,
+            weekly_availability: settingsBootstrap.settings.weekly_availability || DEFAULT_SETTINGS.weekly_availability,
+        })
+    }, [settingsBootstrap])
+
+    const connectionStatus = settingsBootstrap?.intervals_connection ?? null
+    const isConnectionLoading = isLoadingSettingsBootstrap && !connectionStatus
+    const connectionMethodLabel = connectionStatus ? getConnectionMethodLabel(connectionStatus.method) : ''
 
     const handleOAuthConnect = async () => {
         if (!session?.access_token) return;
@@ -98,7 +90,23 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
         setIsDisconnecting(true);
         try {
             await disconnectOAuth(session.access_token);
-            setOauthStatus({ connected: false, method: 'none', athlete_id: null });
+            queryClient.setQueryData(queryKeys.settingsBootstrap(), (current: {
+                settings: UserSettingsData;
+                api_keys_configured: boolean;
+                intervals_connection: IntervalsConnectionStatus;
+            } | undefined) => {
+                if (!current) return current;
+                return {
+                    ...current,
+                    api_keys_configured: false,
+                    intervals_connection: {
+                        connected: false,
+                        method: 'none',
+                        athlete_id: null,
+                    },
+                };
+            });
+            queryClient.setQueryData(queryKeys.apiConfigured(), false);
             setMessage(t('oauth.disconnected'));
         } catch {
             setMessage(t('common.error'));
@@ -265,24 +273,32 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                 <Card>
                     <CardHeader>
                         <CardTitle>{t('settings.apiTitle')}</CardTitle>
-                        {oauthStatus && (
+                        {isConnectionLoading ? (
+                            <div className="text-sm text-muted-foreground">{t('common.loading')}</div>
+                        ) : connectionStatus && (
                             <div className="text-sm text-muted-foreground">
                                 {t('settings.apiStatus')}{' '}
-                                {oauthStatus.connected ? t('settings.apiConnected') : t('settings.apiNotConnected')}
+                                {connectionStatus.connected ? t('settings.apiConnected') : t('settings.apiNotConnected')}
                             </div>
                         )}
                     </CardHeader>
                     <CardContent className="space-y-4">
+                        {isConnectionLoading && (
+                            <div className="flex items-center justify-center py-4 text-sm text-muted-foreground">
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                {t('common.loading')}
+                            </div>
+                        )}
                         {/* Connected (any method) */}
-                        {oauthStatus?.connected && (
+                        {!isConnectionLoading && connectionStatus?.connected && (
                             <div className="text-center py-4">
                                 <div className="mb-2 flex justify-center"><PartyPopper className="h-10 w-10 text-primary" /></div>
                                 <p className="text-sm text-muted-foreground">{t('settings.apiConnectedMessage')}</p>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                    {t('oauth.connectedVia', { method: 'OAuth' })} &middot; {oauthStatus.athlete_id}
+                                    {t('oauth.connectedVia', { method: connectionMethodLabel })} &middot; {connectionStatus.athlete_id}
                                 </p>
                                 <span className="inline-block mt-2 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
-                                    OAuth
+                                    {connectionMethodLabel}
                                 </span>
                                 <div className="mt-4">
                                     <Button variant="outline" size="sm" onClick={handleDisconnect} disabled={isDisconnecting}>
@@ -294,7 +310,7 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                         )}
 
                         {/* Not connected */}
-                        {(!oauthStatus?.connected) && (
+                        {!isConnectionLoading && !connectionStatus?.connected && (
                             <Button className="w-full h-11" onClick={handleOAuthConnect} disabled={isOAuthLoading}>
                                 {isOAuthLoading ? (
                                     <><Loader2 className="h-4 w-4 animate-spin mr-2" /> {t('oauth.connecting')}</>
