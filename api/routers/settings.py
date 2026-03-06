@@ -51,9 +51,48 @@ class UserApiKeys(BaseModel):
     athlete_id: Optional[str] = None
 
 
+class IntervalsConnectionStatus(BaseModel):
+    connected: bool
+    method: str
+    athlete_id: Optional[str] = None
+
+
 class UserSettingsResponse(BaseModel):
     settings: UserSettings
     api_keys_configured: bool  # Don't expose actual keys
+    intervals_connection: IntervalsConnectionStatus
+
+
+def _build_intervals_connection(api_keys_data: Optional[dict]) -> IntervalsConnectionStatus:
+    """Build Intervals connection metadata for bootstrap responses.
+
+    Keep the precedence aligned with /api/auth/intervals/status:
+    OAuth wins over legacy API key when both are present.
+    """
+    api_keys_data = api_keys_data or {}
+
+    if (
+        api_keys_data.get("intervals_access_token")
+        and api_keys_data.get("intervals_oauth_athlete_id")
+    ):
+        return IntervalsConnectionStatus(
+            connected=True,
+            method="oauth",
+            athlete_id=api_keys_data["intervals_oauth_athlete_id"],
+        )
+
+    if api_keys_data.get("intervals_api_key") and api_keys_data.get("athlete_id"):
+        return IntervalsConnectionStatus(
+            connected=True,
+            method="api_key",
+            athlete_id=api_keys_data["athlete_id"],
+        )
+
+    return IntervalsConnectionStatus(
+        connected=False,
+        method="none",
+        athlete_id=None,
+    )
 
 
 # --- Endpoints ---
@@ -86,15 +125,10 @@ async def get_settings(user: dict = Depends(get_current_user)):
     )
 
     settings_data = settings_result.data if settings_result else {}
-    api_keys_data = api_keys_result.data if api_keys_result else {}
-
-    # api_keys_configured: (api_key AND athlete_id) OR (access_token AND oauth_athlete_id)
-    has_api_key = bool(
-        api_keys_data.get("intervals_api_key") and api_keys_data.get("athlete_id")
-    )
-    has_oauth = bool(
-        api_keys_data.get("intervals_access_token")
-        and api_keys_data.get("intervals_oauth_athlete_id")
+    if settings_data is None:
+        settings_data = {}
+    intervals_connection = _build_intervals_connection(
+        api_keys_result.data if api_keys_result else {}
     )
 
     return UserSettingsResponse(
@@ -115,7 +149,8 @@ async def get_settings(user: dict = Depends(get_current_user)):
             weekly_plan_day=settings_data.get("weekly_plan_day", 0),
             weekly_availability=_normalize_availability(settings_data.get("weekly_availability", DEFAULT_WEEKLY_AVAILABILITY)),
         ),
-        api_keys_configured=has_api_key or has_oauth,
+        api_keys_configured=intervals_connection.connected,
+        intervals_connection=intervals_connection,
     )
 
 
@@ -216,16 +251,10 @@ async def check_api_keys(user: dict = Depends(get_current_user)):
         .execute()
     )
 
-    data = result.data if result else {}
-
-    has_api_key = bool(
-        data.get("intervals_api_key") and data.get("athlete_id")
-    )
-    has_oauth = bool(
-        data.get("intervals_access_token")
-        and data.get("intervals_oauth_athlete_id")
+    intervals_connection = _build_intervals_connection(
+        result.data if result else {}
     )
 
     return {
-        "intervals_configured": has_api_key or has_oauth,
+        "intervals_configured": intervals_connection.connected,
     }
