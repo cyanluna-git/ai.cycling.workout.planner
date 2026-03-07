@@ -1,14 +1,21 @@
 """Tests for Intervals.icu webhook receiver endpoint."""
 
-import pytest
+import sys
+import types
 from unittest.mock import AsyncMock, patch
+
+import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+
+fake_supabase = types.ModuleType("supabase")
+fake_supabase.create_client = lambda *args, **kwargs: None
+fake_supabase.Client = object
+sys.modules.setdefault("supabase", fake_supabase)
 
 import api.routers.webhooks as webhooks_mod
 
 SECRET = "test-secret-123"
-AUTH_HEADERS = {"Authorization": SECRET}
 
 
 def _make_app() -> FastAPI:
@@ -28,7 +35,7 @@ def _webhook_payload(events: list | None = None) -> dict:
                 "timestamp": "2024-12-06T06:40:47.011+00:00",
             }
         ]
-    return {"events": events}
+    return {"secret": SECRET, "events": events}
 
 
 @pytest.fixture(autouse=True)
@@ -60,7 +67,6 @@ class TestWebhookEndpoint:
         response = client.post(
             "/api/webhooks/intervals",
             json=_webhook_payload(),
-            headers=AUTH_HEADERS,
         )
 
         assert response.status_code == 200
@@ -82,7 +88,6 @@ class TestWebhookEndpoint:
             json=_webhook_payload(
                 events=[{"athlete_id": "i154786", "type": "ACTIVITY_ANALYZED"}]
             ),
-            headers=AUTH_HEADERS,
         )
 
         assert response.status_code == 200
@@ -101,7 +106,6 @@ class TestWebhookEndpoint:
             json=_webhook_payload(
                 events=[{"athlete_id": "i999", "type": "WELLNESS_UPDATED"}]
             ),
-            headers=AUTH_HEADERS,
         )
 
         assert response.status_code == 200
@@ -123,7 +127,6 @@ class TestWebhookEndpoint:
             json=_webhook_payload(
                 events=[{"athlete_id": "i111", "type": "CALENDAR_UPDATED"}]
             ),
-            headers=AUTH_HEADERS,
         )
 
         assert response.status_code == 200
@@ -136,20 +139,20 @@ class TestWebhookEndpoint:
         """Wrong Authorization header returns 403."""
         response = client.post(
             "/api/webhooks/intervals",
-            json=_webhook_payload(),
-            headers={"Authorization": "wrong-secret"},
+            json={**_webhook_payload(), "secret": "wrong-secret"},
         )
 
         assert response.status_code == 403
 
-    def test_webhook_missing_auth_header(self, client):
-        """Missing Authorization header returns 403."""
+    def test_webhook_missing_secret_field(self, client):
+        """Missing secret field returns 200 because payload parsing fails."""
         response = client.post(
             "/api/webhooks/intervals",
-            json=_webhook_payload(),
+            json={"events": _webhook_payload()["events"]},
         )
 
-        assert response.status_code == 403
+        assert response.status_code == 200
+        assert response.json() == {"status": "ok"}
 
     @patch("api.routers.webhooks.get_user_id_by_athlete_id", new_callable=AsyncMock)
     @patch("api.routers.webhooks.clear_user_cache")
@@ -164,7 +167,6 @@ class TestWebhookEndpoint:
             json=_webhook_payload(
                 events=[{"athlete_id": "i000000", "type": "ACTIVITY_UPLOADED"}]
             ),
-            headers=AUTH_HEADERS,
         )
 
         assert response.status_code == 200
@@ -182,7 +184,6 @@ class TestWebhookEndpoint:
             json=_webhook_payload(
                 events=[{"athlete_id": "i154786", "type": "SOME_FUTURE_EVENT"}]
             ),
-            headers=AUTH_HEADERS,
         )
 
         assert response.status_code == 200
@@ -195,7 +196,7 @@ class TestWebhookEndpoint:
         response = client.post(
             "/api/webhooks/intervals",
             content=b"not-json{{{",
-            headers={"Content-Type": "application/json", "Authorization": SECRET},
+            headers={"Content-Type": "application/json"},
         )
 
         assert response.status_code == 200
@@ -209,7 +210,6 @@ class TestWebhookEndpoint:
         response = test_client.post(
             "/api/webhooks/intervals",
             json=_webhook_payload(),
-            headers=AUTH_HEADERS,
         )
 
         assert response.status_code == 503
@@ -231,7 +231,6 @@ class TestWebhookEndpoint:
                     {"athlete_id": "i100", "type": "CALENDAR_UPDATED"},
                 ]
             ),
-            headers=AUTH_HEADERS,
         )
 
         assert response.status_code == 200
@@ -241,8 +240,7 @@ class TestWebhookEndpoint:
         """Payload without events field returns 200 (parse error handled)."""
         response = client.post(
             "/api/webhooks/intervals",
-            json={"other_field": "value"},
-            headers=AUTH_HEADERS,
+            json={"secret": SECRET, "other_field": "value"},
         )
 
         # Pydantic validation fails → caught as parse error → 200
