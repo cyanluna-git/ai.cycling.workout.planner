@@ -69,6 +69,15 @@ const disconnectedBootstrap = {
     },
 }
 
+const legacyApiKeyBootstrap: SettingsBootstrapResponse = {
+    ...connectedBootstrap,
+    intervals_connection: {
+        connected: true,
+        method: 'api_key',
+        athlete_id: 'legacy-athlete',
+    },
+}
+
 function createQueryClient() {
     return new QueryClient({
         defaultOptions: {
@@ -158,6 +167,22 @@ describe('SettingsPage', () => {
 
         const statusLines = screen.getAllByText((_, element) => element?.textContent?.includes('Not configured') ?? false)
         expect(statusLines[0]).toHaveTextContent('Status:')
+    })
+
+    it('renders legacy api-key connections as unified OAuth UI', async () => {
+        const queryClient = createQueryClient()
+        mockFetchSettingsBootstrap.mockResolvedValue(legacyApiKeyBootstrap)
+
+        renderSettingsPage(queryClient)
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: /disconnect/i })).toBeInTheDocument()
+        })
+
+        const connectionLines = screen.getAllByText((_, element) => element?.textContent?.includes('Connected via OAuth') ?? false)
+        expect(connectionLines[0]).toHaveTextContent('legacy-athlete')
+        expect(screen.getByText(/^OAuth$/)).toBeInTheDocument()
+        expect(screen.queryByText('API Key')).toBeNull()
     })
 
     it('updates the UI and shared query cache after disconnect', async () => {
