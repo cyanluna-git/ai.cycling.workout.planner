@@ -35,12 +35,6 @@ const DEFAULT_SETTINGS: UserSettingsData = {
     },
 }
 
-function getConnectionMethodLabel(method: string) {
-    if (method === 'api_key') return 'API Key'
-    if (method === 'oauth') return 'OAuth'
-    return method
-}
-
 export function SettingsPage({ onBack }: { onBack: () => void }) {
     const { t } = useTranslation();
     const { session, signOut } = useAuth()
@@ -70,8 +64,6 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
 
     const connectionStatus = settingsBootstrap?.intervals_connection ?? null
     const isConnectionLoading = isLoadingSettingsBootstrap && !connectionStatus
-    const connectionMethodLabel = connectionStatus ? getConnectionMethodLabel(connectionStatus.method) : ''
-
     const handleOAuthConnect = async () => {
         if (!session?.access_token) return;
         setIsOAuthLoading(true);
@@ -295,10 +287,10 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                                 <div className="mb-2 flex justify-center"><PartyPopper className="h-10 w-10 text-primary" /></div>
                                 <p className="text-sm text-muted-foreground">{t('settings.apiConnectedMessage')}</p>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                    {t('oauth.connectedVia', { method: connectionMethodLabel })} &middot; {connectionStatus.athlete_id}
+                                    {t('oauth.connectedVia', { method: 'OAuth' })} &middot; {connectionStatus.athlete_id}
                                 </p>
                                 <span className="inline-block mt-2 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
-                                    {connectionMethodLabel}
+                                    OAuth
                                 </span>
                                 <div className="mt-4">
                                     <Button variant="outline" size="sm" onClick={handleDisconnect} disabled={isDisconnecting}>
