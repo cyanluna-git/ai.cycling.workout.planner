@@ -1,5 +1,7 @@
 """Fitness router - CTL/ATL/TSB and wellness data."""
 
+import asyncio
+
 from fastapi import APIRouter, HTTPException, Depends
 from datetime import date, timedelta
 
@@ -8,7 +10,6 @@ from ..schemas import (
     TrainingMetrics,
     TrainingHistoryPoint,
     WellnessMetrics,
-    AthleteProfile,
     ActivitiesResponse,
     Activity,
     WeeklyCalendarResponse,
@@ -23,16 +24,18 @@ import sys
 sys.path.insert(0, str(__file__).replace("/api/routers/fitness.py", ""))
 
 from src.clients.intervals import IntervalsAPIError
-from src.services.data_processor import DataProcessor
 from .auth import get_current_user
 from ..services.user_api_service import (
     get_user_intervals_client,
     UserApiServiceError,
 )
+from ..services.fitness_snapshot_service import (
+    get_cached_athlete_profile,
+    get_fitness_snapshot,
+)
 from ..services.cache_service import (
     get_cached,
     set_cached,
-    CACHE_KEYS,
 )
 
 router = APIRouter()
@@ -60,79 +63,42 @@ async def get_fitness(
 
     try:
         client = await get_user_intervals_client(user_id)
-        processor = DataProcessor()
-
-        # Fetch data
-        activities = client.get_recent_activities(days=42)
-        wellness_data = client.get_recent_wellness(days=7)
-        athlete_data = client.get_athlete_profile()
-
-        # Calculate metrics
-        training = processor.calculate_training_metrics(activities)
-        ctl_history_raw = processor.calculate_ctl_history(activities, days=7)
-        wellness = processor.analyze_wellness(wellness_data)
-
-        # Extract profile data from nested structure
-        # sportSettings[0] is typically "Ride" settings
-        sport_settings = athlete_data.get("sportSettings", [])
-        ride_settings = next(
-            (s for s in sport_settings if "Ride" in s.get("types", [])),
-            sport_settings[0] if sport_settings else {},
+        snapshot, profile_data = await asyncio.gather(
+            get_fitness_snapshot(user_id, client, refresh=refresh),
+            get_cached_athlete_profile(user_id, client, refresh=refresh),
         )
 
-        ftp = ride_settings.get("ftp")
-        lthr = ride_settings.get("lthr")
-        max_hr = ride_settings.get("max_hr")
-        weight = athlete_data.get("icu_weight")  # weight is in icu_weight, not weight
-
-        # Get eFTP and VO2max from mmp_model if available
-        mmp_model = ride_settings.get("mmp_model", {}) or {}
-        eftp = mmp_model.get("ftp") if mmp_model else None
-        vo2max_estimate = mmp_model.get("vo2max") if mmp_model else None
-
-        # Calculate W/kg if both FTP and weight are available
-        w_per_kg = round(ftp / weight, 2) if ftp and weight else None
-
         training_data = TrainingMetrics(
-            ctl=training.ctl,
-            atl=training.atl,
-            tsb=training.tsb,
-            form_status=training.form_status,
+            ctl=snapshot.training_metrics.ctl,
+            atl=snapshot.training_metrics.atl,
+            tsb=snapshot.training_metrics.tsb,
+            form_status=snapshot.training_metrics.form_status,
             ctl_history=[
-                TrainingHistoryPoint(**point) for point in ctl_history_raw
+                TrainingHistoryPoint(**point) for point in snapshot.ctl_history
             ],
         )
 
         wellness_data = WellnessMetrics(
-            readiness=wellness.readiness,
-            hrv=wellness.hrv,
-            hrv_sdnn=wellness.hrv_sdnn,
-            rhr=wellness.rhr,
-            sleep_hours=wellness.sleep_hours,
-            sleep_score=wellness.sleep_score,
-            sleep_quality=wellness.sleep_quality,
-            weight=wellness.weight,
-            body_fat=wellness.body_fat,
-            vo2max=wellness.vo2max or vo2max_estimate,  # Fallback to mmp_model
-            soreness=wellness.soreness,
-            fatigue=wellness.fatigue,
-            stress=wellness.stress,
-            mood=wellness.mood,
-            motivation=wellness.motivation,
-            spo2=wellness.spo2,
-            systolic=wellness.systolic,
-            diastolic=wellness.diastolic,
-            respiration=wellness.respiration,
-            readiness_score=wellness.readiness_score,
-        )
-
-        profile_data = AthleteProfile(
-            ftp=ftp,
-            max_hr=max_hr,
-            lthr=lthr,
-            weight=weight,
-            w_per_kg=w_per_kg,
-            vo2max=vo2max_estimate,
+            readiness=snapshot.wellness_metrics.readiness,
+            hrv=snapshot.wellness_metrics.hrv,
+            hrv_sdnn=snapshot.wellness_metrics.hrv_sdnn,
+            rhr=snapshot.wellness_metrics.rhr,
+            sleep_hours=snapshot.wellness_metrics.sleep_hours,
+            sleep_score=snapshot.wellness_metrics.sleep_score,
+            sleep_quality=snapshot.wellness_metrics.sleep_quality,
+            weight=snapshot.wellness_metrics.weight,
+            body_fat=snapshot.wellness_metrics.body_fat,
+            vo2max=snapshot.wellness_metrics.vo2max or profile_data.vo2max,
+            soreness=snapshot.wellness_metrics.soreness,
+            fatigue=snapshot.wellness_metrics.fatigue,
+            stress=snapshot.wellness_metrics.stress,
+            mood=snapshot.wellness_metrics.mood,
+            motivation=snapshot.wellness_metrics.motivation,
+            spo2=snapshot.wellness_metrics.spo2,
+            systolic=snapshot.wellness_metrics.systolic,
+            diastolic=snapshot.wellness_metrics.diastolic,
+            respiration=snapshot.wellness_metrics.respiration,
+            readiness_score=snapshot.wellness_metrics.readiness_score,
         )
 
         response = FitnessResponse(
@@ -147,7 +113,6 @@ async def get_fitness(
         # Also cache individual components with their own TTLs
         set_cached(user_id, "fitness:training", training_data)
         set_cached(user_id, "fitness:wellness", wellness_data)
-        set_cached(user_id, "fitness:profile", profile_data)
 
         return response
     except UserApiServiceError as e:

@@ -111,7 +111,7 @@ class TestWebhookEndpoint:
         assert response.status_code == 200
         mock_clear.assert_called_once_with(
             "user-uuid-456",
-            keys=["fitness:complete", "fitness:wellness"],
+            keys=["fitness:snapshot", "fitness:complete", "fitness:wellness"],
         )
 
     @patch("api.routers.webhooks.get_user_id_by_athlete_id", new_callable=AsyncMock)

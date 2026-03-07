@@ -1,5 +1,6 @@
 """Workout router - generate and create workouts."""
 
+import asyncio
 import logging
 from fastapi import APIRouter, HTTPException, Depends
 from datetime import date, timedelta
@@ -32,6 +33,7 @@ from ..services.user_api_service import (
 )
 from ..services.cache_service import clear_user_cache
 from ..services.audit_service import log_audit_event, AuditEventType
+from ..services.fitness_snapshot_service import get_fitness_snapshot
 from ..services.recommendation_history_service import get_recent_profile_ids
 
 logger = logging.getLogger(__name__)
@@ -72,11 +74,12 @@ async def generate_workout(
             start_of_week -= timedelta(days=1)
 
         yesterday = today - timedelta(days=1)
-        recent_profile_ids = get_recent_profile_ids(supabase, user["id"])
-
-        # Get current metrics
-        activities = intervals.get_recent_activities(days=42)
-        wellness_data = intervals.get_recent_wellness(days=28)
+        snapshot, recent_profile_ids = await asyncio.gather(
+            get_fitness_snapshot(user["id"], intervals, processor=processor),
+            asyncio.to_thread(get_recent_profile_ids, supabase, user["id"]),
+        )
+        activities = snapshot.activities
+        wellness_data = snapshot.wellness_entries
 
         # --- Acute fatigue detection ---
         fatigue_signal = None
@@ -126,8 +129,8 @@ async def generate_workout(
             == yesterday.strftime("%Y-%m-%d")
         )
 
-        training_metrics = processor.calculate_training_metrics(activities)
-        wellness_metrics = processor.analyze_wellness(wellness_data)
+        training_metrics = snapshot.training_metrics
+        wellness_metrics = snapshot.wellness_metrics
 
         # Generate workout using enhanced protocol-based approach
         generator = WorkoutGenerator(
@@ -244,6 +247,7 @@ async def create_workout(
         # Clear cache for this user (calendar will have new workout)
         clear_user_cache(user["id"], keys=[
             "calendar",
+            "fitness:snapshot",
             "fitness:complete",
             "fitness:training",
             "fitness:wellness"

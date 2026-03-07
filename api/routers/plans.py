@@ -920,7 +920,13 @@ async def generate_weekly_plan(
     # Clear both granular and complete fitness cache keys
     clear_user_cache(
         user["id"],
-        keys=["calendar", "fitness:complete", "fitness:training", "fitness:wellness"],
+        keys=[
+            "calendar",
+            "fitness:snapshot",
+            "fitness:complete",
+            "fitness:training",
+            "fitness:wellness",
+        ],
     )
     logger.info(f"Cleared cache for user {user['id'][:8]}... after plan generation")
 
@@ -1236,7 +1242,13 @@ async def regenerate_today_workout(
     # Clear cache to ensure fresh data on next request
     clear_user_cache(
         user["id"],
-        keys=["calendar", "fitness:complete", "fitness:training", "fitness:wellness"],
+        keys=[
+            "calendar",
+            "fitness:snapshot",
+            "fitness:complete",
+            "fitness:training",
+            "fitness:wellness",
+        ],
     )
     logger.info(
         f"Cleared cache for user {user['id'][:8]}... after workout regeneration"
@@ -1430,6 +1442,7 @@ async def register_weekly_plan_to_intervals(
             user["id"],
             keys=[
                 "calendar",
+                "fitness:snapshot",
                 "fitness:complete",
                 "fitness:training",
                 "fitness:wellness",

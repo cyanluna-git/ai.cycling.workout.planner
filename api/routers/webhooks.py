@@ -44,7 +44,11 @@ INTERVALS_WEBHOOK_SECRET = os.getenv("INTERVALS_WEBHOOK_SECRET")
 EVENT_CACHE_MAP: dict[str, list[str] | None] = {
     "ACTIVITY_UPLOADED": None,  # Affects fitness/training/activities/calendar
     "ACTIVITY_ANALYZED": None,  # TSS recalculated, affects everything
-    "WELLNESS_UPDATED": ["fitness:complete", "fitness:wellness"],
+    "WELLNESS_UPDATED": [
+        "fitness:snapshot",
+        "fitness:complete",
+        "fitness:wellness",
+    ],
     "CALENDAR_UPDATED": ["calendar"],
 }
 

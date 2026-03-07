@@ -29,6 +29,7 @@ DEFAULT_TTL = 2 * 60 * 60  # 2 hours (reduced from 6 hours)
 # Cache key prefixes
 CACHE_KEYS = {
     "fitness": "fitness",
+    "fitness_snapshot": "fitness:snapshot",
     "wellness": "wellness",
     "activities": "activities",
     "profile": "profile",
