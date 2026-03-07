@@ -7,12 +7,12 @@ API request returns fresh data.
 Webhook is configured once in the Intervals.icu OAuth app management UI.
 All authorized athletes' events arrive at this single endpoint.
 
-Verification: Intervals.icu sends the configured "Webhook Authorization Header"
-value as the HTTP Authorization header with each POST. We compare this against
-INTERVALS_WEBHOOK_SECRET env var.
+Verification: Intervals.icu sends the configured webhook secret in the payload
+body. We compare `payload.secret` against `INTERVALS_WEBHOOK_SECRET`.
 
 Payload format (from Intervals.icu):
     {
+        "secret": "ooKeodacie8I",
         "events": [
             {
                 "athlete_id": "i154786",
@@ -62,8 +62,9 @@ class WebhookEvent(BaseModel):
 class WebhookPayload(BaseModel):
     """Intervals.icu webhook payload."""
 
+    secret: str
     events: list[WebhookEvent]
-    # Allow extra fields (secret body field, etc.) for forward-compatibility
+    # Allow extra fields for forward-compatibility.
     model_config = {"extra": "allow"}
 
 
@@ -71,7 +72,7 @@ class WebhookPayload(BaseModel):
 async def receive_intervals_webhook(request: Request) -> dict[str, str]:
     """Receive webhook events from Intervals.icu.
 
-    - Verifies Authorization header against INTERVALS_WEBHOOK_SECRET env var.
+    - Verifies payload.secret against INTERVALS_WEBHOOK_SECRET env var.
     - For each event, looks up the user by athlete_id and clears relevant cache.
     - Always returns 200 to prevent Intervals.icu from retrying.
     """
@@ -84,16 +85,6 @@ async def receive_intervals_webhook(request: Request) -> dict[str, str]:
             media_type="application/json",
         )
 
-    # Verify Authorization header (set in Intervals.icu "Webhook Authorization Header")
-    auth_header = request.headers.get("Authorization", "")
-    if auth_header != INTERVALS_WEBHOOK_SECRET:
-        logger.warning("Webhook Authorization header mismatch — rejecting request")
-        return Response(
-            content='{"error": "invalid secret"}',
-            status_code=403,
-            media_type="application/json",
-        )
-
     # Parse payload — return 200 even on parse errors to prevent retries
     try:
         body = await request.json()
@@ -101,6 +92,14 @@ async def receive_intervals_webhook(request: Request) -> dict[str, str]:
     except Exception as e:
         logger.warning(f"Webhook payload parse error: {e}")
         return {"status": "ok"}
+
+    if payload.secret != INTERVALS_WEBHOOK_SECRET:
+        logger.warning("Webhook secret mismatch — rejecting request")
+        return Response(
+            content='{"error": "invalid secret"}',
+            status_code=403,
+            media_type="application/json",
+        )
 
     # Process events
     processed = 0
