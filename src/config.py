@@ -35,6 +35,8 @@ class UserProfile:
     max_hr: int  # Maximum Heart Rate
     lthr: int  # Lactate Threshold Heart Rate
     training_goal: str
+    training_style: str = "auto"
+    training_focus: str = "maintain"
     exclude_barcode_workouts: bool = False  # Exclude barcode-style intervals (40/20, 30/30)
 
 
@@ -122,6 +124,8 @@ def load_config(env_file: Optional[str] = None) -> Config:
             max_hr=int(os.getenv("USER_MAX_HR", "185")),
             lthr=int(os.getenv("USER_LTHR", "165")),
             training_goal=os.getenv("TRAINING_GOAL", ""),
+            training_style=os.getenv("TRAINING_STYLE", "auto"),
+            training_focus=os.getenv("TRAINING_FOCUS", "maintain"),
         ),
         scheduler=SchedulerConfig(
             schedule_time=os.getenv("SCHEDULE_TIME", "06:00"),

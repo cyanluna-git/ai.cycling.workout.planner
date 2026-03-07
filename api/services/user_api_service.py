@@ -352,6 +352,8 @@ async def get_user_profile(user_id: str) -> UserProfile:
         max_hr=settings.max_hr,
         lthr=settings.lthr,
         training_goal=settings.training_goal,
+        training_style=settings.training_style,
+        training_focus=settings.training_focus,
         exclude_barcode_workouts=settings.exclude_barcode_workouts,
     )
 

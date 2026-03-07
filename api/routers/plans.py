@@ -1154,6 +1154,8 @@ async def regenerate_today_workout(
         max_hr=user_settings.get("max_hr", 190),
         lthr=user_settings.get("lthr", 170),
         training_goal=user_settings.get("training_goal", "General"),
+        training_style=user_settings.get("training_style", "auto"),
+        training_focus=user_settings.get("training_focus", "maintain"),
         exclude_barcode_workouts=user_settings.get("exclude_barcode_workouts", False),
     )
 

@@ -94,6 +94,57 @@ class WorkoutGenerator:
         self.max_duration = max_duration_minutes
         self.validator = WorkoutValidator(max_duration_minutes=max_duration_minutes * 2)
 
+    @staticmethod
+    def _normalize_training_focus(training_focus: Optional[str]) -> str:
+        normalized = (training_focus or "maintain").strip().lower()
+        if normalized in {"recovery", "maintain", "build"}:
+            return normalized
+        return "maintain"
+
+    @staticmethod
+    def _normalize_user_notes(notes: str) -> str:
+        return " ".join(notes.split())
+
+    def _resolve_training_style(self, tsb: float, requested_style: str) -> str:
+        normalized_request = (requested_style or "").strip().lower()
+        if normalized_request and normalized_request != "auto":
+            return normalized_request
+
+        profile_style = (getattr(self.profile, "training_style", "auto") or "auto").strip().lower()
+        if profile_style and profile_style != "auto":
+            return profile_style
+
+        training_focus = self._normalize_training_focus(
+            getattr(self.profile, "training_focus", "maintain")
+        )
+        if training_focus == "recovery":
+            return "endurance"
+        if tsb < -20:
+            return "endurance"
+        if tsb < -10:
+            return "sweetspot"
+        if tsb >= 10:
+            return "polarized"
+        return "sweetspot"
+
+    def _resolve_intensity(self, tsb: float, requested_intensity: str) -> str:
+        normalized_request = (requested_intensity or "").strip().lower()
+        if normalized_request and normalized_request != "auto":
+            return normalized_request
+
+        training_focus = self._normalize_training_focus(
+            getattr(self.profile, "training_focus", "maintain")
+        )
+        if training_focus == "recovery":
+            return "easy"
+        if tsb < -20:
+            return "easy"
+        if tsb < -10:
+            return "easy"
+        if tsb < 5:
+            return "moderate"
+        return "hard"
+
     def _convert_profile_steps_to_text(self, steps: list, ftp: int) -> str:
         """Convert profile steps (in watts) to Intervals.icu text format.
         
@@ -294,6 +345,8 @@ class WorkoutGenerator:
         weekday: str = "",
         wellness_text: str = "",
         training_style: str = "auto",
+        training_focus: str = "maintain",
+        user_notes: str = "",
     ) -> dict:
         """Use LLM to select a profile from Profile DB candidates.
         
@@ -370,6 +423,8 @@ Guidelines:
 """
             
             variety_seed = random.randint(1, 1000)
+            style_desc = STYLE_DESCRIPTIONS.get(training_style, training_style)
+            notes_text = user_notes or "No additional user notes."
             user_prompt = f"""**Available Workout Profiles:**
 {profile_candidates}
 
@@ -382,11 +437,16 @@ Guidelines:
 - Weekly TSS so far: {weekly_tss}
 - Yesterday's load: {yesterday_load} TSS
 - Target duration: ~{duration} minutes
+- Training style: {training_style} ({style_desc})
+- Training focus: {training_focus}
 - Training goal: {goal}
 - Intensity preference: {intensity}
 
 **Wellness:**
 {wellness_text}
+
+**User Notes:**
+{notes_text}
 
 Select the best profile and provide customization if needed.
 (Variety seed: {variety_seed} — use this to vary your selection)
@@ -427,9 +487,16 @@ Select the best profile and provide customization if needed.
         indoor: bool = False,
         weekday: str = "",
         wellness_text: str = "",
+        training_style: str = "auto",
+        training_focus: str = "maintain",
+        user_notes: str = "",
     ) -> dict:
         """Use LLM to select module keys from inventory."""
-        inventory_text = get_module_inventory_text(exclude_barcode=exclude_barcode, intensity=intensity)
+        inventory_text = get_module_inventory_text(
+            exclude_barcode=exclude_barcode,
+            training_style=training_style,
+            intensity=intensity,
+        )
 
         # Get balance hints for variety enforcement
         try:
@@ -467,6 +534,11 @@ Select the best profile and provide customization if needed.
             duration=duration,
             goal=goal,
             intensity=intensity,
+            training_style=training_style,
+            training_style_description=STYLE_DESCRIPTIONS.get(training_style, training_style),
+            training_focus=training_focus,
+            intensity_description=INTENSITY_DESCRIPTIONS.get(intensity, intensity),
+            user_notes=user_notes or "No additional user notes.",
             balance_hints=balance_hints,
         )
 
@@ -527,17 +599,13 @@ Select the best profile and provide customization if needed.
 
         # Get TSB for intensity adjustment
         tsb = training_metrics.tsb if training_metrics.tsb is not None else 0.0
+        training_focus = self._normalize_training_focus(
+            getattr(self.profile, "training_focus", "maintain")
+        )
+        resolved_style = self._resolve_training_style(tsb, style)
+        notes_text = self._normalize_user_notes(notes)
 
-        # Determine intensity based on TSB if auto
-        if intensity == "auto" or not intensity:
-            if tsb < -20:
-                intensity = "easy"
-            elif tsb < -10:
-                intensity = "easy"
-            elif tsb < 5:
-                intensity = "moderate"
-            else:
-                intensity = "hard"
+        intensity = self._resolve_intensity(tsb, intensity)
 
         # --- Acute fatigue override ---
         # Force intensity to "easy" when HRV/RHR signals acute fatigue,
@@ -591,7 +659,9 @@ Select the best profile and provide customization if needed.
                 indoor=indoor,
                 weekday=weekday_str,
                 wellness_text=wellness_text,
-                training_style=style,
+                training_style=resolved_style,
+                training_focus=training_focus,
+                user_notes=notes_text,
             )
 
             if profile_selection and "profile_id" in profile_selection:
@@ -680,6 +750,9 @@ Select the best profile and provide customization if needed.
                 indoor=indoor,
                 weekday=weekday_str,
                 wellness_text=wellness_text,
+                training_style=resolved_style,
+                training_focus=training_focus,
+                user_notes=notes_text,
             )
 
             logger.info(

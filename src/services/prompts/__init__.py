@@ -113,8 +113,14 @@ MODULE_SELECTOR_USER = """# Block Library (filtered for {intensity} intensity)
 - **Weekly TSS (Mon-Sun):** {weekly_tss}
 - **Yesterday's Load:** {yesterday_load}
 - **Time Available:** {duration} min
+- **Training Style:** {training_style} ({training_style_description})
+- **Training Focus:** {training_focus}
 - **Intensity Preference:** {intensity}
+- **Intensity Guidance:** {intensity_description}
 - **Primary Goal:** {goal}
+
+# User Notes
+{user_notes}
 
 # Variety Hints (least-used modules to consider)
 {balance_hints}
