@@ -16,13 +16,19 @@ sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-from src.clients.supabase_client import get_supabase_admin_client
 from .auth import get_current_user
 from api.services.power_converter import convert_power_to_watts
 from ..services.cache_service import clear_user_cache
+from ..services.recommendation_history_service import get_recent_profile_ids
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+def _get_supabase_admin_client():
+    from src.clients.supabase_client import get_supabase_admin_client
+
+    return get_supabase_admin_client()
 
 
 # --- Schemas ---
@@ -527,7 +533,7 @@ async def get_current_weekly_plan(
     user: dict = Depends(get_current_user), week_start_date: Optional[str] = None
 ):
     """Get the current week's plan (or specific week if week_start_date provided)."""
-    supabase = get_supabase_admin_client()
+    supabase = _get_supabase_admin_client()
 
     if week_start_date:
         week_start = datetime.strptime(week_start_date, "%Y-%m-%d").date()
@@ -685,7 +691,7 @@ async def generate_weekly_plan(
         logger.warning(f"Rate limit exceeded for user {user['id']}")
         raise HTTPException(status_code=429, detail=str(e))
 
-    supabase = get_supabase_admin_client()
+    supabase = _get_supabase_admin_client()
 
     # Determine target week
     if request.week_start:
@@ -790,6 +796,8 @@ async def generate_weekly_plan(
             f"completed_tss={completed_tss}, remaining_available={remaining_available}"
         )
 
+    recent_profile_ids = get_recent_profile_ids(supabase, user["id"], limit=8)
+
     generator = WeeklyPlanGenerator(llm_client, user_settings)
     weekly_plan = generator.generate_weekly_plan(
         ctl=ctl,
@@ -806,6 +814,7 @@ async def generate_weekly_plan(
         remaining_days_only=remaining_days_only,
         completed_tss=completed_tss,
         start_day_index=start_day_index,
+        recent_profile_ids=recent_profile_ids,
     )
 
     # Delete existing plan for this week if any
@@ -922,7 +931,7 @@ async def generate_weekly_plan(
 @router.get("/plans/today", response_model=TodayWorkoutResponse)
 async def get_today_workout(user: dict = Depends(get_current_user)):
     """Get today's planned workout."""
-    supabase = get_supabase_admin_client()
+    supabase = _get_supabase_admin_client()
     today = date.today()
 
     # Get today's workout
@@ -1090,7 +1099,7 @@ async def regenerate_today_workout(
         logger.warning(f"Rate limit exceeded for user {user['id']}")
         raise HTTPException(status_code=429, detail=str(e))
 
-    supabase = get_supabase_admin_client()
+    supabase = _get_supabase_admin_client()
     today = date.today()
 
     # Get today's existing workout
@@ -1166,7 +1175,10 @@ async def regenerate_today_workout(
     )
 
     # Create training metrics (import at function scope to avoid issues)
-    from src.services.data_processor import TrainingMetrics as TM, WellnessMetrics as WM
+    from src.services.data_processor import (
+        TrainingMetrics as TM,
+        build_placeholder_wellness_metrics,
+    )
 
     training_metrics = TM(
         ctl=ctl,
@@ -1175,12 +1187,8 @@ async def regenerate_today_workout(
     )
 
     # Create minimal wellness metrics (we don't have detailed data here)
-    wellness_metrics = WM(
-        readiness="Unknown",
-        hrv=None,
-        rhr=None,
-        sleep_hours=None,
-    )
+    wellness_metrics = build_placeholder_wellness_metrics()
+    recent_profile_ids = get_recent_profile_ids(supabase, user["id"])
 
     # Generate new workout
     new_workout = generator.generate_enhanced(
@@ -1189,6 +1197,7 @@ async def regenerate_today_workout(
         target_date=today,
         style=user_settings.get("training_style", "auto"),
         duration=user_settings.get("preferred_duration", 60),
+        recent_profile_ids=recent_profile_ids,
     )
 
     # Prepare coaching dict for DB storage
@@ -1261,7 +1270,7 @@ async def regenerate_today_workout(
 @router.put("/plans/daily/{workout_id}/skip")
 async def skip_workout(workout_id: str, user: dict = Depends(get_current_user)):
     """Mark a workout as skipped."""
-    supabase = get_supabase_admin_client()
+    supabase = _get_supabase_admin_client()
 
     # Verify ownership
     workout_result = (
@@ -1293,7 +1302,7 @@ async def register_weekly_plan_to_intervals(
     """Register all workouts in a weekly plan to Intervals.icu."""
     from api.services.user_api_service import get_user_intervals_client
 
-    supabase = get_supabase_admin_client()
+    supabase = _get_supabase_admin_client()
 
     # Get the weekly plan
     plan_result = (
@@ -1442,7 +1451,7 @@ async def register_weekly_plan_to_intervals(
 @router.delete("/plans/weekly/{plan_id}")
 async def delete_weekly_plan(plan_id: str, user: dict = Depends(get_current_user)):
     """Delete a weekly plan and its workouts."""
-    supabase = get_supabase_admin_client()
+    supabase = _get_supabase_admin_client()
 
     # Verify ownership
     plan_result = (
@@ -1476,7 +1485,7 @@ async def sync_weekly_plan_with_intervals(
     """
     from api.services.user_api_service import get_user_intervals_client
 
-    supabase = get_supabase_admin_client()
+    supabase = _get_supabase_admin_client()
 
     # Get the weekly plan
     plan_result = (
@@ -1668,7 +1677,7 @@ def _is_plan_finalized(plan_data: dict, week_end_str: str) -> bool:
 @router.get("/plans/achievements")
 async def get_achievements(user: dict = Depends(get_current_user)):
     """Get user's TSS achievement history, streak, and badges."""
-    supabase = get_supabase_admin_client()
+    supabase = _get_supabase_admin_client()
 
     # Fetch recent weekly plans (up to 52 weeks)
     recent_plans_result = (
@@ -1783,7 +1792,7 @@ async def get_achievements(user: dict = Depends(get_current_user)):
 @router.post("/plans/weekly/{plan_id}/finalize")
 async def finalize_weekly_plan(plan_id: str, user: dict = Depends(get_current_user)):
     """Finalize a weekly plan and calculate achievement."""
-    supabase = get_supabase_admin_client()
+    supabase = _get_supabase_admin_client()
 
     # Verify ownership
     plan_result = (

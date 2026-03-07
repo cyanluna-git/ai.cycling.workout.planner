@@ -70,6 +70,32 @@ class WellnessMetrics:
     readiness_score: Optional[float]  # Computed readiness score (0-100)
 
 
+def build_placeholder_wellness_metrics(readiness: str = "Unknown") -> WellnessMetrics:
+    """Return a fully-populated empty wellness snapshot."""
+    return WellnessMetrics(
+        hrv=None,
+        hrv_sdnn=None,
+        rhr=None,
+        sleep_hours=None,
+        sleep_score=None,
+        sleep_quality=None,
+        readiness=readiness,
+        weight=None,
+        body_fat=None,
+        vo2max=None,
+        soreness=None,
+        fatigue=None,
+        stress=None,
+        mood=None,
+        motivation=None,
+        spo2=None,
+        systolic=None,
+        diastolic=None,
+        respiration=None,
+        readiness_score=None,
+    )
+
+
 class DataProcessor:
     """Process training and wellness data.
 
@@ -241,28 +267,7 @@ class DataProcessor:
         """
         if not wellness_data:
             logger.warning("No wellness data provided")
-            return WellnessMetrics(
-                hrv=None,
-                hrv_sdnn=None,
-                rhr=None,
-                sleep_hours=None,
-                sleep_score=None,
-                sleep_quality=None,
-                readiness="Unknown",
-                weight=None,
-                body_fat=None,
-                vo2max=None,
-                soreness=None,
-                fatigue=None,
-                stress=None,
-                mood=None,
-                motivation=None,
-                spo2=None,
-                systolic=None,
-                diastolic=None,
-                respiration=None,
-                readiness_score=None,
-            )
+            return build_placeholder_wellness_metrics()
 
         # Sort wellness entries by date descending (newest first)
         sorted_data = sorted(

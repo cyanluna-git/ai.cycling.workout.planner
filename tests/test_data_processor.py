@@ -3,7 +3,12 @@
 import pytest
 from datetime import date, timedelta
 
-from src.services.data_processor import DataProcessor, TrainingMetrics, WellnessMetrics
+from src.services.data_processor import (
+    DataProcessor,
+    TrainingMetrics,
+    WellnessMetrics,
+    build_placeholder_wellness_metrics,
+)
 
 
 @pytest.fixture
@@ -197,6 +202,19 @@ class TestDataProcessor:
         result = processor.check_existing_workout(events, date(2024, 12, 15))
 
         assert result is None
+
+    def test_build_placeholder_wellness_metrics_matches_dataclass_contract(self):
+        """Placeholder wellness snapshots should satisfy the full dataclass shape."""
+        result = build_placeholder_wellness_metrics()
+
+        assert isinstance(result, WellnessMetrics)
+        assert result.readiness == "Unknown"
+        assert result.hrv is None
+        assert result.hrv_sdnn is None
+        assert result.rhr is None
+        assert result.sleep_hours is None
+        assert result.weight is None
+        assert result.readiness_score is None
 
 
 class TestCtlHistory:

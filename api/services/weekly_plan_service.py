@@ -308,6 +308,7 @@ class WeeklyPlanGenerator:
         remaining_days_only: bool = False,
         completed_tss: int = 0,
         start_day_index: int = 0,
+        recent_profile_ids: Optional[List[int]] = None,
     ) -> WeeklyPlan:
         """Generate a complete 7-day workout plan.
 
@@ -516,10 +517,25 @@ class WeeklyPlanGenerator:
             duration=candidate_center,
             duration_buffer=candidate_buffer,
             limit=50,
-            exclude_profile_ids=None,  # TODO: Pass recently used profile IDs from this week
+            exclude_profile_ids=recent_profile_ids,
             ftp=ftp,
             weight=weight,
         )
+
+        if not candidates and recent_profile_ids:
+            logger.info(
+                "No weekly profile candidates left after excluding recent profiles; retrying without exclusions"
+            )
+            profile_candidates_text, candidates = get_profile_candidates_for_llm(
+                tsb=tsb,
+                training_style=training_style,
+                duration=candidate_center,
+                duration_buffer=candidate_buffer,
+                limit=50,
+                exclude_profile_ids=None,
+                ftp=ftp,
+                weight=weight,
+            )
 
         # Fallback to legacy module system if no profiles available
         if not candidates:

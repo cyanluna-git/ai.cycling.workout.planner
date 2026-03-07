@@ -347,6 +347,7 @@ class WorkoutGenerator:
         training_style: str = "auto",
         training_focus: str = "maintain",
         user_notes: str = "",
+        exclude_profile_ids: Optional[list[int]] = None,
     ) -> dict:
         """Use LLM to select a profile from Profile DB candidates.
         
@@ -370,8 +371,21 @@ class WorkoutGenerator:
                 duration=duration,
                 duration_buffer=30,
                 limit=50,
-                exclude_profile_ids=None,  # TODO: Pass recently used profile IDs
+                exclude_profile_ids=exclude_profile_ids,
             )
+
+            if not candidates and exclude_profile_ids:
+                logger.info(
+                    "No profile candidates left after excluding recent profiles; retrying without exclusions"
+                )
+                profile_candidates, candidates = get_profile_candidates_for_llm(
+                    tsb=tsb,
+                    training_style=training_style,
+                    duration=duration,
+                    duration_buffer=30,
+                    limit=50,
+                    exclude_profile_ids=None,
+                )
             
             if not candidates:
                 logger.info("No profile candidates found, will use module assembly fallback")
@@ -573,6 +587,7 @@ Select the best profile and provide customization if needed.
         weekly_tss: int = 0,
         yesterday_load: int = 0,
         fatigue_override: Optional[FatigueSignal] = None,
+        recent_profile_ids: Optional[list[int]] = None,
     ) -> GeneratedWorkout:
         """Generate a workout using Profile DB (preferred) or module assembly (fallback).
 
@@ -662,6 +677,7 @@ Select the best profile and provide customization if needed.
                 training_style=resolved_style,
                 training_focus=training_focus,
                 user_notes=notes_text,
+                exclude_profile_ids=recent_profile_ids,
             )
 
             if profile_selection and "profile_id" in profile_selection:

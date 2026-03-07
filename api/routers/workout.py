@@ -32,6 +32,7 @@ from ..services.user_api_service import (
 )
 from ..services.cache_service import clear_user_cache
 from ..services.audit_service import log_audit_event, AuditEventType
+from ..services.recommendation_history_service import get_recent_profile_ids
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -53,6 +54,8 @@ async def generate_workout(
         llm = get_server_llm_client()
         user_profile = await get_user_profile(user["id"])
         processor = get_data_processor()
+        from src.clients.supabase_client import get_supabase_admin_client
+        supabase = get_supabase_admin_client()
 
         # Parse target date
         if request.target_date:
@@ -69,6 +72,7 @@ async def generate_workout(
             start_of_week -= timedelta(days=1)
 
         yesterday = today - timedelta(days=1)
+        recent_profile_ids = get_recent_profile_ids(supabase, user["id"])
 
         # Get current metrics
         activities = intervals.get_recent_activities(days=42)
@@ -142,6 +146,7 @@ async def generate_workout(
             weekly_tss=weekly_tss,
             yesterday_load=yesterday_load,
             fatigue_override=fatigue_signal,
+            recent_profile_ids=recent_profile_ids,
         )
 
         # Parse workout text to extract steps

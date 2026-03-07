@@ -183,6 +183,35 @@ class TestBackwardCompatibility:
         assert len(plan.daily_plans) >= 7
 
 
+class TestRecentProfileExclusions:
+    def test_weekly_plan_retries_recent_profile_exclusions(self, monkeypatch):
+        from api.services import workout_profile_service
+
+        gen = _make_generator({"training_style": "sweetspot", "training_focus": "maintain", "preferred_duration": 60})
+        gen.llm.generate.return_value = _mock_llm_response()
+        candidate_calls = []
+
+        def fake_candidates(**kwargs):
+            candidate_calls.append(kwargs["exclude_profile_ids"])
+            if kwargs["exclude_profile_ids"]:
+                return "(No profiles available)", []
+            return ("1. Example Candidate", [{"id": 65, "name": "Example"}])
+
+        monkeypatch.setattr(workout_profile_service, "get_profile_candidates_for_llm", fake_candidates)
+
+        plan = gen.generate_weekly_plan(
+            ctl=50.0,
+            atl=55.0,
+            tsb=-5.0,
+            form_status="Neutral",
+            week_start=date(2026, 2, 16),
+            recent_profile_ids=[65, 67],
+        )
+
+        assert isinstance(plan, WeeklyPlan)
+        assert candidate_calls == [[65, 67], None]
+
+
 # ---------------------------------------------------------------------------
 # Weekly TSS Target
 # ---------------------------------------------------------------------------

@@ -226,3 +226,34 @@ def test_generate_enhanced_fatigue_override_still_forces_easy(monkeypatch):
     )
 
     assert captured["intensity"] == "easy"
+
+
+def test_generate_enhanced_retries_recent_profile_exclusions_then_falls_back(monkeypatch):
+    from api.services import workout_profile_service
+
+    generator = make_generator()
+    candidate_calls = []
+
+    def fake_candidates(**kwargs):
+        candidate_calls.append(kwargs["exclude_profile_ids"])
+        return "(No profiles available)", []
+
+    def fake_module_selector(self, **kwargs):
+        return {
+            "workout_name": "Fallback Endurance",
+            "design_goal": "Keep moving",
+            "selected_modules": ["ramp_standard", "endurance_20min", "flush_and_fade"],
+        }
+
+    monkeypatch.setattr(workout_profile_service, "get_profile_candidates_for_llm", fake_candidates)
+    monkeypatch.setattr(WorkoutGenerator, "_select_modules_with_llm", fake_module_selector)
+
+    workout = generator.generate_enhanced(
+        training_metrics=sample_training_metrics(),
+        wellness_metrics=sample_wellness_metrics(),
+        duration=40,
+        recent_profile_ids=[26, 65],
+    )
+
+    assert candidate_calls == [[26, 65], None]
+    assert workout.source == "module_assembly"

@@ -12,8 +12,6 @@ sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-from src.clients.supabase_client import get_supabase_client
-
 router = APIRouter()
 security = HTTPBearer()
 
@@ -47,12 +45,18 @@ class UserResponse(BaseModel):
 # --- Helper Functions ---
 
 
+def _get_supabase_client():
+    from src.clients.supabase_client import get_supabase_client
+
+    return get_supabase_client()
+
+
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> dict:
     """Verify JWT token and return user info."""
     token = credentials.credentials
-    supabase = get_supabase_client()
+    supabase = _get_supabase_client()
 
     try:
         # Verify token with Supabase
@@ -70,7 +74,7 @@ def get_current_user(
 @router.post("/auth/signup", response_model=AuthResponse)
 async def signup(request: SignUpRequest):
     """Create a new user account."""
-    supabase = get_supabase_client()
+    supabase = _get_supabase_client()
 
     try:
         response = supabase.auth.sign_up(
@@ -96,7 +100,7 @@ async def signup(request: SignUpRequest):
 @router.post("/auth/login", response_model=AuthResponse)
 async def login(request: LoginRequest):
     """Login with email and password."""
-    supabase = get_supabase_client()
+    supabase = _get_supabase_client()
 
     try:
         response = supabase.auth.sign_in_with_password(
@@ -122,7 +126,7 @@ async def login(request: LoginRequest):
 @router.post("/auth/logout")
 async def logout(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Logout current user."""
-    supabase = get_supabase_client()
+    supabase = _get_supabase_client()
 
     try:
         supabase.auth.sign_out()
