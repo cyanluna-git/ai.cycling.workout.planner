@@ -492,7 +492,6 @@ class WeeklyPlanGenerator:
         # Range covers the full span of daily duration targets so the LLM has
         # both short weekday profiles and long weekend profiles to choose from.
         from api.services.workout_profile_service import get_profile_candidates_for_llm
-        import random
 
         active_durations = [v for v in daily_duration_targets.values() if v > 0]
         if active_durations:
@@ -546,7 +545,6 @@ class WeeklyPlanGenerator:
             )
             profile_candidates_text = "(Using legacy module system - no profiles available)"
         else:
-            random.shuffle(candidates)
             module_inventory = ""  # Not used in profile mode
 
         # Build user prompt

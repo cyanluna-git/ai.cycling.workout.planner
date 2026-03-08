@@ -13,6 +13,10 @@ from typing import List, Dict, Any, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
+PROFILE_FETCH_MULTIPLIER = 4
+MIN_PROFILE_SAMPLE_WINDOW = 24
+MAX_PROFILE_SAMPLE_WINDOW = 120
+
 
 class WorkoutProfileService:
     """Service for querying and applying workout profiles from DB."""
@@ -32,6 +36,28 @@ class WorkoutProfileService:
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         return conn
+
+    def _resolve_fetch_limit(self, limit: int) -> int:
+        """Return a bounded fetch window for local candidate sampling."""
+        return max(
+            limit,
+            min(
+                MAX_PROFILE_SAMPLE_WINDOW,
+                max(MIN_PROFILE_SAMPLE_WINDOW, limit * PROFILE_FETCH_MULTIPLIER),
+            ),
+        )
+
+    def _sample_candidates(
+        self, profiles: List[Dict[str, Any]], limit: int
+    ) -> List[Dict[str, Any]]:
+        """Return a randomized subset without SQL-level RANDOM()."""
+        if not profiles:
+            return []
+        if len(profiles) <= limit:
+            selected = list(profiles)
+            random.shuffle(selected)
+            return selected
+        return random.sample(profiles, k=limit)
 
     def get_candidates(
         self,
@@ -104,9 +130,9 @@ class WorkoutProfileService:
             query += f" AND id NOT IN ({placeholders})"
             params.extend(exclude_profile_ids)
 
-        # Use RANDOM() for variety and avoid bias
-        query += " ORDER BY RANDOM() LIMIT ?"
-        params.append(limit)
+        fetch_limit = self._resolve_fetch_limit(limit)
+        query += " ORDER BY id DESC LIMIT ?"
+        params.append(fetch_limit)
 
         try:
             conn = self._get_connection()
@@ -133,8 +159,13 @@ class WorkoutProfileService:
                         profile["tags_list"] = []
                 profiles.append(profile)
 
-            logger.info(f"Found {len(profiles)} profile candidates")
-            return profiles
+            sampled_profiles = self._sample_candidates(profiles, limit)
+            logger.info(
+                "Found %s raw profile candidates, returning %s sampled candidates",
+                len(profiles),
+                len(sampled_profiles),
+            )
+            return sampled_profiles
 
         except Exception as e:
             logger.error(f"Error querying profiles: {e}")
@@ -729,9 +760,6 @@ def get_profile_candidates_for_llm(
     
     if not candidates:
         return "(No profiles available - fallback to legacy module system)", []
-    
-    # Shuffle for additional variety (on top of RANDOM())
-    random.shuffle(candidates)
     
     # Format for LLM prompt
     formatted_text = profile_service.format_candidates_for_prompt(candidates)

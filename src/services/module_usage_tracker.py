@@ -4,8 +4,10 @@ Tracks how often each workout module is selected by the AI.
 Provides statistics for understanding module selection patterns.
 """
 
+import atexit
 import json
 import logging
+import time
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
@@ -17,19 +19,31 @@ logger = logging.getLogger(__name__)
 USAGE_STATS_FILE = (
     Path(__file__).parent.parent.parent / "data" / "module_usage_stats.json"
 )
+DEFAULT_FLUSH_EVERY = 10
+DEFAULT_FLUSH_INTERVAL_SECONDS = 30.0
 
 
 class ModuleUsageTracker:
     """Tracks workout module selection frequency."""
 
-    def __init__(self, stats_file: Optional[Path] = None):
+    def __init__(
+        self,
+        stats_file: Optional[Path] = None,
+        flush_every: int = DEFAULT_FLUSH_EVERY,
+        flush_interval_seconds: float = DEFAULT_FLUSH_INTERVAL_SECONDS,
+    ):
         """Initialize tracker.
 
         Args:
             stats_file: Path to JSON file for storing stats (default: data/module_usage_stats.json)
         """
         self.stats_file = stats_file or USAGE_STATS_FILE
+        self.flush_every = max(1, flush_every)
+        self.flush_interval_seconds = max(0.0, flush_interval_seconds)
         self.stats = self._load_stats()
+        self._dirty = False
+        self._pending_selections = 0
+        self._last_save_monotonic = time.monotonic()
 
     def _load_stats(self) -> Dict:
         """Load usage statistics from file."""
@@ -76,26 +90,44 @@ class ModuleUsageTracker:
                 },
             }
 
-    def _save_stats(self):
-        """Save usage statistics to file."""
+    def _serialize_stats(self) -> Dict:
+        """Convert internal stats to a JSON-safe shape."""
+        return {
+            "total_selections": self.stats["total_selections"],
+            "modules": dict(self.stats["modules"]),
+            "by_category": {
+                category: dict(modules)
+                for category, modules in self.stats["by_category"].items()
+            },
+            "last_updated": datetime.now().isoformat(),
+        }
+
+    def _write_stats_file(self, data: Dict) -> None:
+        """Persist serialized stats to disk."""
+        self.stats_file.parent.mkdir(parents=True, exist_ok=True)
+        with open(self.stats_file, "w") as f:
+            json.dump(data, f, indent=2)
+
+    def _should_flush(self) -> bool:
+        """Return whether buffered changes should flush to disk now."""
+        if self._pending_selections >= self.flush_every:
+            return True
+        if self.flush_interval_seconds <= 0:
+            return True
+        return (
+            time.monotonic() - self._last_save_monotonic
+        ) >= self.flush_interval_seconds
+
+    def flush(self):
+        """Flush buffered usage statistics to disk."""
+        if not self._dirty:
+            return
+
         try:
-            # Ensure directory exists
-            self.stats_file.parent.mkdir(parents=True, exist_ok=True)
-
-            # Convert defaultdict to regular dict for JSON serialization
-            data = {
-                "total_selections": self.stats["total_selections"],
-                "modules": dict(self.stats["modules"]),
-                "by_category": {
-                    category: dict(modules)
-                    for category, modules in self.stats["by_category"].items()
-                },
-                "last_updated": datetime.now().isoformat(),
-            }
-
-            with open(self.stats_file, "w") as f:
-                json.dump(data, f, indent=2)
-
+            self._write_stats_file(self._serialize_stats())
+            self._dirty = False
+            self._pending_selections = 0
+            self._last_save_monotonic = time.monotonic()
         except Exception as e:
             logger.error(f"Failed to save usage stats: {e}")
 
@@ -127,8 +159,10 @@ class ModuleUsageTracker:
         # Update total
         self.stats["total_selections"] += 1
 
-        # Save to disk
-        self._save_stats()
+        self._dirty = True
+        self._pending_selections += 1
+        if self._should_flush():
+            self.flush()
 
         logger.info(
             f"Recorded selection of {len(module_keys)} modules (total: {self.stats['total_selections']})"
@@ -339,4 +373,5 @@ def get_tracker() -> ModuleUsageTracker:
     global _global_tracker
     if _global_tracker is None:
         _global_tracker = ModuleUsageTracker()
+        atexit.register(_global_tracker.flush)
     return _global_tracker
