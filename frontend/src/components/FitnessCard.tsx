@@ -246,6 +246,12 @@ export function FitnessCard({ training, wellness, profile, onRefresh, isRefreshi
                             </p>
                         </div>
                         <div>
+                            <div className="font-semibold mb-1 flex items-center gap-1"><ChevronRight className="h-3 w-3" /> {t('fitness.trendStateLabel')}</div>
+                            <p className="text-muted-foreground text-xs leading-relaxed">
+                                {t('fitness.centeredTrendGlossary')}
+                            </p>
+                        </div>
+                        <div>
                             <div className="font-semibold mb-1 flex items-center gap-1"><ChevronRight className="h-3 w-3" /> FTP</div>
                             <p className="text-muted-foreground text-xs leading-relaxed">
                                 {t('fitness.ftpGlossary')}

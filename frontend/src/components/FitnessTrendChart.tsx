@@ -1,129 +1,135 @@
-/**
- * FitnessTrendChart - 7-day CTL/ATL/TSB trend line chart
- *
- * PMC-standard dual-axis layout (TrainingPeaks / Intervals.icu convention):
- *   Left Y-axis  → CTL + ATL (training load / fitness & fatigue)
- *   Right Y-axis → TSB only  (form / freshness)
- *
- * TSB zone bands (Joe Friel / standard PMC colour coding):
- *   > +5   : Peak Form        — green
- *  -10..+5 : Optimal Training  — blue
- * -30..-10 : Accumulated Fatigue — orange
- *   < -30  : Overreached       — red
- *
- * Zone names are shown in a compact legend strip below the chart.
- */
-
 import { useTranslation } from 'react-i18next';
 import {
-    LineChart,
+    CartesianGrid,
     Line,
+    LineChart,
+    ReferenceArea,
+    ReferenceLine,
+    ResponsiveContainer,
+    Tooltip,
     XAxis,
     YAxis,
-    Tooltip,
-    ResponsiveContainer,
-    Legend,
-    ReferenceLine,
-    ReferenceArea,
 } from 'recharts';
 import type { TrainingHistoryPoint } from '@/lib/api';
+import {
+    mapTrainingHistoryForCenteredChart,
+    type CenteredTrainingStatePoint,
+} from '@/lib/training-state-chart';
 
 interface FitnessTrendChartProps {
     history: TrainingHistoryPoint[];
 }
 
-function getLoadDomain(history: TrainingHistoryPoint[]): [number, number] {
-    if (history.length === 0) return [0, 80];
-    const vals = history.flatMap(p => [p.ctl, p.atl]);
-    const min = Math.min(...vals, 0);
-    const max = Math.max(...vals, 50);
-    return [Math.floor(min - 2), Math.ceil(max + 8)];
+interface TrendTooltipProps {
+    active?: boolean;
+    payload?: Array<{ payload: CenteredTrainingStatePoint }>;
+    label?: string;
 }
 
-function getTsbDomain(history: TrainingHistoryPoint[]): [number, number] {
-    if (history.length === 0) return [-40, 20];
-    const vals = history.map(p => p.tsb);
-    const min = Math.min(...vals, -35);
-    const max = Math.max(...vals, 10);
-    return [Math.floor(min - 3), Math.ceil(max + 5)];
+const DISPLAY_DOMAIN: [number, number] = [-100, 100];
+const DISPLAY_TICKS = [-80, 0, 80];
+
+function TrendTooltipContent({ active, payload, label }: TrendTooltipProps) {
+    const { t } = useTranslation();
+    const point = payload?.[0]?.payload;
+
+    if (!active || !point) return null;
+
+    return (
+        <div className="min-w-[180px] rounded-md border bg-background px-3 py-2 text-xs shadow-md">
+            <div className="mb-1 font-semibold text-foreground">{label}</div>
+            <div className="mb-2 text-muted-foreground">
+                {t('fitness.trendStateLabel')}: <span className="font-medium text-foreground">{point.state_label}</span>
+            </div>
+            <div className="space-y-1 text-muted-foreground">
+                <div className="flex justify-between gap-3">
+                    <span>{t('fitness.trendCTL')}</span>
+                    <span className="font-medium text-foreground">{point.ctl.toFixed(1)}</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                    <span>{t('fitness.trendATL')}</span>
+                    <span className="font-medium text-foreground">{point.atl.toFixed(1)}</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                    <span>{t('fitness.trendTSB')}</span>
+                    <span className="font-medium text-foreground">{point.tsb.toFixed(1)}</span>
+                </div>
+            </div>
+        </div>
+    );
 }
 
 export function FitnessTrendChart({ history }: FitnessTrendChartProps) {
     const { t } = useTranslation();
-    const loadDomain = getLoadDomain(history);
-    const tsbDomain = getTsbDomain(history);
-    const [tsbMin, tsbMax] = tsbDomain;
+    const centeredHistory = mapTrainingHistoryForCenteredChart(history, {
+        overload: t('fitness.trendZoneOverload'),
+        optimal: t('fitness.trendZoneOptimal'),
+        need_load: t('fitness.trendZoneNeedLoad'),
+    });
 
     return (
-        <div className="space-y-1">
+        <div className="space-y-2">
             <ResponsiveContainer width="100%" height={220}>
-                <LineChart data={history} margin={{ top: 5, right: 10, bottom: 5, left: 5 }}>
+                <LineChart data={centeredHistory} margin={{ top: 8, right: 8, bottom: 8, left: 0 }}>
+                    <ReferenceArea y1={40} y2={DISPLAY_DOMAIN[1]} fill="#ef4444" fillOpacity={0.08} />
+                    <ReferenceArea y1={-20} y2={40} fill="#22c55e" fillOpacity={0.08} />
+                    <ReferenceArea y1={DISPLAY_DOMAIN[0]} y2={-20} fill="#f59e0b" fillOpacity={0.08} />
 
-                    {/* ── TSB Zone Bands (background, behind lines) ── */}
-                    <ReferenceArea yAxisId="tsb" y1={5}     y2={tsbMax} fill="#22c55e" fillOpacity={0.09} ifOverflow="extendDomain" />
-                    <ReferenceArea yAxisId="tsb" y1={-10}   y2={5}      fill="#3b82f6" fillOpacity={0.06} ifOverflow="extendDomain" />
-                    <ReferenceArea yAxisId="tsb" y1={-30}   y2={-10}    fill="#f97316" fillOpacity={0.10} ifOverflow="extendDomain" />
-                    <ReferenceArea yAxisId="tsb" y1={tsbMin} y2={-30}   fill="#ef4444" fillOpacity={0.12} ifOverflow="extendDomain" />
+                    <ReferenceLine y={40} stroke="#ef4444" strokeDasharray="4 4" strokeOpacity={0.35} />
+                    <ReferenceLine y={0} stroke="#22c55e" strokeDasharray="4 4" strokeOpacity={0.45} />
+                    <ReferenceLine y={-20} stroke="#f59e0b" strokeDasharray="4 4" strokeOpacity={0.35} />
 
-                    {/* ── Zone boundary reference lines ── */}
-                    <ReferenceLine yAxisId="tsb" y={5}   stroke="#22c55e" strokeWidth={1} strokeDasharray="3 3" strokeOpacity={0.4} />
-                    <ReferenceLine yAxisId="tsb" y={-10} stroke="#f97316" strokeWidth={1} strokeDasharray="3 3" strokeOpacity={0.4} />
-                    <ReferenceLine yAxisId="tsb" y={-30} stroke="#ef4444" strokeWidth={1} strokeDasharray="3 3" strokeOpacity={0.4} />
-                    <ReferenceLine yAxisId="tsb" y={0}   stroke="#94a3b8" strokeWidth={1} strokeOpacity={0.4} />
-
-                    <XAxis dataKey="date" tickFormatter={(d: string) => d.slice(5)} tick={{ fontSize: 10 }} />
-                    <YAxis
-                        yAxisId="load" orientation="left"
+                    <CartesianGrid vertical={false} strokeDasharray="3 3" strokeOpacity={0.15} />
+                    <XAxis
+                        dataKey="date"
+                        tickFormatter={(date: string) => date.slice(5)}
                         tick={{ fontSize: 10 }}
-                        domain={loadDomain} ticks={[loadDomain[0], loadDomain[1]]}
-                        width={30}
+                        tickLine={false}
+                        axisLine={false}
                     />
                     <YAxis
-                        yAxisId="tsb" orientation="right"
-                        tick={{ fontSize: 10, fill: '#22c55e' }}
-                        domain={tsbDomain} ticks={[tsbDomain[0], tsbDomain[1]]}
-                        width={30}
+                        domain={DISPLAY_DOMAIN}
+                        ticks={DISPLAY_TICKS}
+                        tick={{ fontSize: 10 }}
+                        tickFormatter={(value: number) => {
+                            if (value > 0) return t('fitness.trendZoneOverload');
+                            if (value < 0) return t('fitness.trendZoneNeedLoad');
+                            return t('fitness.trendZoneOptimal');
+                        }}
+                        width={64}
+                        tickLine={false}
+                        axisLine={false}
                     />
-                    <Tooltip
-                        formatter={(value, name) => [
-                            value != null ? Number(value).toFixed(1) : '—',
-                            name ?? '',
-                        ]}
-                        labelFormatter={(label) => String(label)}
+                    <Tooltip content={<TrendTooltipContent />} />
+                    <Line
+                        type="monotone"
+                        dataKey="display_state"
+                        stroke="#2563eb"
+                        strokeWidth={2.5}
+                        dot={false}
+                        activeDot={{ r: 4, strokeWidth: 0 }}
                     />
-                    <Legend wrapperStyle={{ fontSize: '11px' }} />
-                    <Line yAxisId="load" type="monotone" dataKey="ctl"
-                        name={t('fitness.trendCTL')} stroke="#3b82f6" strokeWidth={2} dot={false} />
-                    <Line yAxisId="load" type="monotone" dataKey="atl"
-                        name={t('fitness.trendATL')} stroke="#f97316" strokeWidth={2} dot={false} />
-                    <Line yAxisId="tsb" type="monotone" dataKey="tsb"
-                        name={t('fitness.trendTSB')} stroke="#22c55e" strokeWidth={2} strokeDasharray="5 5" dot={false} />
                 </LineChart>
             </ResponsiveContainer>
 
-            {/* ── TSB Zone Legend ── */}
-            <div className="flex flex-wrap justify-center gap-x-3 gap-y-0.5 px-2 text-[10px] text-muted-foreground">
-                <span className="flex items-center gap-1">
-                    <span className="inline-block w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: '#22c55e', opacity: 0.6 }} />
-                    <span>{t('fitness.zonePeakForm')}</span>
-                    <span className="opacity-50">TSB &gt; +5</span>
+            <div className="flex flex-wrap items-center justify-center gap-2 text-[10px] text-muted-foreground">
+                <span className="inline-flex items-center gap-1 rounded-full bg-red-500/10 px-2 py-0.5">
+                    <span className="h-2 w-2 rounded-full bg-red-500" />
+                    <span>{t('fitness.trendZoneOverloadLegend')}</span>
                 </span>
-                <span className="flex items-center gap-1">
-                    <span className="inline-block w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: '#3b82f6', opacity: 0.5 }} />
-                    <span>{t('fitness.zoneOptimal')}</span>
-                    <span className="opacity-50">-10 ~ +5</span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-0.5">
+                    <span className="h-2 w-2 rounded-full bg-green-500" />
+                    <span>{t('fitness.trendZoneOptimalLegend')}</span>
                 </span>
-                <span className="flex items-center gap-1">
-                    <span className="inline-block w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: '#f97316', opacity: 0.6 }} />
-                    <span>{t('fitness.zoneFatigue')}</span>
-                    <span className="opacity-50">-30 ~ -10</span>
-                </span>
-                <span className="flex items-center gap-1">
-                    <span className="inline-block w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: '#ef4444', opacity: 0.6 }} />
-                    <span>{t('fitness.zoneOverreached')}</span>
-                    <span className="opacity-50">TSB &lt; -30</span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5">
+                    <span className="h-2 w-2 rounded-full bg-amber-500" />
+                    <span>{t('fitness.trendZoneNeedLoadLegend')}</span>
                 </span>
             </div>
+
+            <p className="px-1 text-[11px] leading-relaxed text-muted-foreground">
+                {t('fitness.centeredTrendHint')}
+            </p>
         </div>
     );
 }
