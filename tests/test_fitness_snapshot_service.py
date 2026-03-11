@@ -85,6 +85,16 @@ def test_get_fitness_snapshot_reuses_cache(monkeypatch):
                 respiration=None,
                 readiness_score=None,
                 active_calories_load=512.4,
+                active_calories_history=[
+                    {
+                        "date": "2026-03-01",
+                        "active_calories_load": 480.0,
+                    },
+                    {
+                        "date": "2026-03-07",
+                        "active_calories_load": 512.4,
+                    },
+                ],
             )
 
         def calculate_ctl_history(self, activities, days=7):
@@ -152,6 +162,12 @@ def test_generate_workout_uses_shared_snapshot_instead_of_raw_fetch(monkeypatch)
                 respiration=None,
                 readiness_score=None,
                 active_calories_load=480.0,
+                active_calories_history=[
+                    {
+                        "date": "2026-03-07",
+                        "active_calories_load": 480.0,
+                    }
+                ],
             ),
             ctl_history=[{"date": "2026-03-07", "ctl": 70.0, "atl": 76.0, "tsb": -6.0}],
         )

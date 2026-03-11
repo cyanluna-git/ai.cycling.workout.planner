@@ -9,6 +9,7 @@ from ..schemas import (
     FitnessResponse,
     TrainingMetrics,
     TrainingHistoryPoint,
+    ActiveCaloriesHistoryPoint,
     WellnessMetrics,
     ActivitiesResponse,
     Activity,
@@ -100,6 +101,10 @@ async def get_fitness(
             respiration=snapshot.wellness_metrics.respiration,
             readiness_score=snapshot.wellness_metrics.readiness_score,
             active_calories_load=snapshot.wellness_metrics.active_calories_load,
+            active_calories_history=[
+                ActiveCaloriesHistoryPoint(**point)
+                for point in (snapshot.wellness_metrics.active_calories_history or [])
+            ],
         )
 
         response = FitnessResponse(

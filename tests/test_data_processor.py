@@ -132,6 +132,10 @@ class TestDataProcessor:
 
         assert result.active_calories_load is not None
         assert result.active_calories_load > 0
+        assert result.active_calories_history
+        assert len(result.active_calories_history) == 7
+        assert result.active_calories_history[-1]["date"] == today.isoformat()
+        assert result.active_calories_history[-1]["active_calories_load"] == result.active_calories_load
 
     def test_analyze_wellness_returns_none_when_activity_calories_are_missing(self, processor):
         """Unsupported activity payloads should not fabricate an energy load."""
@@ -147,6 +151,28 @@ class TestDataProcessor:
         result = processor.analyze_wellness(wellness, activities=activities)
 
         assert result.active_calories_load is None
+        assert result.active_calories_history == []
+
+    def test_calculate_active_calories_history_returns_seven_days_oldest_first(self, processor):
+        """Active calorie trend history should be chart-ready and ordered oldest first."""
+        today = date.today()
+        activities = [
+            {
+                "start_date_local": today.isoformat(),
+                "calories": 700,
+            },
+            {
+                "start_date_local": (today - timedelta(days=2)).isoformat(),
+                "calories": 300,
+            },
+        ]
+
+        history = processor.calculate_active_calories_history(activities, days=7)
+
+        assert len(history) == 7
+        assert history[0]["date"] == (today - timedelta(days=6)).isoformat()
+        assert history[-1]["date"] == today.isoformat()
+        assert history[-1]["active_calories_load"] > 0
 
     def test_analyze_wellness_hrv_from_previous_day(self, processor):
         """Test that HRV falls back to previous day when today's entry lacks it."""

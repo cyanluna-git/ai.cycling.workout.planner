@@ -13,7 +13,7 @@
  * - aria-label is set to fitness.refresh i18n key value
  */
 
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeAll } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { FitnessCard } from './FitnessCard'
@@ -54,6 +54,7 @@ const mockWellness: WellnessMetrics = {
     respiration: null,
     readiness_score: null,
     active_calories_load: null,
+    active_calories_history: null,
 }
 
 const mockProfile: AthleteProfile = {
@@ -64,6 +65,16 @@ const mockProfile: AthleteProfile = {
     w_per_kg: 3.57,
     vo2max: 52.3,
 }
+
+beforeAll(() => {
+    if (typeof globalThis.ResizeObserver === 'undefined') {
+        globalThis.ResizeObserver = class {
+            observe() {}
+            unobserve() {}
+            disconnect() {}
+        }
+    }
+})
 
 // ---------------------------------------------------------------------------
 // i18n locale key tests (static JSON inspection — no React required)
@@ -128,6 +139,18 @@ describe('i18n locale files — active calorie load keys', () => {
         const fitness = (koLocale as Record<string, unknown>).fitness as Record<string, unknown>
         expect(typeof fitness.activeCaloriesLoad).toBe('string')
         expect((fitness.activeCaloriesLoad as string).length).toBeGreaterThan(0)
+    })
+
+    it('en.json has fitness.activeCaloriesTrendTitle as a non-empty string', () => {
+        const fitness = (enLocale as Record<string, unknown>).fitness as Record<string, unknown>
+        expect(typeof fitness.activeCaloriesTrendTitle).toBe('string')
+        expect((fitness.activeCaloriesTrendTitle as string).length).toBeGreaterThan(0)
+    })
+
+    it('ko.json has fitness.activeCaloriesTrendTitle as a non-empty string', () => {
+        const fitness = (koLocale as Record<string, unknown>).fitness as Record<string, unknown>
+        expect(typeof fitness.activeCaloriesTrendTitle).toBe('string')
+        expect((fitness.activeCaloriesTrendTitle as string).length).toBeGreaterThan(0)
     })
 })
 
@@ -393,6 +416,28 @@ describe('FitnessCard — active calorie load', () => {
         )
 
         expect(screen.queryByText('512 kcal')).toBeNull()
+    })
+
+    it('renders the compact trend chart section when active calorie history is present', () => {
+        render(
+            <FitnessCard
+                training={mockTraining}
+                wellness={{
+                    ...mockWellness,
+                    active_calories_load: 512.4,
+                    active_calories_history: [
+                        { date: '2026-03-05', active_calories_load: 420.0 },
+                        { date: '2026-03-06', active_calories_load: 455.5 },
+                        { date: '2026-03-07', active_calories_load: 512.4 },
+                    ],
+                }}
+                profile={mockProfile}
+            />
+        )
+
+        expect(screen.getByText('7-Day Trend')).toBeInTheDocument()
+        expect(screen.getByText('Active Calorie Trend')).toBeInTheDocument()
+        expect(screen.getAllByText(/512 kcal/i).length).toBeGreaterThan(0)
     })
 })
 

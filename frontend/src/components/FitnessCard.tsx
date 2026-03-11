@@ -6,6 +6,7 @@ import { getTsbIcon } from "@/lib/icon-maps";
 import { getBlendedReadiness } from "@/lib/readiness";
 import type { TrainingMetrics, WellnessMetrics, AthleteProfile } from "@/lib/api";
 import { FitnessTrendChart } from "@/components/FitnessTrendChart";
+import { ActiveCaloriesTrendChart } from "@/components/ActiveCaloriesTrendChart";
 
 interface FitnessCardProps {
     training: TrainingMetrics;
@@ -17,6 +18,9 @@ interface FitnessCardProps {
 
 export function FitnessCard({ training, wellness, profile, onRefresh, isRefreshing }: FitnessCardProps) {
     const { t } = useTranslation();
+    const activeCaloriesHistory = wellness.active_calories_history ?? [];
+    const hasTrainingTrend = Boolean(training.ctl_history && training.ctl_history.length > 0);
+    const hasActiveCaloriesTrend = activeCaloriesHistory.length > 0;
     // TSB color based on value
     const getTsbColor = (tsb: number) => {
         if (tsb > 10) return "text-green-500";
@@ -169,10 +173,32 @@ export function FitnessCard({ training, wellness, profile, onRefresh, isRefreshi
                 </div>
 
                 {/* CTL/ATL/TSB Trend Chart */}
-                {training.ctl_history && training.ctl_history.length > 0 && (
-                    <div>
+                {(hasTrainingTrend || hasActiveCaloriesTrend) && (
+                    <div className="space-y-3">
                         <div className="text-xs font-medium text-muted-foreground mb-2">{t('fitness.trendTitle')}</div>
-                        <FitnessTrendChart history={training.ctl_history} />
+                        {hasTrainingTrend && (
+                            <div>
+                                <div className="mb-2 text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground/80">
+                                    {t('fitness.trainingLoad')}
+                                </div>
+                                <FitnessTrendChart history={training.ctl_history!} />
+                            </div>
+                        )}
+                        {hasActiveCaloriesTrend && (
+                            <div className="rounded-lg border border-border/60 bg-muted/20 px-2 py-2 sm:px-3">
+                                <div className="mb-1.5 flex items-center justify-between">
+                                    <div className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground/80">
+                                        {t('fitness.activeCaloriesTrendTitle')}
+                                    </div>
+                                    {wellness.active_calories_load != null && (
+                                        <div className="text-xs font-semibold text-orange-500">
+                                            {wellness.active_calories_load.toFixed(0)} kcal
+                                        </div>
+                                    )}
+                                </div>
+                                <ActiveCaloriesTrendChart history={activeCaloriesHistory} />
+                            </div>
+                        )}
                     </div>
                 )}
 

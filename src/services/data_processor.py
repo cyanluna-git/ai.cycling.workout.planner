@@ -69,6 +69,7 @@ class WellnessMetrics:
     # Computed/derived
     readiness_score: Optional[float]  # Computed readiness score (0-100)
     active_calories_load: Optional[float] = None  # CTL-like EMA of daily active calories
+    active_calories_history: Optional[list[dict[str, float | str]]] = None
 
 
 def build_placeholder_wellness_metrics(readiness: str = "Unknown") -> WellnessMetrics:
@@ -95,6 +96,7 @@ def build_placeholder_wellness_metrics(readiness: str = "Unknown") -> WellnessMe
         respiration=None,
         readiness_score=None,
         active_calories_load=None,
+        active_calories_history=None,
     )
 
 
@@ -321,6 +323,10 @@ class DataProcessor:
         # Readiness score from Intervals.icu (use latest, computed daily)
         readiness_score = latest.get("readiness")
         active_calories_load = self.calculate_active_calories_load(activities or [])
+        active_calories_history = self.calculate_active_calories_history(
+            activities or [],
+            days=7,
+        )
 
         # Determine readiness text based on available data
         readiness_text = self._assess_readiness(hrv, rhr, sleep_hours, latest)
@@ -356,6 +362,7 @@ class DataProcessor:
             respiration=respiration,
             readiness_score=readiness_score,
             active_calories_load=active_calories_load,
+            active_calories_history=active_calories_history,
         )
 
     def calculate_active_calories_load(self, activities: list[dict]) -> Optional[float]:
@@ -393,6 +400,58 @@ class DataProcessor:
             daily_values.append(daily_totals.get(d.isoformat(), 0.0))
 
         return round(self._exponential_moving_average(daily_values, self.ctl_days), 1)
+
+    def calculate_active_calories_history(
+        self,
+        activities: list[dict],
+        days: int = 7,
+    ) -> list[dict[str, float | str]]:
+        """Return a recent history of CTL-like active calorie load values.
+
+        Each point represents the smoothed active calorie load as of that day,
+        using the same newest-first 42-day EMA convention as the summary metric.
+        """
+        if not activities:
+            return []
+
+        daily_totals: dict[str, float] = {}
+        found_calorie_data = False
+
+        for activity in activities:
+            date_str = (activity.get("start_date_local") or "")[:10]
+            if not date_str:
+                continue
+
+            calories = self._get_activity_calories(activity)
+            if calories is None:
+                continue
+
+            found_calorie_data = True
+            daily_totals[date_str] = daily_totals.get(date_str, 0.0) + calories
+
+        if not found_calorie_data:
+            return []
+
+        history: list[dict[str, float | str]] = []
+        today = date.today()
+        for offset in range(days - 1, -1, -1):
+            target_day = today - timedelta(days=offset)
+            values = []
+            for lookback in range(self.ctl_days):
+                d = target_day - timedelta(days=lookback)
+                values.append(daily_totals.get(d.isoformat(), 0.0))
+
+            history.append(
+                {
+                    "date": target_day.isoformat(),
+                    "active_calories_load": round(
+                        self._exponential_moving_average(values, self.ctl_days),
+                        1,
+                    ),
+                }
+            )
+
+        return history
 
     def _get_most_recent_value(
         self,

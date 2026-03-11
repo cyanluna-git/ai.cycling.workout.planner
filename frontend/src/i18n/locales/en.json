@@ -215,6 +215,7 @@
     "wearableHint": "Connect a wearable device (Garmin, Wahoo, Polar, Whoop) to Intervals.icu to see HRV, sleep, and resting heart rate data.",
     "wearableHintLink": "Set up wearable connections",
     "trendTitle": "7-Day Trend",
+    "activeCaloriesTrendTitle": "Active Calorie Trend",
     "trendCTL": "CTL (Fitness)",
     "trendATL": "ATL (Fatigue)",
     "trendTSB": "TSB (Form)",

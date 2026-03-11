@@ -17,6 +17,16 @@ class TrainingHistoryPoint(BaseModel):
     tsb: float = Field(..., description="TSB value (CTL - ATL)")
 
 
+class ActiveCaloriesHistoryPoint(BaseModel):
+    """Single day of active calorie load history."""
+
+    date: str = Field(..., description="Date (YYYY-MM-DD)")
+    active_calories_load: float = Field(
+        ...,
+        description="Smoothed active calorie load value for the day",
+    )
+
+
 class TrainingMetrics(BaseModel):
     """Current training metrics."""
 
@@ -70,6 +80,10 @@ class WellnessMetrics(BaseModel):
     active_calories_load: Optional[float] = Field(
         None,
         description="CTL-like exponentially weighted average of daily active calories",
+    )
+    active_calories_history: Optional[List[ActiveCaloriesHistoryPoint]] = Field(
+        None,
+        description="7-day active calorie load trend history",
     )
 
 

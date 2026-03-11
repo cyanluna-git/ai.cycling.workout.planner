@@ -25,6 +25,11 @@ export interface TrainingHistoryPoint {
     tsb: number;
 }
 
+export interface ActiveCaloriesHistoryPoint {
+    date: string;
+    active_calories_load: number;
+}
+
 export interface TrainingMetrics {
     ctl: number;
     atl: number;
@@ -64,6 +69,7 @@ export interface WellnessMetrics {
     // Computed/derived
     readiness_score: number | null;
     active_calories_load?: number | null;
+    active_calories_history?: ActiveCaloriesHistoryPoint[] | null;
 }
 
 export interface AthleteProfile {

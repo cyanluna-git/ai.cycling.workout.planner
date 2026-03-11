@@ -215,6 +215,7 @@
     "wearableHint": "Garmin, Wahoo, Polar, Whoop 등의 웨어러블 기기를 Intervals.icu에 연동하면 HRV, 수면, 안정시 심박 데이터를 확인할 수 있습니다.",
     "wearableHintLink": "웨어러블 연동 설정하기",
     "trendTitle": "7일 트렌드",
+    "activeCaloriesTrendTitle": "활동 칼로리 트렌드",
     "trendCTL": "CTL (체력)",
     "trendATL": "ATL (피로)",
     "trendTSB": "TSB (컨디션)",
