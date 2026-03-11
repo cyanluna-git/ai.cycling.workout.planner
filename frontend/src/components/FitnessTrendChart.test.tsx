@@ -82,13 +82,11 @@ describe('i18n locale files — centered trend chart keys', () => {
 });
 
 describe('FitnessTrendChart', () => {
-    it('renders centered legend copy and hint', () => {
+    it('mounts the centered chart without the extra legend block', () => {
         render(<FitnessTrendChart history={makeHistory()} />);
 
-        expect(screen.getByText('Overload risk when TSB stays too low')).toBeInTheDocument();
-        expect(screen.getByText('Optimal band centered around balanced form')).toBeInTheDocument();
-        expect(screen.getByText('Need load when TSB trends too fresh')).toBeInTheDocument();
-        expect(screen.getByText(/This chart centers the optimal TSB band/i)).toBeInTheDocument();
+        expect(screen.queryByText('Overload risk when TSB stays too low')).toBeNull();
+        expect(screen.queryByText(/This chart centers the optimal TSB band/i)).toBeNull();
     });
 
     it('mounts without throwing when history is empty', () => {
@@ -119,6 +117,6 @@ describe('FitnessCard — centered trend integration', () => {
         );
 
         expect(screen.getByText('7-Day Trend')).toBeInTheDocument();
-        expect(screen.getByText(/This chart centers the optimal TSB band/i)).toBeInTheDocument();
+        expect(screen.queryByText(/This chart centers the optimal TSB band/i)).toBeNull();
     });
 });
