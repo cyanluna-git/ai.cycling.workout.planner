@@ -11,6 +11,8 @@ from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
+ACTIVE_CALORIES_SMOOTHING_DAYS = 28
+
 
 @dataclass
 class TrainingMetrics:
@@ -368,7 +370,7 @@ class DataProcessor:
     def calculate_active_calories_load(self, activities: list[dict]) -> Optional[float]:
         """Return a CTL-like load score from daily active calories.
 
-        Uses the same 42-day EMA window as CTL and sums calories per day before
+        Uses a 28-day EMA window and sums calories per day before
         smoothing. Missing days count as zero load. If the activity payload does
         not expose any calorie fields, returns None.
         """
@@ -395,11 +397,17 @@ class DataProcessor:
 
         today = date.today()
         daily_values: list[float] = []
-        for i in range(self.ctl_days):
+        for i in range(ACTIVE_CALORIES_SMOOTHING_DAYS):
             d = today - timedelta(days=i)
             daily_values.append(daily_totals.get(d.isoformat(), 0.0))
 
-        return round(self._exponential_moving_average(daily_values, self.ctl_days), 1)
+        return round(
+            self._exponential_moving_average(
+                daily_values,
+                ACTIVE_CALORIES_SMOOTHING_DAYS,
+            ),
+            1,
+        )
 
     def calculate_active_calories_history(
         self,
@@ -409,7 +417,7 @@ class DataProcessor:
         """Return a recent history of CTL-like active calorie load values.
 
         Each point represents the smoothed active calorie load as of that day,
-        using the same newest-first 42-day EMA convention as the summary metric.
+        using the same newest-first 28-day EMA convention as the summary metric.
         """
         if not activities:
             return []
@@ -437,7 +445,7 @@ class DataProcessor:
         for offset in range(days - 1, -1, -1):
             target_day = today - timedelta(days=offset)
             values = []
-            for lookback in range(self.ctl_days):
+            for lookback in range(ACTIVE_CALORIES_SMOOTHING_DAYS):
                 d = target_day - timedelta(days=lookback)
                 values.append(daily_totals.get(d.isoformat(), 0.0))
 
@@ -445,7 +453,10 @@ class DataProcessor:
                 {
                     "date": target_day.isoformat(),
                     "active_calories_load": round(
-                        self._exponential_moving_average(values, self.ctl_days),
+                        self._exponential_moving_average(
+                            values,
+                            ACTIVE_CALORIES_SMOOTHING_DAYS,
+                        ),
                         1,
                     ),
                 }
