@@ -393,7 +393,7 @@ describe('FitnessCard — refresh button', () => {
 })
 
 describe('FitnessCard — active calorie load', () => {
-    it('renders the active calorie load row when the value is present', () => {
+    it('does not render the active calorie load summary row in the wellness column', () => {
         render(
             <FitnessCard
                 training={mockTraining}
@@ -402,11 +402,10 @@ describe('FitnessCard — active calorie load', () => {
             />
         )
 
-        expect(screen.getAllByText(/active calorie load/i)).toHaveLength(2)
-        expect(screen.getByText('512 kcal')).toBeInTheDocument()
+        expect(screen.queryByText('512 kcal')).toBeNull()
     })
 
-    it('does not render the active calorie load row when the value is missing', () => {
+    it('does not render the active calorie load summary row when the value is missing', () => {
         render(
             <FitnessCard
                 training={mockTraining}
@@ -437,7 +436,7 @@ describe('FitnessCard — active calorie load', () => {
 
         expect(screen.getByText('7-Day Trend')).toBeInTheDocument()
         expect(screen.getByText('Active Calorie Trend')).toBeInTheDocument()
-        expect(screen.getAllByText(/512 kcal/i).length).toBeGreaterThan(0)
+        expect(screen.getByText('512 kcal')).toBeInTheDocument()
     })
 })
 
