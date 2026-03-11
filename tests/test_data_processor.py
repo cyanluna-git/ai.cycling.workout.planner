@@ -109,6 +109,45 @@ class TestDataProcessor:
         assert result.sleep_hours == 8.0
         assert "Good" in result.readiness
 
+    def test_analyze_wellness_includes_active_calorie_load_from_activities(self, processor):
+        """Activity calories should produce a CTL-like smoothed load."""
+        today = date.today()
+        activities = [
+            {
+                "start_date_local": today.isoformat(),
+                "calories": 600,
+            },
+            {
+                "start_date_local": (today - timedelta(days=1)).isoformat(),
+                "calories": 400,
+            },
+            {
+                "start_date_local": (today - timedelta(days=1)).isoformat(),
+                "calories": 150,
+            },
+        ]
+        wellness = [{"id": today.isoformat(), "sleepSecs": 28800}]
+
+        result = processor.analyze_wellness(wellness, activities=activities)
+
+        assert result.active_calories_load is not None
+        assert result.active_calories_load > 0
+
+    def test_analyze_wellness_returns_none_when_activity_calories_are_missing(self, processor):
+        """Unsupported activity payloads should not fabricate an energy load."""
+        today = date.today()
+        activities = [
+            {
+                "start_date_local": today.isoformat(),
+                "distance": 42000,
+            }
+        ]
+        wellness = [{"id": today.isoformat(), "sleepSecs": 28800}]
+
+        result = processor.analyze_wellness(wellness, activities=activities)
+
+        assert result.active_calories_load is None
+
     def test_analyze_wellness_hrv_from_previous_day(self, processor):
         """Test that HRV falls back to previous day when today's entry lacks it."""
         wellness = [
@@ -215,6 +254,7 @@ class TestDataProcessor:
         assert result.sleep_hours is None
         assert result.weight is None
         assert result.readiness_score is None
+        assert result.active_calories_load is None
 
 
 class TestCtlHistory:

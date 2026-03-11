@@ -63,6 +63,7 @@ export interface WellnessMetrics {
 
     // Computed/derived
     readiness_score: number | null;
+    active_calories_load?: number | null;
 }
 
 export interface AthleteProfile {

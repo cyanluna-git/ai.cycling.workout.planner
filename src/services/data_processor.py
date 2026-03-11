@@ -68,6 +68,7 @@ class WellnessMetrics:
 
     # Computed/derived
     readiness_score: Optional[float]  # Computed readiness score (0-100)
+    active_calories_load: Optional[float] = None  # CTL-like EMA of daily active calories
 
 
 def build_placeholder_wellness_metrics(readiness: str = "Unknown") -> WellnessMetrics:
@@ -93,6 +94,7 @@ def build_placeholder_wellness_metrics(readiness: str = "Unknown") -> WellnessMe
         diastolic=None,
         respiration=None,
         readiness_score=None,
+        active_calories_load=None,
     )
 
 
@@ -256,11 +258,16 @@ class DataProcessor:
 
         return ema
 
-    def analyze_wellness(self, wellness_data: list[dict]) -> WellnessMetrics:
+    def analyze_wellness(
+        self,
+        wellness_data: list[dict],
+        activities: Optional[list[dict]] = None,
+    ) -> WellnessMetrics:
         """Analyze wellness data to determine training readiness.
 
         Args:
             wellness_data: List of wellness objects from Intervals.icu.
+            activities: Optional activity objects used for derived energy load.
 
         Returns:
             WellnessMetrics with comprehensive wellness data.
@@ -313,6 +320,7 @@ class DataProcessor:
 
         # Readiness score from Intervals.icu (use latest, computed daily)
         readiness_score = latest.get("readiness")
+        active_calories_load = self.calculate_active_calories_load(activities or [])
 
         # Determine readiness text based on available data
         readiness_text = self._assess_readiness(hrv, rhr, sleep_hours, latest)
@@ -347,7 +355,44 @@ class DataProcessor:
             diastolic=diastolic,
             respiration=respiration,
             readiness_score=readiness_score,
+            active_calories_load=active_calories_load,
         )
+
+    def calculate_active_calories_load(self, activities: list[dict]) -> Optional[float]:
+        """Return a CTL-like load score from daily active calories.
+
+        Uses the same 42-day EMA window as CTL and sums calories per day before
+        smoothing. Missing days count as zero load. If the activity payload does
+        not expose any calorie fields, returns None.
+        """
+        if not activities:
+            return None
+
+        daily_totals: dict[str, float] = {}
+        found_calorie_data = False
+
+        for activity in activities:
+            date_str = (activity.get("start_date_local") or "")[:10]
+            if not date_str:
+                continue
+
+            calories = self._get_activity_calories(activity)
+            if calories is None:
+                continue
+
+            found_calorie_data = True
+            daily_totals[date_str] = daily_totals.get(date_str, 0.0) + calories
+
+        if not found_calorie_data:
+            return None
+
+        today = date.today()
+        daily_values: list[float] = []
+        for i in range(self.ctl_days):
+            d = today - timedelta(days=i)
+            daily_values.append(daily_totals.get(d.isoformat(), 0.0))
+
+        return round(self._exponential_moving_average(daily_values, self.ctl_days), 1)
 
     def _get_most_recent_value(
         self,
@@ -367,6 +412,22 @@ class DataProcessor:
             value = entry.get(field)
             if value is not None:
                 return value
+        return None
+
+    def _get_activity_calories(self, activity: dict) -> Optional[float]:
+        """Extract active calories from an Intervals activity payload.
+
+        The exact field name is not modeled elsewhere in the codebase, so this
+        helper accepts the common calorie key variants seen in activity APIs.
+        """
+        for field in ("calories", "activityCalories", "activeCalories", "active_calories"):
+            value = activity.get(field)
+            if value is None:
+                continue
+            try:
+                return float(value)
+            except (TypeError, ValueError):
+                return None
         return None
 
     def _assess_readiness(

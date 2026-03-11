@@ -157,6 +157,14 @@ export function FitnessCard({ training, wellness, profile, onRefresh, isRefreshi
                                 </span>
                             </div>
                         )}
+                        {wellness.active_calories_load != null && (
+                            <div className="flex justify-between items-baseline">
+                                <span className="text-sm text-muted-foreground">{t('fitness.activeCaloriesLoad')}</span>
+                                <span className="text-lg font-bold text-orange-500">
+                                    {wellness.active_calories_load.toFixed(0)} kcal
+                                </span>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -229,6 +237,12 @@ export function FitnessCard({ training, wellness, profile, onRefresh, isRefreshi
                             <div className="font-semibold mb-1 flex items-center gap-1"><ChevronRight className="h-3 w-3" /> HRV</div>
                             <p className="text-muted-foreground text-xs leading-relaxed">
                                 {t('fitness.hrvGlossary')}
+                            </p>
+                        </div>
+                        <div>
+                            <div className="font-semibold mb-1 flex items-center gap-1"><ChevronRight className="h-3 w-3" /> {t('fitness.activeCaloriesLoad')}</div>
+                            <p className="text-muted-foreground text-xs leading-relaxed">
+                                {t('fitness.activeCaloriesLoadGlossary')}
                             </p>
                         </div>
                     </div>

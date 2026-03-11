@@ -60,8 +60,9 @@ def test_get_fitness_snapshot_reuses_cache(monkeypatch):
             self.training_calls += 1
             return TrainingMetrics(ctl=72, atl=80, tsb=-8)
 
-        def analyze_wellness(self, wellness_entries):
+        def analyze_wellness(self, wellness_entries, activities=None):
             self.wellness_calls += 1
+            assert activities is not None
             return WellnessMetrics(
                 hrv=None,
                 hrv_sdnn=None,
@@ -83,6 +84,7 @@ def test_get_fitness_snapshot_reuses_cache(monkeypatch):
                 diastolic=None,
                 respiration=None,
                 readiness_score=None,
+                active_calories_load=512.4,
             )
 
         def calculate_ctl_history(self, activities, days=7):
@@ -149,6 +151,7 @@ def test_generate_workout_uses_shared_snapshot_instead_of_raw_fetch(monkeypatch)
                 diastolic=None,
                 respiration=None,
                 readiness_score=None,
+                active_calories_load=480.0,
             ),
             ctl_history=[{"date": "2026-03-07", "ctl": 70.0, "atl": 76.0, "tsb": -6.0}],
         )

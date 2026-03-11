@@ -99,6 +99,7 @@ async def get_fitness(
             diastolic=snapshot.wellness_metrics.diastolic,
             respiration=snapshot.wellness_metrics.respiration,
             readiness_score=snapshot.wellness_metrics.readiness_score,
+            active_calories_load=snapshot.wellness_metrics.active_calories_load,
         )
 
         response = FitnessResponse(

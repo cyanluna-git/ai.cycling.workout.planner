@@ -53,6 +53,7 @@ const mockWellness: WellnessMetrics = {
     diastolic: null,
     respiration: null,
     readiness_score: null,
+    active_calories_load: null,
 }
 
 const mockProfile: AthleteProfile = {
@@ -113,6 +114,20 @@ describe('i18n locale files — fitness refresh keys', () => {
     it('ko.json fitness.refresh does not contain emoji characters', () => {
         const fitness = (koLocale as Record<string, unknown>).fitness as Record<string, unknown>
         expect(/[\u{1F000}-\u{1FFFF}]/u.test(fitness.refresh as string)).toBe(false)
+    })
+})
+
+describe('i18n locale files — active calorie load keys', () => {
+    it('en.json has fitness.activeCaloriesLoad as a non-empty string', () => {
+        const fitness = (enLocale as Record<string, unknown>).fitness as Record<string, unknown>
+        expect(typeof fitness.activeCaloriesLoad).toBe('string')
+        expect((fitness.activeCaloriesLoad as string).length).toBeGreaterThan(0)
+    })
+
+    it('ko.json has fitness.activeCaloriesLoad as a non-empty string', () => {
+        const fitness = (koLocale as Record<string, unknown>).fitness as Record<string, unknown>
+        expect(typeof fitness.activeCaloriesLoad).toBe('string')
+        expect((fitness.activeCaloriesLoad as string).length).toBeGreaterThan(0)
     })
 })
 
@@ -351,6 +366,33 @@ describe('FitnessCard — refresh button', () => {
             />
         )
         expect(btn).not.toBeDisabled()
+    })
+})
+
+describe('FitnessCard — active calorie load', () => {
+    it('renders the active calorie load row when the value is present', () => {
+        render(
+            <FitnessCard
+                training={mockTraining}
+                wellness={{ ...mockWellness, active_calories_load: 512.4 }}
+                profile={mockProfile}
+            />
+        )
+
+        expect(screen.getAllByText(/active calorie load/i)).toHaveLength(2)
+        expect(screen.getByText('512 kcal')).toBeInTheDocument()
+    })
+
+    it('does not render the active calorie load row when the value is missing', () => {
+        render(
+            <FitnessCard
+                training={mockTraining}
+                wellness={mockWellness}
+                profile={mockProfile}
+            />
+        )
+
+        expect(screen.queryByText('512 kcal')).toBeNull()
     })
 })
 

@@ -109,7 +109,10 @@ async def get_fitness_snapshot(
         activities=activities,
         wellness_entries=wellness_entries,
         training_metrics=processor.calculate_training_metrics(activities),
-        wellness_metrics=processor.analyze_wellness(wellness_entries),
+        wellness_metrics=processor.analyze_wellness(
+            wellness_entries,
+            activities=activities,
+        ),
         ctl_history=processor.calculate_ctl_history(activities, days=CTL_HISTORY_DAYS),
     )
     set_cached(user_id, FITNESS_SNAPSHOT_CACHE_KEY, snapshot)

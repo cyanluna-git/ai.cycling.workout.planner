@@ -67,6 +67,10 @@ class WellnessMetrics(BaseModel):
     readiness_score: Optional[float] = Field(
         None, description="Computed readiness score (0-100)"
     )
+    active_calories_load: Optional[float] = Field(
+        None,
+        description="CTL-like exponentially weighted average of daily active calories",
+    )
 
 
 class AthleteProfile(BaseModel):
