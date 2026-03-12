@@ -3,6 +3,7 @@ import {
     Radio, Bot, Smartphone, Crosshair,
     FileCode, ChevronRight, CalendarDays,
 } from "lucide-react";
+import { BrandLockup } from "@/components/BrandLockup";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Button } from "@/components/ui/button";
 
@@ -20,10 +21,15 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
             {/* HERO */}
             <div className="container mx-auto px-4 pt-20 pb-16">
                 <div className="text-center max-w-3xl mx-auto">
-                    <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight flex items-center justify-center gap-3">
-                        <img src="/logo-256.png" alt="" className="h-12 w-12 md:h-14 md:w-14 object-contain" />
-                        AI Cycling Coach
-                    </h1>
+                    <img
+                        src="/zelia-wordmark.png"
+                        alt="ZeLia"
+                        className="mx-auto mb-4 h-10 w-auto object-contain md:h-12"
+                    />
+                    <div className="mb-4 flex items-center justify-center gap-3 tracking-tight">
+                        <img src="/logo-256.png" alt="" className="h-12 w-12 object-contain md:h-14 md:w-14" />
+                        <h1 className="text-4xl font-bold md:text-5xl">AI Coach</h1>
+                    </div>
                     <p className="text-xl md:text-2xl font-medium mb-3">
                         {t('landing.heroSubtitle')}
                     </p>
@@ -159,10 +165,13 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
 
             <footer className="border-t py-8">
                 <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-                    <div className="inline-flex items-center gap-1.5 mb-3">
-                        <img src="/logo-256.png" alt="" className="h-5 w-5 object-contain" />
-                        <span>AI Cycling Coach</span>
-                    </div>
+                    <BrandLockup
+                        centered
+                        className="mb-3"
+                        iconClassName="h-5 w-5"
+                        textClassName="text-sm"
+                        wordmarkClassName="h-4"
+                    />
                     <div className="flex justify-center gap-4 text-xs">
                         <a href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</a>
                     </div>

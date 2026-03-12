@@ -10,6 +10,7 @@ import { FitnessCardSkeleton, WeeklyCalendarSkeleton, WeeklyPlanSkeleton } from 
 import { CoachLoadingAnimation } from "@/components/CoachLoadingAnimation";
 import { UpdateAnnouncementModal } from "@/components/UpdateAnnouncementModal";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { BrandLockup } from "@/components/BrandLockup";
 import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useDashboard } from "@/hooks/useDashboard";
@@ -111,7 +112,12 @@ function Dashboard() {
         <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
           {/* Top row: Title + User actions */}
           <div className="flex justify-between items-center">
-            <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2"><img src="/logo-256.png" alt="" className="h-8 w-8 object-contain" /> AI Cycling Coach</h1>
+            <BrandLockup
+              className="min-w-0"
+              iconClassName="h-7 w-7 sm:h-8 sm:w-8"
+              textClassName="text-lg sm:text-2xl"
+              wordmarkClassName="h-4 sm:h-5"
+            />
             <div className="flex items-center gap-1 sm:gap-2">
               <LanguageSwitcher />
               <Button variant="ghost" onClick={signOut} className="h-11 sm:h-9 text-xs sm:text-sm transition-all active:scale-95">

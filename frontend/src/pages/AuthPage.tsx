@@ -117,8 +117,18 @@ export function AuthPage() {
             <div className="absolute top-4 right-4"><LanguageSwitcher /></div>
             <div className="flex flex-col items-center w-full max-w-md gap-4">
             <Card className="w-full">
-                <CardHeader className="text-center">
-                    <CardTitle className="text-2xl flex items-center justify-center gap-2"><img src="/logo-256.png" alt="" className="h-9 w-9 object-contain" /> AI Cycling Coach</CardTitle>
+                <CardHeader className="pb-5 pt-8 text-center">
+                    <CardTitle>
+                        <img
+                            src="/zelia-wordmark.png"
+                            alt="ZeLia"
+                            className="mx-auto mb-5 h-10 w-auto object-contain md:h-12"
+                        />
+                        <div className="flex items-center justify-center gap-3 tracking-tight">
+                            <img src="/logo-256.png" alt="" className="h-11 w-11 object-contain md:h-12 md:w-12" />
+                            <span className="text-2xl font-bold">AI Coach</span>
+                        </div>
+                    </CardTitle>
                     <p className="text-muted-foreground text-sm">
                         {mode === 'login' && t('auth.loginToStart')}
                         {mode === 'signup' && t('auth.createAccount')}
