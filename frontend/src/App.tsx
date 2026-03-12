@@ -116,7 +116,8 @@ function Dashboard() {
               className="min-w-0"
               iconClassName="h-7 w-7 sm:h-8 sm:w-8"
               textClassName="text-lg sm:text-2xl"
-              wordmarkClassName="h-4 sm:h-5"
+              labelClassName="h-6 sm:h-7"
+              wordmarkClassName="h-5 sm:h-7"
             />
             <div className="flex items-center gap-1 sm:gap-2">
               <LanguageSwitcher />

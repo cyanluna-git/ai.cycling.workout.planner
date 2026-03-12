@@ -34,14 +34,14 @@ export function BrandLockup({
         <span className={cn("font-bold whitespace-nowrap", textClassName)}>AI Coach</span>
       </div>
       <span
-        className={cn("hidden h-5 w-px bg-border sm:block", labelClassName)}
+        className={cn("hidden h-7 w-px bg-border sm:block", labelClassName)}
         aria-hidden="true"
       />
-      <span className="inline-flex shrink-0 items-center rounded-full border border-border/80 bg-white px-2 py-1 shadow-xs">
+      <span className="inline-flex shrink-0 items-center">
         <img
           src="/zelia-wordmark.png"
           alt="ZeLia"
-          className={cn("h-6 w-auto object-contain", wordmarkClassName)}
+          className={cn("h-7 w-auto object-contain", wordmarkClassName)}
         />
       </span>
     </div>
