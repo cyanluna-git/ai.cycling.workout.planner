@@ -77,18 +77,19 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             # Calculate response time
             response_time_ms = int((time.time() - start_time) * 1000)
 
-            # Log to database (fire and forget)
-            await self._log_request(
-                user_id=user_id,
-                method=method,
-                path=path,
-                status_code=status_code,
-                response_time_ms=response_time_ms,
-                ip_address=ip_address,
-                user_agent=user_agent,
-                request_body=request_body,
-                error_message=error_message,
-            )
+            # Log to database only for errors (fire and forget)
+            if status_code >= 400:
+                await self._log_request(
+                    user_id=user_id,
+                    method=method,
+                    path=path,
+                    status_code=status_code,
+                    response_time_ms=response_time_ms,
+                    ip_address=ip_address,
+                    user_agent=user_agent,
+                    request_body=request_body,
+                    error_message=error_message,
+                )
 
         return response
 
