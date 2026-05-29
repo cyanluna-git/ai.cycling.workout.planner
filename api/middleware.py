@@ -22,6 +22,33 @@ EXCLUDED_PATHS = {
     "/favicon.ico",
 }
 
+# Paths whose responses are never persisted to the request log table.
+# Third-party webhooks are high-volume, fire-and-forget, and low diagnostic
+# value — a misconfigured secret can flood the table with hundreds of
+# thousands of rows. App-level logger output still covers them.
+NO_DB_LOG_PATHS = {
+    "/api/webhooks/intervals",
+}
+
+# Client-error statuses that are expected noise (unauthenticated polling,
+# rejected webhooks) and not worth persisting per-row.
+SKIP_LOG_STATUSES = {401, 403}
+
+
+def should_persist_log(path: str, status_code: int) -> bool:
+    """Decide whether a request/response should be written to the log table.
+
+    Only server-relevant errors are persisted: success responses, excluded
+    webhook paths, and expected auth-failure statuses are skipped.
+    """
+    if status_code < 400:
+        return False
+    if path in NO_DB_LOG_PATHS:
+        return False
+    if status_code in SKIP_LOG_STATUSES:
+        return False
+    return True
+
 
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
     """Middleware to log all API requests for admin monitoring."""
@@ -77,8 +104,9 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             # Calculate response time
             response_time_ms = int((time.time() - start_time) * 1000)
 
-            # Log to database only for errors (fire and forget)
-            if status_code >= 400:
+            # Persist only server-relevant errors (fire and forget).
+            # Skips success, webhook noise, and expected auth failures.
+            if should_persist_log(request.url.path, status_code):
                 await self._log_request(
                     user_id=user_id,
                     method=method,
