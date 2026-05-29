@@ -14,7 +14,7 @@ fake_supabase.create_client = lambda *args, **kwargs: None
 fake_supabase.Client = object
 sys.modules.setdefault("supabase", fake_supabase)
 
-from api.middleware import should_persist_log
+from api.middleware import body_for_log, should_persist_log
 
 
 def test_success_responses_are_not_logged() -> None:
@@ -42,3 +42,13 @@ def test_server_errors_are_logged() -> None:
 def test_other_client_errors_are_logged() -> None:
     assert should_persist_log("/api/plans/weekly/generate", 400) is True
     assert should_persist_log("/api/plans/weekly/xyz", 404) is True
+
+
+def test_request_body_kept_only_for_server_errors() -> None:
+    body = {"duration": 60}
+    # 5xx: keep the body for debugging.
+    assert body_for_log(body, 500) == body
+    assert body_for_log(body, 502) == body
+    # 4xx: drop the body to save space.
+    assert body_for_log(body, 400) is None
+    assert body_for_log(body, 404) is None
