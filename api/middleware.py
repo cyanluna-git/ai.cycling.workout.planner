@@ -22,6 +22,46 @@ EXCLUDED_PATHS = {
     "/favicon.ico",
 }
 
+# Paths whose responses are never persisted to the request log table.
+# Third-party webhooks are high-volume, fire-and-forget, and low diagnostic
+# value — a misconfigured secret can flood the table with hundreds of
+# thousands of rows. App-level logger output still covers them.
+NO_DB_LOG_PATHS = {
+    "/api/webhooks/intervals",
+}
+
+# Client-error statuses that are expected noise (unauthenticated polling,
+# rejected webhooks) and not worth persisting per-row.
+SKIP_LOG_STATUSES = {401, 403}
+
+# Max request body size (bytes) captured for logging. Bodies above this are
+# dropped to keep rows small — the request body is only stored on 5xx anyway.
+MAX_LOGGED_BODY_BYTES = 2000
+
+
+def should_persist_log(path: str, status_code: int) -> bool:
+    """Decide whether a request/response should be written to the log table.
+
+    Only server-relevant errors are persisted: success responses, excluded
+    webhook paths, and expected auth-failure statuses are skipped.
+    """
+    if status_code < 400:
+        return False
+    if path in NO_DB_LOG_PATHS:
+        return False
+    if status_code in SKIP_LOG_STATUSES:
+        return False
+    return True
+
+
+def body_for_log(request_body: Optional[dict], status_code: int) -> Optional[dict]:
+    """Keep the captured request body only for server errors (5xx).
+
+    Client errors (4xx) are diagnosable from path/status/error_message, so we
+    drop their body to reduce stored bytes.
+    """
+    return request_body if status_code >= 500 else None
+
 
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
     """Middleware to log all API requests for admin monitoring."""
@@ -53,7 +93,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         if method in ("POST", "PUT", "PATCH"):
             try:
                 body = await request.body()
-                if len(body) < 10000:  # Only log if < 10KB
+                if len(body) < MAX_LOGGED_BODY_BYTES:
                     request_body = json.loads(body.decode("utf-8"))
                     # Remove sensitive fields
                     for key in ["password", "api_key", "secret", "token"]:
@@ -77,8 +117,9 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             # Calculate response time
             response_time_ms = int((time.time() - start_time) * 1000)
 
-            # Log to database only for errors (fire and forget)
-            if status_code >= 400:
+            # Persist only server-relevant errors (fire and forget).
+            # Skips success, webhook noise, and expected auth failures.
+            if should_persist_log(request.url.path, status_code):
                 await self._log_request(
                     user_id=user_id,
                     method=method,
@@ -87,7 +128,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
                     response_time_ms=response_time_ms,
                     ip_address=ip_address,
                     user_agent=user_agent,
-                    request_body=request_body,
+                    request_body=body_for_log(request_body, status_code),
                     error_message=error_message,
                 )
 
