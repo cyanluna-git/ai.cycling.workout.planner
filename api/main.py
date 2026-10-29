@@ -44,6 +44,7 @@ origins = [
     "http://localhost:8005",  # Alternative dev port
     "https://*.vercel.app",  # Vercel preview deployments
     "https://ai-cycling-workout-planner.vercel.app",  # Production
+    "https://argo-coach.cyanluna.com",  # Custom production domain
 ]
 
 app.add_middleware(
